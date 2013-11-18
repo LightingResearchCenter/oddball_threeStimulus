@@ -27,5 +27,8 @@ ECG
 * Kardia for ECG by Perakakis et al.(included), http://sourceforge.net/projects/mykardia/
 * HRVAS for ECG by John Ramshur (included), http://sourceforge.net/projects/hrvas/
 
+AUTO-SAVE of FIGURES
+* export_fig by Oliver Woodford, http://www.mathworks.com/matlabcentral/fileexchange/23629-exportfig
+
 -- 
 and remember to add the subfolders in this repository to Matlab Path, as otherwsie they won't be found and your script will crash
