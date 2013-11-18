@@ -1,0 +1,9 @@
+Subfolder,Filename,Duration,SOA,oddBallYes,distracterYes,freeze,comment
+auditoryStimuli,standardTone.wav,0.06,1.934,0,0,1,firstFreeze
+auditoryStimuli,standardTone.wav,0.06,1.934,0,0,0,NaN
+auditoryStimuli,noiseDistracter.wav,0.06,1.934,0,1,0,distracter
+auditoryStimuli,standardTone.wav,0.06,1.934,0,0,0,NaN
+auditoryStimuli,targetTone.wav,0.06,1.934,1,0,0,oddBall
+auditoryStimuli,standardTone.wav,0.06,1.934,0,0,0,NaN
+auditoryStimuli,standardTone.wav,0.06,1.934,0,0,0,NaN
+auditoryStimuli,standardTone.wav,0.06,1.934,0,0,1,secondFreeze
