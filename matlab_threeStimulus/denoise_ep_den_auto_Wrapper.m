@@ -114,7 +114,7 @@ function epochs_ep = denoise_ep_den_auto_Wrapper(epochs, scales, parameters, han
                                 error('You probably ran the GUI of EP_DEN and now Matlab confuses the two Run_NZT, closing and restarting Matlab at least helps')
                             elseif strcmp(err.identifier, 'MATLAB:nologicalnan')                                
                                 warning('Why actually? happened with too low high cutoff frequency for bandpass filtering')
-                                epochs = epochIn;
+                                epoch = epochIn;
                                 return
                             else
                                 err.identifier
