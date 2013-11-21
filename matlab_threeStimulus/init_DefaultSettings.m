@@ -1,6 +1,7 @@
 function [handles, flags] = init_DefaultSettings()
            
     handles.style.scrsz = get(0,'ScreenSize'); % get screen size for plotting
+    handles.style.scrsz = [1 1 1680 1050];
         
     % General debug switch
     handles.flags.showDebugMessages = 0;

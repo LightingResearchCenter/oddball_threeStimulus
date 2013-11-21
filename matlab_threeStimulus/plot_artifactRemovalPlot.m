@@ -1,10 +1,30 @@
 function plot_artifactRemovalPlot(t, epochIn, dataOut_afterMuscle, epochOut_afterFixedThreshold, epochOut_afterEOG_removal, ...
             epochOut_afterECG_removal, epochOut, ch, zoomRange, parameters, handles)
             
+        [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
+        if handles.flags.saveDebugMATs == 1
+            debugMatFileName = 'tempArtifactRemoval.mat';
+            if nargin == 0
+                load('debugPath.mat')
+                load(fullfile(path.debugMATs, debugMatFileName))
+                close all
+            else
+                if handles.flags.saveDebugMATs == 1
+                    path = handles.path;
+                    save('debugPath.mat', 'path')
+                    save(fullfile(path.debugMATs, debugMatFileName))            
+                end
+            end
+        end
                     
         % DEBUG difference matrices
-        diff_origFixed = epochIn - epochOut_afterFixedThreshold;
-        diff_fixedEog = epochOut_afterFixedThreshold - epochOut_afterEOG_removal;
+        try
+            diff_origAfterMuscle = epochIn - dataOut_afterMuscle;
+        catch err
+            err
+            whos
+        end
+        diff_muscleEog = epochOut_afterFixedThreshold - epochOut_afterEOG_removal;
         diff_eogEcg = epochOut_afterEOG_removal - epochOut_afterECG_removal;
         diff_fixedEcg = epochOut_afterFixedThreshold - epochOut_afterECG_removal;
         diff_total = epochIn - epochOut_afterECG_removal;
@@ -20,24 +40,24 @@ function plot_artifactRemovalPlot(t, epochIn, dataOut_afterMuscle, epochOut_afte
 
         i = 1;           
         sp(i) = subplot(rows,cols,i); 
-            p(i,:) = plot(t, epochIn(:,ch), t, epochOut_afterFixedThreshold(:,ch));
+            p(i,:) = plot(t, epochIn(:,ch), t, dataOut_afterMuscle(:,ch));
             tit(i) = title(' ');
 
             i = 2;           
             sp(i) = subplot(rows,cols,i); 
-            p(i,:) = plot(t, epochIn(:,ch), t, epochOut_afterFixedThreshold(:,ch));
-            leg(1) = legend('In', 'After Fixed');
+            p(i,:) = plot(t, epochIn(:,ch), t, dataOut_afterMuscle(:,ch));
+            leg(1) = legend(['In, no of NaNs: ', num2str(sum(isnan(epochIn(:,ch))))], ['MuscleArtifact, no of NaNs: ', num2str(sum(isnan(dataOut_afterMuscle(:,ch))))]);
                 legend('boxoff')
 
         i = 3;
         sp(i) = subplot(rows,cols,i); 
-            p(i,:) = plot(t, diff_origFixed(:,ch), t, diff_fixedEog(:,ch));
+            p(i,:) = plot(t, diff_muscleEog(:,ch));
             tit(i) = title(' ');
 
             i = 4;
             sp(i) = subplot(rows,cols,i); 
-            p(i,:) = plot(t, diff_origFixed(:,ch), t, diff_fixedEog(:,ch));
-            leg(2) = legend('Diff(In-Fixed)', 'Diff(Fixed-EOG)');
+            p(i,:) = plot(t, diff_muscleEog(:,ch));
+            leg(2) = legend('Diff(In-EOG)');
                 legend('boxoff')
 
         i = 5;
@@ -64,12 +84,12 @@ function plot_artifactRemovalPlot(t, epochIn, dataOut_afterMuscle, epochOut_afte
 
         i = 9;
         sp(i) = subplot(rows,cols,i); 
-            p(i,:) = plot(t, epochOut_afterFixedThreshold(:,ch), t, epochOut(:,ch));
+            p(i,:) = plot(t, epochIn(:,ch), t, epochOut(:,ch));
             tit(i) = title(' ');
 
             i = 10;
             sp(i) = subplot(rows,cols,i); 
-            p(i,:) = plot(t, epochOut_afterFixedThreshold(:,ch), t, epochOut(:,ch));
+            p(i,:) = plot(t, epochIn(:,ch), t, epochOut(:,ch));
             leg(5) = legend('Fixed', 'Out');
                 legend('boxoff')
 

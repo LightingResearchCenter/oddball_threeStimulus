@@ -30,6 +30,8 @@ function statsOut = batch_extraComputeStats(dataIn, scalarOrVector, sensorType, 
         isCell = 0;
     end
         
+    dim = 2;
+
     % Now the input data is 3D and we need to "get rid" of the last
     % dimension which is the subjects so we would average over the subjects    
     for norm = 1 : length(normType)
@@ -46,10 +48,13 @@ function statsOut = batch_extraComputeStats(dataIn, scalarOrVector, sensorType, 
                         for ch = 1 : length(dataIn.(normType{norm}).(conditionFields{condition}).(scalarOrVector).(dataTypes{type}))
                             dataSamplesPerSession = dataIn.(normType{norm}).(conditionFields{condition}).(scalarOrVector).(dataTypes{type}){ch}(:,:,:);
                             dataSamplesPerSession = squeeze(dataSamplesPerSession); % squeeze and remove the singleton (session)
+                            % dataSamplesPerSession
+                            
                             if noOfDataPointsPerPersonPerSession > 1
-                                statsOut.(normType{norm}).(conditionFields{condition}).(scalarOrVector).(dataTypes{type}) = batch_calculateStatsForMatrix(dataSamplesPerSession, 2, 0, handles);
+                                statsOut.(normType{norm}).(conditionFields{condition}).(scalarOrVector).(dataTypes{type}) = batch_calculateStatsForMatrix(dataSamplesPerSession, dim, 0, handles);
                             else
-                                statsOut.(normType{norm}).(conditionFields{condition}).(scalarOrVector).(dataTypes{type}) = batch_calculateStatsForVector(dataSamplesPerSession, 1, handles);
+                                statsOut.(normType{norm}).(conditionFields{condition}).(scalarOrVector).(dataTypes{type}) = batch_calculateStatsForVector(dataSamplesPerSession, dim, handles);
+                                % statVector = statsOut.(normType{norm}).(conditionFields{condition}).(scalarOrVector).(dataTypes{type}).mean
                             end
                         end
                         
@@ -60,9 +65,9 @@ function statsOut = batch_extraComputeStats(dataIn, scalarOrVector, sensorType, 
                         dataSamplesPerSession = squeeze(dataSamplesPerSession); % squeeze and remove the singleton (session)
                         
                         if noOfDataPointsPerPersonPerSession > 1
-                            statsOut.(normType{norm}).(conditionFields{condition}).(scalarOrVector).(dataTypes{type}) = batch_calculateStatsForMatrix(dataSamplesPerSession, 2, 0, handles);
+                            statsOut.(normType{norm}).(conditionFields{condition}).(scalarOrVector).(dataTypes{type}) = batch_calculateStatsForMatrix(dataSamplesPerSession, dim, 0, handles);
                         else
-                            statsOut.(normType{norm}).(conditionFields{condition}).(scalarOrVector).(dataTypes{type}) = batch_calculateStatsForVector(dataSamplesPerSession, 1, handles);
+                            statsOut.(normType{norm}).(conditionFields{condition}).(scalarOrVector).(dataTypes{type}) = batch_calculateStatsForVector(dataSamplesPerSession, dim, handles);
                         end
                         
                     end    

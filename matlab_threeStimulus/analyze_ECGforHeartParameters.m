@@ -56,6 +56,12 @@ function heart = analyze_ECGforHeartParameters(ECG, ECG_raw, handles)
         heartrateSampleRate = parameters.EEG.srate/parameters.heart.downsampleFactor;
         disp(['          .. QRS Detection with Pan-Tompkins'])
         [rPeakTimes, rPeakAmplitudes] = QRS_peakDetection(ECG_raw_downsampled, heartrateSampleRate);
+
+        % No peaks found
+        if isnan(rPeakTimes)
+            heart = analyze_ECG_fillTheFieldWithNan();
+            return
+        end
         
         heart.vector.ECG_timeDownSampled = x_new / heartrateSampleRate;
         heart.vector.ECG_rawDownSampled = ECG_raw_downsampled;
@@ -131,8 +137,6 @@ function heart = analyze_ECGforHeartParameters(ECG, ECG_raw, handles)
         heart.scalar.HR_Mean = nanmean(heart.vector.HR);
         heart.scalar.HR_Median = nanmedian(heart.vector.HR);        
 
-        plot(hp, thp)
-
     %% Calculate HRV (Kardia Toolbox)
         disp(['            .. Compute heart Rate Variability (HRV)'])
         [heart, hpFilt] = analyze_HRV_Wrapper(heart, hp, thp, hpOutlierRej, thpOutOutlierRej, rrTimes, rrPeakInterval, rrPeakAmplitude, heartrateSampleRate, parameters, handles);        
@@ -154,8 +158,49 @@ function heart = analyze_ECGforHeartParameters(ECG, ECG_raw, handles)
         heart = analyze_heart_DFA_Wrapper(heart, hp, thp, rrTimes, rrPeakInterval, rrPeakAmplitude, heartrateSampleRate, parameters, handles);
         
     
+    function heart = analyze_ECG_fillTheFieldWithNan()
+
+        % make it more intelligent later instead of this hard-coding
+        heart.vector.ECG_timeDownSampled = NaN;
+        heart.vector.ECG_rawDownSampled = NaN;
         
+        heart.vector.RR_t = NaN;
+        heart.vector.RR_timeSeries = NaN;
+               
+        heart.vector.HR = NaN;
+        heart.scalar.HR_Mean = NaN;
+        heart.scalar.HR_Median = NaN;
     
+        heart.scalar.DFA_alphaScaling = NaN;
+        heart.vector.DFA_intervals = NaN;
+        heart.vector.DFA_flucts = NaN;
+
+        heart.scalar.MFDFA_mean_h = NaN;
+        heart.scalar.MFDFA_mean_Dh = NaN;
+        heart.scalar.MFDFA_width_h = NaN;
+        heart.scalar.MFDFA_height_Dh = NaN;
+
+        heart.vector.RR_t = NaN;
+        heart.vector.RR_timeSeriesAfterOutlier = NaN;
+        heart.vector.RR_timeSeriesFilt = NaN;
+        heart.vector.PSD = NaN;
+        heart.vector.F = NaN;
+
+        heart.scalar.TOTAL = NaN;
+        heart.scalar.HF = NaN;
+        heart.scalar.LF = NaN;
+        heart.scalar.VLF = NaN;
+        heart.scalar.LF_HF_ratio = NaN;
+        heart.scalar.NHF = NaN;
+        heart.scalar.NLF = NaN;
+        heart.scalar.avIBI = NaN;
+        heart.scalar.maxIBI = NaN;
+        heart.scalar.minIBI = NaN;
+        heart.scalar.RMSSD = NaN;
+        heart.scalar.SDNN = NaN;
+
+
+        
     function debug_plot(ECG, ECG_raw, parameters, style, handles)
                 
         scrsz = handles.style.scrsz;

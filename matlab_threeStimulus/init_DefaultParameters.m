@@ -39,6 +39,11 @@ function parameters = init_DefaultParameters(handles)
             
             parameters.triggerSignals.audioON = 5;
 
+                % if audio trigger is not found (e.g. hardware failure),
+                % use the following mean delay from Python trigger onset,
+                % empirical estimate (depends on your hardware and OS)
+                parameters.triggerSignals.meanAudioDurationFromPythonTrigger = 622; % [in samples]
+
             parameters.triggerPrecision = 24; % 24 bits, http://www.biosemi.com/faq/trigger_signals.htm
 
         % General EEG Parameters
@@ -59,12 +64,16 @@ function parameters = init_DefaultParameters(handles)
             % Frontiers in Perception Science:233. 
             % http://dx.doi.org/10.3389/fpsyg.2012.00233.
     
+        % Flags for filtering (not implemented very well, correct for code)
+        parameters.filter.filterForCNV = 1;
+        parameters.filter.filterForAlpha = 1;
+
         % GENERAL
         parameters.filter.bandPass_loFreq = 0.01;
         parameters.filter.bandPass_hiFreq = 50;
         parameters.filterOrder = 6; % filter order   
         parameters.filterOrderSteep = 100; % additional pass of filtering with steeper cut
-        parameters.applySteepBandPass = 0;
+        parameters.applySteepBandPass = 0;        
         
             % 0.01 Hz recommended as low-cut off frequency for ERP by:
             % * Acunzo et al. (2012), http://dx.doi.org/10.1016/j.jneumeth.2012.06.011
@@ -110,6 +119,14 @@ function parameters = init_DefaultParameters(handles)
         parameters.artifacts.epochByEpochRemoveBaseline = 0; % use rmbase() to remove baseline before ICA
         parameters.artifacts.useICA = 0; % otherwise use the regress_eog
         parameters.artifacts.show_ICA_verbose = 1;
+        
+        % FASTER
+        parameters.artifacts.useFASTER = 1;
+            parameters.artifacts.FASTER_lpf_wFreq = 95;
+            parameters.artifacts.FASTER_lpf_bandwidth = 2.5;
+            
+        % DETECT
+        parameters.artifacts.useDETECT = 0;
     
     %% Power spectrum analysis parameters
     

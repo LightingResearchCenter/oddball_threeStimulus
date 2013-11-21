@@ -1,15 +1,18 @@
 function dataOut = pre_artifactRemovalInputData(dataIn, EOG, ECG, i, dataType, parameters, handles)
 
-    debugMatFileName = 'tempArtifactRemoval.mat';
-    if nargin == 0
-        load('debugPath.mat')
-        load(fullfile(path.debugMATs, debugMatFileName))
-        close all
-    else
-        if handles.flags.saveDebugMATs == 1
-            path = handles.path;
-            save('debugPath.mat', 'path')
-            save(fullfile(path.debugMATs, debugMatFileName))            
+    [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
+    if handles.flags.saveDebugMATs == 1
+        debugMatFileName = 'tempArtifactRemoval.mat';
+        if nargin == 0
+            load('debugPath.mat')
+            load(fullfile(path.debugMATs, debugMatFileName))
+            close all
+        else
+            if handles.flags.saveDebugMATs == 1
+                path = handles.path;
+                save('debugPath.mat', 'path')
+                save(fullfile(path.debugMATs, debugMatFileName))            
+            end
         end
     end
         
@@ -38,7 +41,7 @@ function dataOut = pre_artifactRemovalInputData(dataIn, EOG, ECG, i, dataType, p
             E = zeros(rows,cols);
 
             for i = 1 : cols
-                [INI{i},S(:,i),E(:,i)] = detectmuscle(dataIn(:,i), iter, Mode);
+                [INI{i},S(:,i),E_muscle(:,i)] = detectmuscle(dataIn(:,i), iter, Mode);
             end
 
             %{
@@ -51,13 +54,14 @@ function dataOut = pre_artifactRemovalInputData(dataIn, EOG, ECG, i, dataType, p
             pause
             %}
 
-            numberOfNaNs = length(dataOut(isnan(E) == 1));
-            S(~isnan(E),:) = NaN;
+            numberOfNaNs = length(dataOut(isnan(E_muscle) == 1));
+            S(~isnan(E_muscle),:) = NaN;
             NaNPercentage = (numberOfNaNs / (rows*cols)) * 100;
             disp(['     . Muscle artifact detection algorithm - ',  'Number of NaNs: ', num2str(numberOfNaNs), ', percentage: ', num2str(NaNPercentage), '%'])           
 
             dataOut_afterMuscle = dataIn;
-            dataOut_afterMuscle(isnan(E)) = NaN;
+            dataOut_afterMuscle(isnan(E_muscle)) = NaN;
+            dataOut = dataOut_afterMuscle;
             
         else
             
@@ -157,7 +161,9 @@ function dataOut = pre_artifactRemovalInputData(dataIn, EOG, ECG, i, dataType, p
             ch = 2; % 1 for Fz, 2 for Pz  
            
             zoomRange = [160 165]; % in seconds
-            plot_artifactRemovalPlot(t, dataIn, dataOut_afterMuscle, [], dataOut_afterEOG_removal, ...
+            plot_artifactRemovalPlot(t, dataIn, dataOut_afterMuscle, dataIn, dataOut_afterEOG_removal, ...
                                         dataOut_afterECG_removal, dataOut, ch, zoomRange, handles.parameters, handles)
             
         end
+
+

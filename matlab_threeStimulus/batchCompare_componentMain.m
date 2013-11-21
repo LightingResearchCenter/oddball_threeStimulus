@@ -1,23 +1,26 @@
 function batchCompare_componentMain(fileNameFields, handles)
 
     %% DEBUG
-    debugMatFileName = 'tempComponentCompare.mat';
-    if nargin == 0
-        load('debugPath.mat')
-        load(fullfile(path.debugMATs, debugMatFileName))
-        close all
-    else
-        if handles.flags.saveDebugMATs == 1
-            path = handles.path;
-            save('debugPath.mat', 'path')
-            save(fullfile(path.debugMATs, debugMatFileName))            
+    [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
+    if handles.flags.saveDebugMATs == 1
+        debugMatFileName = 'tempComponentCompare.mat';
+        if nargin == 0
+            load('debugPath.mat')
+            load(fullfile(path.debugMATs, debugMatFileName))
+            close all
+        else
+            if handles.flags.saveDebugMATs == 1
+                path = handles.path;
+                save('debugPath.mat', 'path')
+                save(fullfile(path.debugMATs, debugMatFileName))            
+            end
         end
     end
         
     fieldValue = {'peakMeanAmplit'};
     erpComponent = {'N2'; 'N1'; 'P3_N2'};
     erpComponent = {'RT'};
-    % erpComponent = {'P3'};
+    erpComponent = {'P3'};
     erpDataType = {'filt'};
     chsToPlot = {'Cz'; 'Pz'};
 
@@ -37,10 +40,13 @@ function batchCompare_componentMain(fileNameFields, handles)
                 % statsPer = 'trials';
                 statsPer = 'session'; % average one session        
                 stimulusType = {'target'; 'distracter'; 'standard'};                
-                statsOut = batch_statsPerComponent(dataOut, statsPer, erpComponent{j}, erpDataType{k}, fieldValue{i}, fileNameFields, stimulusType, handles);        
+                [statsOut, matricesSessionNorm] = batch_statsPerComponent(dataOut, statsPer, erpComponent{j}, erpDataType{k}, fieldValue{i}, fileNameFields, stimulusType, handles);        
 
-                % PLOT                       
-                batch_plotIntensityComparisonMAIN(statsOut, statsPer, erpComponent{j}, erpDataType{k}, fieldValue{i}, fileNameFields, stimulusType, chsToPlot, handles)
+                % PLOT
+                chsToPlot = {'Cz'; 'Pz'};
+                batch_plotIntensityComparisonMAIN(statsOut, matricesSessionNorm, statsPer, erpComponent{j}, erpDataType{k}, fieldValue{i}, fileNameFields, stimulusType, chsToPlot, handles)
+                chsToPlot = {'Fz'; 'Oz'};
+                batch_plotIntensityComparisonMAIN(statsOut, matricesSessionNorm, statsPer, erpComponent{j}, erpDataType{k}, fieldValue{i}, fileNameFields, stimulusType, chsToPlot, handles)
 
             end
         end

@@ -1,16 +1,19 @@
-function statsOut = batch_statsPerComponent(dataOut, statsPer, erpComponent, erpDataType, fieldValue, fileNameFields, stimulusType, handles)
+function [statsOut, matricesSessionNorm] = batch_statsPerComponent(dataOut, statsPer, erpComponent, erpDataType, fieldValue, fileNameFields, stimulusType, handles)
 
     %% DEBUG
-    debugMatFileName = 'tempStatsOut.mat';
-    if nargin == 0
-        load('debugPath.mat')
-        load(fullfile(path.debugMATs, debugMatFileName))
-        close all
-    else
-        if handles.flags.saveDebugMATs == 1
-            path = handles.path;
-            save('debugPath.mat', 'path')
-            save(fullfile(path.debugMATs, debugMatFileName))            
+    [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
+    if handles.flags.saveDebugMATs == 1
+        debugMatFileName = 'tempStatsOut.mat';
+        if nargin == 0
+            load('debugPath.mat')
+            load(fullfile(path.debugMATs, debugMatFileName))
+            close all
+        else
+            if handles.flags.saveDebugMATs == 1
+                path = handles.path;
+                save('debugPath.mat', 'path')
+                save(fullfile(path.debugMATs, debugMatFileName))            
+            end
         end
     end
     
@@ -67,7 +70,7 @@ function statsOut = batch_statsPerComponent(dataOut, statsPer, erpComponent, erp
     
         % not necessarily functioning correctly as it has not been
         % used that extensively
-        warning(['  !  ', statsPer, ' -based analysis might not work properly'])
+        warning(['  !  ', statsPer, ' -based analysis might not work properly, not tested that well!'])
 
         % concacenate the session together
         disp('  .. . . concatenate sessions together (3D)')

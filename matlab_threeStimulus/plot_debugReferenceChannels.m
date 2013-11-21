@@ -129,8 +129,8 @@ function plot_debugReferenceChannels(ref, refRightEar, refLeftEar, parameters, h
     loFreq = parameters.filter.bandPass_loFreq;
     hiFreq = parameters.filter.bandPass_hiFreq;
     filterOrder = parameters.filterOrder;
-    ref_bpF = pre_bandbassFilter(ref, parameters.EEG.srate, [hiFreq, loFreq], filterOrder);
-    ref_pca60_bp = pre_bandbassFilter(ref_pca60, parameters.EEG.srate, [hiFreq, loFreq], filterOrder);
+    ref_bpF = pre_bandbassFilter(ref, parameters.EEG.srate, [hiFreq, loFreq], filterOrder, filterOrder, handles);
+    ref_pca60_bp = pre_bandbassFilter(ref_pca60, parameters.EEG.srate, [hiFreq, loFreq], filterOrder, filterOrder, handles);
 
     %% Power analysis of the Bandpass-FILTERED
 

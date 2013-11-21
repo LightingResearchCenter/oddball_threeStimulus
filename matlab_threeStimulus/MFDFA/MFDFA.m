@@ -1,11 +1,13 @@
 function [s,q,Hq,h,Dh,logFq]=MFDFA(signal,m,scmin,scmax,ressc,qmin,qmax,qres)
 
+%{
     debugMatFileName = 'MFDFA.mat';
     if nargin == 0
         load(debugMatFileName)
     else
         save(debugMatFileName)        
     end  
+%}
 
 
 %

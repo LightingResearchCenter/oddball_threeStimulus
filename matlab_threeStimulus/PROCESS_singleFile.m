@@ -5,18 +5,21 @@ function [epochs_target, epochs_distracter, epochs_standard, ...
           dataMatrix_filtGeneral, alpha, powers, handles] = ...
                 PROCESS_singleFile(inputFiles, fileNameIn, dataMatrixIn, triggers, handles)
 
-    debugMatFileName = 'tempProcess.mat';
-    if nargin == 0
-        load('debugPath.mat')
-        load(fullfile(path.debugMATs, debugMatFileName))
-        close all
-    else
-        if handles.flags.saveDebugMATs == 1
-            path = handles.path;
-            save('debugPath.mat', 'path')
-            save(fullfile(path.debugMATs, debugMatFileName))            
-        end
-    end  
+    [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
+    if handles.flags.saveDebugMATs == 1
+        debugMatFileName = 'tempProcess.mat';
+        if nargin == 0
+            load('debugPath.mat')
+            load(fullfile(path.debugMATs, debugMatFileName))
+            close all
+        else
+            if handles.flags.saveDebugMATs == 1
+                path = handles.path;
+                save('debugPath.mat', 'path')
+                save(fullfile(path.debugMATs, debugMatFileName))            
+            end
+        end  
+    end
     
     disp(' ')                
 
@@ -39,15 +42,14 @@ function [epochs_target, epochs_distracter, epochs_standard, ...
         ECGind_raw = [handles.parameters.EEG.nrOfChannels+2+handles.parameters.BioSemi.chOffset handles.parameters.EEG.nrOfChannels+2+handles.parameters.BioSemi.chOffset];
 
         % PROCESS the "Time-Series EEG", i.e. al the channels without
-        % ERP oddball epoching, artifacts removed and bandpass-filtered
-       [alpha, powers, amplitSpectrum, PSD, SEM, heart, fractalAnalysis] =  process_timeSeriesEEG(dataMatrix_filtGeneral(:,EEGind(1):EEGind(2)), ... % EEG
+        % ERP oddball epoching, artifacts removed and bandpass-filtered        
+        [alpha, powers, amplitSpectrum, PSD, SEM, heart, fractalAnalysis] =  process_timeSeriesEEG(dataMatrix_filtGeneral(:,EEGind(1):EEGind(2)), ... % EEG
                                                                             dataMatrix_filtGeneral(:,EOGind(1):EOGind(2)), ... % EOG 
                                                                             dataMatrixIn(:,EOGind_raw(1):EOGind_raw(2)), ... % EOG RAW
                                                                             dataMatrix_filtGeneral(:,ECGind(1):ECGind(2)), ... % ECG
                                                                             dataMatrixIn(:,ECGind_raw(1):ECGind_raw(2)), ... % ECG RAW
                                                                             triggers, handles.style, handles.parameters, handles);   
-                                    
-                                    
+                       
     %% Epoch the EEG
     
         % i.e. Split into Oddball, Distracter and Standard Event-Related Potentials (ERPs)            
@@ -100,7 +102,36 @@ function [epochs_target, epochs_distracter, epochs_standard, ...
 
             % Save into GDF?
             % http://en.wikipedia.org/wiki/General_Data_Format_for_Biomedical_Signals                       
+    
+    %% FASTER: Artifact removal for the concatenad RAW / GENERALLY filtered
+
+        if handles.parameters.artifacts.useFASTER == 1
             
+            % concatenate
+            epochs_concan_raw = pre_concatenateEpochs(epochs_raw, handles.parameters, handles);
+            epochs_concan_distr_raw = pre_concatenateEpochs(epochs_distr_raw, handles.parameters, handles);
+            epochs_concan_std_raw = pre_concatenateEpochs(epochs_std_raw, handles.parameters, handles);
+            
+            % FASTER (3rd party) used with a wrapper funtion
+            epochs_concan_FASTER = pre_artifactFASTER_wrapper(epochs_concan_raw, handles.parameters, 'target', handles);
+            epochs_concan_FASTER_distr = pre_artifactFASTER_wrapper(epochs_concan_distr_raw, handles.parameters, 'distracter', handles);
+            epochs_concan_FASTER_std = pre_artifactFASTER_wrapper(epochs_concan_std_raw, handles.parameters, 'standard', handles);
+
+            % deconcatenate back
+            epochs_deconcan_FASTER = pre_deconcatenateEpochs(epochs_concan_FASTER, handles.parameters, handles);
+            epochs_deconcan_FASTER_distr = pre_deconcatenateEpochs(epochs_concan_FASTER_distr, handles.parameters, handles);
+            epochs_deconcan_FASTER_std = pre_deconcatenateEpochs(epochs_concan_FASTER_std, handles.parameters, handles);
+
+            % assign to different variable names so that the denoising goes
+            % okay and you can debug the FASTER step easily if you need
+            epochs_raw = epochs_deconcan_FASTER;
+            epochs_distr_raw = epochs_deconcan_FASTER_distr;
+            epochs_std_raw = epochs_deconcan_FASTER_std;
+
+        end
+
+        
+
     %% TIME-FREQUENCY ANALYSIS FOR THE EPOCHS
     
     disp('    Time-Frequency Analysis (ERPWaveLab, Morlet, CWT)')
@@ -165,13 +196,13 @@ function [epochs_target, epochs_distracter, epochs_standard, ...
                         
         % EP_den auto requires all the epochs to be concatenated into a
         % single vector (single vector per channel)
-        epochs_concan = pre_concatenateEpochs(epochs_filt, handles.parameters, handles);
+        epochs_concan = pre_concatenateEpochs(epochs_filt, handles.parameters, handles);        
         epochs_concan_CNV = pre_concatenateEpochs(epochs_CNV_filt, handles.parameters, handles);
         
-        epochs_concan_distr = pre_concatenateEpochs(epochs_distr_filt, handles.parameters, handles);
+        epochs_concan_distr = pre_concatenateEpochs(epochs_distr_filt, handles.parameters, handles);        
         epochs_concan_CNV_distr = pre_concatenateEpochs(epochs_CNV_distr_filt, handles.parameters, handles);
         
-        epochs_concan_std = pre_concatenateEpochs(epochs_std_filt, handles.parameters, handles);
+        epochs_concan_std = pre_concatenateEpochs(epochs_std_filt, handles.parameters, handles);        
         epochs_concan_CNV_std = pre_concatenateEpochs(epochs_CNV_std_filt, handles.parameters, handles);
         
         % ICA could be done here for the concatenated vector if needed, one
@@ -190,7 +221,8 @@ function [epochs_target, epochs_distracter, epochs_standard, ...
         else
             disp('       ICA not applied to the data')
         end
-        
+
+    
     %% TIME-FREQUENCY ANALYSIS FOR THE EPOCHS
     %{
     disp('    Time-Frequency Analysis (EEGLab, Morlet, CWT)')

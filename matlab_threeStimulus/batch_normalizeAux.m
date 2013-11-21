@@ -63,7 +63,7 @@ function matrixNorm = batch_normalizeAux(matrixIn, typeOfNorm, handles)
                                 dataPoints = matrixIn.(conditions{conditionFixedIndex}).(auxFields{field}).(auxParam{param})(session,:);
                                 normOut.(conditions{condition}).(auxFields{field}).(auxParam{param})(session,:) = dataPoints;                                                                    
                                     
-                                    if session == 1 && param == 1 && field == 1
+                                    if session == 1 && param == 1 && field == 1 && 1 == 2
                                         disp('All the conditions should have the same values (this is the normValue)')                                        
                                         disp(['condition = "', conditions{condition}, '", session=', num2str(session), ', and the values and indices:'])
                                         disp(dataPoints)
@@ -74,7 +74,7 @@ function matrixNorm = batch_normalizeAux(matrixIn, typeOfNorm, handles)
                                 dataPoints = matrixIn.(conditions{condition}).(auxFields{field}).(auxParam{param})(sessionFixedIndex,:);
                                 normOut.(conditions{condition}).(auxFields{field}).(auxParam{param})(session,:) = dataPoints;
                                                                 
-                                if condition == 1 && param == 1 && field == 1 
+                                if condition == 1 && param == 1 && field == 1 && 1 == 2
                                     disp('All the sessions should have the same values (this is the normValue)')
                                     disp(auxParam{param})
                                     disp(auxFields{field})
@@ -101,7 +101,7 @@ function matrixNorm = batch_normalizeAux(matrixIn, typeOfNorm, handles)
                             [dataPoints_mean_out, ~, ~] = batch_normalizeLowLevel(dataPoints_mean_in, 'mean', [], [], norm, handles);                                         
                             % [dataPoints_SD_out, LE, UE] = batch_normalizeLowLevel(dataPoints_SD_in, 'SD', dataPoints_mean_in, dataPoints_mean_out, norm, handles);     
                             
-                            if strcmp(typeOfNorm, 'firstSession') && condition == 1 && param == 1 && field == 1
+                            if strcmp(typeOfNorm, 'firstSession') && condition == 1 && param == 1 && field == 1 && 1 == 2
                                 disp(conditions{condition})
                                 disp(session)
                                 disp(dataPoints_mean_in)

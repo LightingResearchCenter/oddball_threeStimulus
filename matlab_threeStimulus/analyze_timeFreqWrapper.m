@@ -5,23 +5,25 @@ function [realCoefs, imagCoefs, timep, freq, isNaN] = analyze_timeFreqWrapper(ma
     % from Matlab's Wavelet Toolbox if you have a license for it
     % see e.g. http://www.bsp.brain.riken.jp/~phan/nfea/download.html     
     
-    
-    debugMatFileName = 'tempTimeFreqWrapper.mat';
-    if nargin == 0
-        %load('debugPath.mat')
-        %load(fullfile(path.debugMATs, debugMatFileName))
-        load(debugMatFileName)
-        close all
-    else
-        save(debugMatFileName)
-        %{
-        if handles.flags.saveDebugMATs == 1
-            path = handles.path;
-            save('debugPath.mat', 'path')
-            save(fullfile(path.debugMATs, debugMatFileName))            
-        end
-        %}
-    end 
+    [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
+    if handles.flags.saveDebugMATs == 1
+        debugMatFileName = 'tempTimeFreqWrapper.mat';
+        if nargin == 0
+            %load('debugPath.mat')
+            %load(fullfile(path.debugMATs, debugMatFileName))
+            load(debugMatFileName)
+            close all
+        else
+            save(debugMatFileName)
+            %{
+            if handles.flags.saveDebugMATs == 1
+                path = handles.path;
+                save('debugPath.mat', 'path')
+                save(fullfile(path.debugMATs, debugMatFileName))            
+            end
+            %}
+        end 
+    end
     
     % handles
     
@@ -196,7 +198,7 @@ function [realCoefs, imagCoefs, timep, freq, isNaN] = analyze_timeFreqWrapper(ma
 
         end              
 
-        disp(['timeDiv: ', num2str(parameters.timeFreq.timeResolutionDivider), ', min f: ', num2str(min(freq)), ', max f: ', num2str(max(freq)), ', freqRes: ', num2str(freq(2)-freq(1)), ' Hz'])       
+        disp(['      - timeDiv: ', num2str(parameters.timeFreq.timeResolutionDivider), ', min f: ', num2str(min(freq)), ', max f: ', num2str(max(freq)), ', freqRes: ', num2str(freq(2)-freq(1)), ' Hz'])       
 
         isNaN = logical(isNaN);        
         [noOfChannels, noOfScales, noOfTimePoints, noOfEpochs] = size(power);                   
@@ -204,7 +206,7 @@ function [realCoefs, imagCoefs, timep, freq, isNaN] = analyze_timeFreqWrapper(ma
         %timep = (linspace(min(timeVectorIn), max(timeVectorIn), length(timeVectorIn)));        
         [T, F] = meshgrid(timep, freq);
                 
-        whos
+        % whos
 
         % Plot the TF
         if parameters.timeFreq.plotEpochs == 1
@@ -233,13 +235,13 @@ function [realCoefs, imagCoefs, timep, freq, isNaN] = analyze_timeFreqWrapper(ma
             end
             
             try
-                if handles.figureOut.ON == 1    
+                if handles.figureOut.debugON == 1 
                     drawnow
                     dateStr = plot_getDateString(); % get current date as string
                     %cd(path.outputFigures)            
                     fileNameOut = ['timeFreqDebug_',strrep(handles.inputFile, '.pdf', ''), '_', erpType, dateStr];
 
-                    disp([' ... saving figure to disk (', fileNameOut, '.png]'])
+                    disp(['         ... saving figure to disk (', fileNameOut, '.png]'])
                     export_fig(fullfile(handles.path.figuresOut, fileNameOut), handles.figureOut.resolution, handles.figureOut.antialiasLevel, fig(1))
                     %cd(path.code)
                 end

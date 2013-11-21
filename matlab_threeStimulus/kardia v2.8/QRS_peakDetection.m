@@ -12,7 +12,7 @@ function [rPeakTimes, rPeakAmplitudes] = QRS_peakDetection(ecg_data, fs)
     %fs = 200;              % Sampling rate
     N = length(ecg_data);       % Signal length
     t = [0:N-1]/fs;        % time index
-    debugPlot = 0;
+    debugPlot = 1;
 
 
     %% DEBUG PLOT
@@ -183,6 +183,7 @@ function [rPeakTimes, rPeakAmplitudes] = QRS_peakDetection(ecg_data, fs)
             left(i)
             right(i)
         end
+        
         R_loc(i) = R_loc(i)-1+left(i); % add offset
 
         [Q_value(i) Q_loc(i)] = min( ecg_data(left(i):R_loc(i)) );
@@ -194,8 +195,22 @@ function [rPeakTimes, rPeakAmplitudes] = QRS_peakDetection(ecg_data, fs)
     end
 
     % there is no selective wave
-    Q_loc=Q_loc(Q_loc~=0);
-    R_loc=R_loc(R_loc~=0);
+    try 
+        Q_loc=Q_loc(Q_loc~=0);
+    catch err
+        % err
+        disp('            no Q_loc')
+    end
+    
+    try 
+        R_loc=R_loc(R_loc~=0);
+    catch err
+        % err
+        rPeakTimes = NaN;
+        rPeakAmplitudes = NaN;
+        
+        return
+    end
     S_loc=S_loc(S_loc~=0);
 
     %% FINAL PLOT

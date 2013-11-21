@@ -23,11 +23,11 @@ function auxStat = batch_auxStatCalculation(auxMatrix, handles)
 
                     if 1 == 1 % debug
 
+                        disp('Stat, debug')
                         matrixIn
                         meanDebug = structOut.mean
                         sessionsMean = auxStat.(normFields{i}).(conditions{cond}).(auxFields{field}).(auxParam{param}).mean
                         sessionsSD = auxStat.(normFields{i}).(conditions{cond}).(auxFields{field}).(auxParam{param}).SD
-                        pause
                     
                     end
                         

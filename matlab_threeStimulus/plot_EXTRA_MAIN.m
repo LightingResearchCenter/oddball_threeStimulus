@@ -128,7 +128,12 @@ function plot_EXTRA_MAIN(heart_Out, fractalEEG_Out, eye_Out, handles)
         
          % PLOT
         hold on
-        p(1) = errorbar(x1, y1, err1, 'ko');
+        try
+            p(1) = errorbar(x1, y1, err1, 'ko');
+        catch err
+            err
+            whos
+        end
         p(2) = errorbar(x2, y2, err2, 'r*');
         p(3) = errorbar(x3, y3, err3, 'ro');
         hold off

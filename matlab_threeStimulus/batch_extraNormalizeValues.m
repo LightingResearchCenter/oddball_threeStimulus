@@ -79,7 +79,7 @@ function matrixNorm = batch_extraNormalizeValues(matrixIn, typeOfNorm, scalarOrV
                                     normOut.(conditionFields{condition}).(dataTypes{field}).(variableFields{variable})(:,session,:) = dataPoints;    
                                 end
 
-                                    if session == noOfSessions && variable == 1 && field == 1
+                                    if session == noOfSessions && variable == 1 && field == 1 && 1 == 2
                                         disp('All the conditionFields should have the same values (this is the normValue)')                                        
                                         disp(['condition = "', conditionFields{condition}, '", session=', num2str(session), ', and the values and indices:'])
                                         disp(normOut.(conditionFields{condition}).(dataTypes{field}).(variableFields{variable})(:,session,:))                                        
@@ -101,7 +101,7 @@ function matrixNorm = batch_extraNormalizeValues(matrixIn, typeOfNorm, scalarOrV
                                 %dataPoints = matrixIn.(conditions{condition}).(auxFields{field}).(auxParam{param})(sessionFixedIndex,:);
                                 %normOut.(conditions{condition}).(auxFields{field}).(auxParam{param})(session,:) = dataPoints;
                                 
-                                if condition == 1 && variable == 1 && field == 1 
+                                if condition == 1 && variable == 1 && field == 1 && 1 == 2 
                                     disp('All the sessions should have the same values (this is the normValue)')
                                     disp(variableFields{variable})
                                     disp(dataTypes{field})

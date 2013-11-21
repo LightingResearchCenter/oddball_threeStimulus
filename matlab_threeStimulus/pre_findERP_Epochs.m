@@ -1,8 +1,7 @@
 function [epochs, stimulusON] = pre_findERP_Epochs(data, triggers, triggerUsed, stimulusType, alpha, found_oddballON, epochIndices_IN, baselineCorr, endOfEpochCorr, epochs, parameters, handles)
-
     
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
-    if 1 == 1
+    if 1 == 2 % this function is called so often that there is a significant overhead if you save this every time to disk
         debugMatFileName = 'tempFindEpochs_ERPs.mat';
         if nargin == 0
             load('debugPath.mat')
@@ -26,7 +25,8 @@ function [epochs, stimulusON] = pre_findERP_Epochs(data, triggers, triggerUsed, 
     % length(data)
     % length(triggers.oddTone)    
     % CORRECT AT SOME POINT, GIVE THE TRIGGER TYPE as INPUT    
-
+    %parameters.triggerSignals.meanAudioDurationFromPythonTrigger = 622
+    warningFlag = 0;
     debugEpochExtraction = 0;
     
     if strcmp(stimulusType, 'standard')
@@ -60,8 +60,15 @@ function [epochs, stimulusON] = pre_findERP_Epochs(data, triggers, triggerUsed, 
                     % high (directly connected to the audio output)
                     searchWindowSecs = 1.5;
                     audioTriggerTemp = triggers.audio(stimulusON(j,1):stimulusON(j,1)+(parameters.EEG.srate*searchWindowSecs));
-                    audioOnsetIndex = find(audioTriggerTemp == 0, 1, 'first');
-                    audioOnsetIndex(j) = audioOnsetIndex + stimulusON(j,1); % add back the trimmed portion
+                    audioOnsetIndexRaw = find(audioTriggerTemp == 0, 1, 'first');
+                    try
+                        audioOnsetIndex(j) = audioOnsetIndexRaw + stimulusON(j,1); % add back the trimmed portion
+                    catch err
+                        warning(['No audio trigger found for epoch #', num2str(j)])
+                        % warningFlag = 1; % warn only once
+                        % use the mean delay
+                        audioOnsetIndex(j) = parameters.triggerSignals.meanAudioDurationFromPythonTrigger + stimulusON(j,1);
+                    end
                     delay(j) = audioOnsetIndex(j) - stimulusON(j,1);
 
                     % disp([stimulusON(j,1) audioOnsetIndex delay(j)]) 

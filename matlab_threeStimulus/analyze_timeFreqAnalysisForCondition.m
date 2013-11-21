@@ -1,5 +1,6 @@
 function [realCoefs, imagCoefs, TFStat] = analyze_timeFreqAnalysisForCondition(epochsIn, erpType, parameters, handles)
 
+    [~, handles.flags] = init_DefaultSettings(); % use a subfunction        
     if handles.flags.saveDebugMATs == 1
         debugMatFileName = 'tempTimeFreq.mat';
         if nargin == 0

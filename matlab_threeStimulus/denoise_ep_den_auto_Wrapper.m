@@ -1,15 +1,18 @@
 function epochs_ep = denoise_ep_den_auto_Wrapper(epochs, scales, parameters, handles)
 
-    debugMatFileName = 'tempDenoiseEP.mat';
-    if nargin == 0
-        load('debugPath.mat')
-        load(fullfile(path.debugMATs, debugMatFileName))
-        close all
-    else
-        if handles.flags.saveDebugMATs == 1
-            path = handles.path;
-            save('debugPath.mat', 'path')
-            save(fullfile(path.debugMATs, debugMatFileName))            
+    [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
+    if handles.flags.saveDebugMATs == 1
+        debugMatFileName = 'tempDenoiseEP.mat';
+        if nargin == 0
+            load('debugPath.mat')
+            load(fullfile(path.debugMATs, debugMatFileName))
+            close all
+        else
+            if handles.flags.saveDebugMATs == 1
+                path = handles.path;
+                save('debugPath.mat', 'path')
+                save(fullfile(path.debugMATs, debugMatFileName))            
+            end
         end
     end
 
@@ -110,7 +113,9 @@ function epochs_ep = denoise_ep_den_auto_Wrapper(epochs, scales, parameters, han
                             if strcmp(err.identifier, 'MATLAB:TooManyInputs')
                                 error('You probably ran the GUI of EP_DEN and now Matlab confuses the two Run_NZT, closing and restarting Matlab at least helps')
                             elseif strcmp(err.identifier, 'MATLAB:nologicalnan')                                
-                                error('Why actually? happened with too low high cutoff frequency for bandpass filtering')
+                                warning('Why actually? happened with too low high cutoff frequency for bandpass filtering')
+                                epochs = epochIn;
+                                return
                             else
                                 err.identifier
                                 error('Have you added EP_DEN to path in Matlab?')
