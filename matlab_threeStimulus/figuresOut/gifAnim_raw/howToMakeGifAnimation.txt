@@ -1,0 +1,3 @@
+convert -delay 100 -loop 0 *.png a.gif
+
+from: http://ubuntuforums.org/showthread.php?t=1132058
