@@ -152,6 +152,9 @@ function plot_waveforms(epochs_target, epochs_distracter, epochs_standard, ...
                 hold on
                 p(i,1:3) = plot_errorShade(x, targetERP_EP.mean, targetERP_EP.std, alpha, [0 0.60 1]);
                 p(i,4:6) = plot_errorShade(x, targetERP.mean, targetERP.std, alpha, [1 0.20 0.60]);
+                %y = targetERP.mean
+                %sd = targetERP.std
+                %whos
                 
                 if j == 1
                     titStr = sprintf('%s\n%s\n%s', ['TARGET (', parameters.BioSemi.chName{ch + parameters.BioSemi.chOffset}, ')'], ...

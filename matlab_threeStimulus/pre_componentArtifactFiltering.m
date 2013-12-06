@@ -1,5 +1,6 @@
 function [matrixOut, filtOnly, NaN_indices] = pre_componentArtifactFiltering(matrixIn, artifactIndices, rawMax, rowsIn, colsIn, loFreq, hiFreq, filterOrder, filterOrderSteep, dataType, parameters, handles)   
 
+    %{
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
     if handles.flags.saveDebugMATs == 1
         debugMatFileName = 'tempComponentArtifact.mat';
@@ -15,6 +16,7 @@ function [matrixOut, filtOnly, NaN_indices] = pre_componentArtifactFiltering(mat
             end
         end  
     end
+    %}
 
     %% Notch filter the mains (60 Hz) 
     % out using the modified fitler from BioSig
@@ -86,7 +88,7 @@ function [matrixOut, filtOnly, NaN_indices] = pre_componentArtifactFiltering(mat
         if parameters.artifacts.useDETECT == 1
             
             disp(['   Remove the artifacts with DETECT'])            
-            indicesArtifact = pre_DETECT_wrapper(EEG, EOG, ECG, j, dataType, parameters, handles)
+            indicesArtifact = pre_DETECT_wrapper(EEG, EOG, ECG, j, dataType, parameters, handles);
     
         elseif parameters.artifacts.applyRegressEOG == 1
 

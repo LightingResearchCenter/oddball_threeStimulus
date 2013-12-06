@@ -1,5 +1,6 @@
 function dataOut = pre_artifactRemovalInputData(dataIn, EOG, ECG, i, dataType, parameters, handles)
 
+    %{
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
     if handles.flags.saveDebugMATs == 1
         debugMatFileName = 'tempArtifactRemoval.mat';
@@ -15,6 +16,7 @@ function dataOut = pre_artifactRemovalInputData(dataIn, EOG, ECG, i, dataType, p
             end
         end
     end
+    %}
         
     [dataSamples, dataChannels] = size(dataIn);
     dataOut = dataIn;
@@ -37,11 +39,12 @@ function dataOut = pre_artifactRemovalInputData(dataIn, EOG, ECG, i, dataType, p
             iter = 1;
             Mode = 1;
 
-            S = zeros(rows,cols);
-            E = zeros(rows,cols);
-
+            S = zeros(rows,cols);          
+            E_muscle = zeros(rows,cols);
+            
             for i = 1 : cols
-                [INI{i},S(:,i),E_muscle(:,i)] = detectmuscle(dataIn(:,i), iter, Mode);
+                [~, E_muscle(:,i)] = detectmuscle(dataIn(:,i), iter, Mode);
+                %[INI{i},S(:,i), E_muscle(:,i)] = detectmuscle(dataIn(:,i), iter, Mode);
             end
 
             %{

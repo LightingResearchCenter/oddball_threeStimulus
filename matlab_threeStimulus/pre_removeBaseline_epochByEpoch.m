@@ -1,5 +1,6 @@
 function epochOut = pre_removeBaseline_epochByEpoch(epochIn, j, parameters, handles)
         
+    %{
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
     if handles.flags.saveDebugMATs == 1
         debugMatFileName = 'tempBaselineRemoval.mat';
@@ -15,7 +16,8 @@ function epochOut = pre_removeBaseline_epochByEpoch(epochIn, j, parameters, hand
             end
         end 
     end
-
+    %}
+    
     debugEpochBaselineCorrection = 0;  
 
     % From ERPLAB:
@@ -26,18 +28,19 @@ function epochOut = pre_removeBaseline_epochByEpoch(epochIn, j, parameters, hand
     % epoching process unless you have a good reason not to. 
     [rows,cols] = size(epochIn);
     x_in = (linspace(1,rows,rows))';  
+    t = -parameters.oddballTask.ERP_baseline : 1/rows : parameters.oddballTask.ERP_duration;    
 
     % baseline period indices, detrend based on the pre-stimulus EEG only:
-    basIndex1 = parameters.oddballTask.baselineRemove_index1; 
-    basIndex2 = parameters.oddballTask.baselineRemove_index2 * parameters.EEG.srate;
-    baseline_x = (linspace(1,basIndex2,basIndex2))';
+    indicesTrim = analyze_getTFtrimIndices(t, parameters.oddballTask.ERP_baselineCorrection, [], [], []);
+    noOfSamples = indicesTrim(2) - indicesTrim(1) + 1;
+    baseline_x = (linspace(indicesTrim(1),indicesTrim(2),noOfSamples))';
     
     epochOut_rmbas = zeros(rows,cols);
     epochOut_mean = zeros(rows,cols);
 
     % Remove Bassline
     for i = 1 : cols        
-        baseline = (basIndex1:1:basIndex2);
+        baseline = (indicesTrim(1):1:indicesTrim(2));
         frames = length(epochIn(:,i));        
         [epochOut_rmbas(:,i), epochOut_mean(:,i)] = rmbase(epochIn(:,i)', frames, baseline);        
     end   

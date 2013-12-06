@@ -1,12 +1,13 @@
 function [list_properties, activData, blinkData] = component_properties_mod(EEG, blink_chans, lpf_band)
     
+    %{
     dir = cd;
     if nargin == 0
         load(fullfile(dir, 'debug.mat'))
     else
         save(fullfile(dir, 'debug.mat'))
-    end
-    
+    end    
+    %}
 
 
 % Copyright (C) 2010 Hugh Nolan, Robert Whelan and Richard Reilly, Trinity College Dublin,

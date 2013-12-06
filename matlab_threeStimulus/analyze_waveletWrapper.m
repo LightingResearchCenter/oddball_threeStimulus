@@ -1,5 +1,5 @@
 % Modified from HRVAS toolbox
-function [cwtpower,f,scale,Cdelta,n,dj,dt,variance,coi]= analyze_waveletWrapper(y,fs,timeDiv)
+function [cwtpower,WT,f,scale,Cdelta,n,dj,dt,variance,coi]= analyze_waveletWrapper(y,fs,timeDiv)
     
     variance = std(y)^2;
     y = (y - mean(y)) / sqrt(variance);
@@ -24,6 +24,10 @@ function [cwtpower,f,scale,Cdelta,n,dj,dt,variance,coi]= analyze_waveletWrapper(
         % Wavelet Analysis. <I>Bull. Amer. Meteor. Soc.</I>, 79, 61-78.    
     
     cwtpower = (abs(wave)).^2 ; % compute wavelet power spectrum              
+    %cwtpower = wave; % compute wavelet power spectrum              
+    
+    % match the variable name to ERPWAVELAB
+    WT = wave;
     
     f=fliplr(1./period); %frequency in ascending order
     cwtpower=flipud(cwtpower); %flip to match freq. order

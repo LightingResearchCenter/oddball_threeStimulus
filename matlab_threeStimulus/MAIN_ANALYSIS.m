@@ -142,6 +142,7 @@ function MAIN_ANALYSIS()
 
             tElapsed(i) = toc;
             disp(['TIME FOR COMPUTATION: ', num2str(tElapsed(i)), ' sec'])
+            whos
 
         end           
         

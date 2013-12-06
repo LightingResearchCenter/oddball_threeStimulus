@@ -1,6 +1,6 @@
  function [f, amplit, PSD, amplit_matrix, PSD_matrix] = analyze_powerSpectrum(EEGchannel, Fs, windowType, r, segmentLength, nfft, freqRange, nOverlap, fromWhereCalled)
        
-    overlapInSamples = segmentLength * (1 - (nOverlap/100));
+    overlapInSamples = segmentLength * (1 - (nOverlap/100));    
     nrOfWindows = 1 + ( (length(EEGchannel)-segmentLength) / overlapInSamples);  % e.g. 1 + (333824 - (2*2048)) / (1*2048) = 1 + 148 = 149
 
     x = 1 : 1 : segmentLength/2 + 1;

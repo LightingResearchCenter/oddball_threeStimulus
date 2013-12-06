@@ -1,5 +1,6 @@
 function [alpha, powers, amplit, PSD, SEM, heart, fractalAnalysis] = process_timeSeriesEEG(EEG, EOG, ECG, EOG_raw, ECG_raw, triggers, style, parameters, handles)
     
+    %{
     debugMatFileName = 'tempTimeSeries.mat';
     if nargin == 0
         load('debugPath.mat')
@@ -12,6 +13,7 @@ function [alpha, powers, amplit, PSD, SEM, heart, fractalAnalysis] = process_tim
             save(fullfile(path.debugMATs, debugMatFileName))            
         end
     end
+    %}
         
     % Channel-wise processing
     [samples,channels] = size(EEG);
@@ -103,7 +105,16 @@ function [alpha, powers, amplit, PSD, SEM, heart, fractalAnalysis] = process_tim
             [f, amplit, PSD, amplit_matrix, PSD_matrix] = analyze_powerSpectrum(EEGchannel, Fs, windowType, r, segmentLength, nfft, freqRange, nOverlap, 'eegTimeSeries');                               
             
             % MULTIFRACTAL ANALYSIS
-            disp(['           .. (MF)DFA for EEG channels'])
-            fractalAnalysis = analyze_fractalAnalysisPerChannel(EEGchannel, ch, Fs, parameters, handles);
+            if parameters.compute_MFDFA == 1
+                disp(['           .. (MF)DFA for EEG channels'])
+                fractalAnalysis = analyze_fractalAnalysisPerChannel(EEGchannel, ch, Fs, parameters, handles);
+            else
+                disp(['           .. (MF)DFA skipped'])                
+                fractalAnalysis = pre_returnEmptyMFDFAfields();
+            end
             
         
+            
+    function fractalAnalysis = pre_returnEmptyMFDFAfields()
+       
+        fractalAnalysis = [];

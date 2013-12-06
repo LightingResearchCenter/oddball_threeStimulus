@@ -47,6 +47,7 @@ function [handles, flags] = init_DefaultSettings()
         handles.style.markerSize = 6;  
         handles.style.markerFaceColor = [0 0.4 1];
         handles.style.fontGrey = [0.2 0.2 0.2];
+        handles.style.lineGrey = [0.4 0.4 0.4];
         handles.style.markerEdgeColor = 'none';
         handles.style.ERP_yLimits = [-10 15];
         handles.style.RT_limits = [-200 800];

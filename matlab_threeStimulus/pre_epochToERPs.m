@@ -1,5 +1,6 @@
 function [epochs, epochs_distr, epochs_std, epoch_indicesOut] = pre_epochToERPs(data, triggers, epochIndices_IN, alpha, parameters, dataType, handles)
 
+    %{
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
     if handles.flags.saveDebugMATs == 1
         debugMatFileName = 'tempEpochToERPs.mat';
@@ -15,6 +16,7 @@ function [epochs, epochs_distr, epochs_std, epoch_indicesOut] = pre_epochToERPs(
             end
         end
     end
+    %}
     
     % whos
     baselineCorr = (parameters.oddballTask.ERP_baseline * parameters.EEG.srate);

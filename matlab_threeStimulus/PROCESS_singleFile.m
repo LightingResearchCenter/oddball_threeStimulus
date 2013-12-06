@@ -42,13 +42,15 @@ function [epochs_target, epochs_distracter, epochs_standard, ...
         ECGind_raw = [handles.parameters.EEG.nrOfChannels+2+handles.parameters.BioSemi.chOffset handles.parameters.EEG.nrOfChannels+2+handles.parameters.BioSemi.chOffset];
 
         % PROCESS the "Time-Series EEG", i.e. al the channels without
-        % ERP oddball epoching, artifacts removed and bandpass-filtered        
+        % ERP oddball epoching, artifacts removed and bandpass-filtered     
+        handles.parameters.compute_MFDFA = 0;
         [alpha, powers, amplitSpectrum, PSD, SEM, heart, fractalAnalysis] =  process_timeSeriesEEG(dataMatrix_filtGeneral(:,EEGind(1):EEGind(2)), ... % EEG
                                                                             dataMatrix_filtGeneral(:,EOGind(1):EOGind(2)), ... % EOG 
                                                                             dataMatrixIn(:,EOGind_raw(1):EOGind_raw(2)), ... % EOG RAW
                                                                             dataMatrix_filtGeneral(:,ECGind(1):ECGind(2)), ... % ECG
                                                                             dataMatrixIn(:,ECGind_raw(1):ECGind_raw(2)), ... % ECG RAW
-                                                                            triggers, handles.style, handles.parameters, handles);   
+                                                                            triggers, handles.style, handles.parameters, handles);                                                                           
+        close all
                        
     %% Epoch the EEG
     
@@ -58,8 +60,11 @@ function [epochs_target, epochs_distracter, epochs_standard, ...
         % process_epochingToERPs(dataMatrix_filt, dataMatrix_filtGeneral, dataMatrix_filt_CNV, dataMatrix_filtAlpha, triggers, alpha, handles)
             
             disp('     ERP FILTERED')  
-            [epochs_filt, epochs_distr_filt, epochs_std_filt, epoch_indices] = pre_epochToERPs(dataMatrix_filt(:,:), triggers, [], alpha, handles.parameters, 'filt', handles);
-            
+            [epochs_filt, epochs_distr_filt, epochs_std_filt, epoch_indices] = pre_epochToERPs(dataMatrix_filt(:,:), triggers, [], alpha, handles.parameters, 'filt', handles);    
+        
+            disp('     RAW INPUT')  
+            [epochs_rawInput, epochs_distr_rawInput, epochs_std_rawInput, ~] = pre_epochToERPs(dataMatrixIn(:,:), triggers, epoch_indices, alpha, handles.parameters, 'rawInput', handles);       
+                        
             disp('     GENERAL')  
             [epochs_raw, epochs_distr_raw, epochs_std_raw, ~] = pre_epochToERPs(dataMatrix_filtGeneral(:,:), triggers, epoch_indices, alpha, handles.parameters, 'raw', handles);
             
@@ -73,7 +78,7 @@ function [epochs_target, epochs_distracter, epochs_standard, ...
             [epochs_ECG, epochs_distr_ECG, epochs_std_ECG, ~] = pre_epochToERPs(dataMatrixIn(:,handles.parameters.EEG.nrOfChannels+2:handles.parameters.EEG.nrOfChannels+2), triggers, epoch_indices, alpha, handles.parameters, 'ECG', handles);
             
             disp('     EOG')
-            [epochs_EOG, epochs_distr_EOG, epochs_std_EOG, ~] = pre_epochToERPs(dataMatrixIn(:,handles.parameters.EEG.nrOfChannels+1:handles.parameters.EEG.nrOfChannels+1), triggers, epoch_indices, alpha, handles.parameters, 'ECG', handles);
+            [epochs_EOG, epochs_distr_EOG, epochs_std_EOG, ~] = pre_epochToERPs(dataMatrix_filtGeneral(:,handles.parameters.EEG.nrOfChannels+1:handles.parameters.EEG.nrOfChannels+1), triggers, epoch_indices, alpha, handles.parameters, 'ECG', handles);
             
                 % maybe change the ALPHA to actual time-frequency
                 % presentation, or just add theta also :
@@ -85,13 +90,13 @@ function [epochs_target, epochs_distracter, epochs_standard, ...
                 % Clinical Neurophysiology 118:2128–2148. 
                 % http://dx.doi.org/10.1016/j.clinph.2007.04.019.            
 
-        % save EOG and ECG
-        %{
-        EOG = dataMatrix_filt(:,7-offset);
-        EOG_CNV = dataMatrix_filt_CNV(:,7-offset);
-        ECG = dataMatrix_filt(:,8-offset);
-        ECG_CNV = dataMatrix_filt_CNV(:,8-offset);
-        %}
+            % save EOG and ECG
+            %{
+            EOG = dataMatrix_filt(:,7-offset);
+            EOG_CNV = dataMatrix_filt_CNV(:,7-offset);
+            ECG = dataMatrix_filt(:,8-offset);
+            ECG_CNV = dataMatrix_filt_CNV(:,8-offset);
+            %}
         
             % release some memory
             clear dataMatrix    
@@ -107,41 +112,35 @@ function [epochs_target, epochs_distracter, epochs_standard, ...
 
         if handles.parameters.artifacts.useFASTER == 1
             
-            % concatenate
-            epochs_concan_raw = pre_concatenateEpochs(epochs_raw, handles.parameters, handles);
-            epochs_concan_distr_raw = pre_concatenateEpochs(epochs_distr_raw, handles.parameters, handles);
-            epochs_concan_std_raw = pre_concatenateEpochs(epochs_std_raw, handles.parameters, handles);
+            % use the ERP-filtered epochs as the reference as it should be
+            % smoother
+            ref = 
+            ref_distr =
+            ref_std = 
+                        
+            disp('    FASTER Artifact Rejection')           
+            [epochs_raw, epochs_distr_raw, epochs_std_raw, artifactIndices_FASTER, artifactIndices_FASTER_distr, artifactIndices_FASTER_std]...
+                = pre_FASTER_forAllStimuli(epochs_raw, epochs_distr_raw, epochs_std_raw, ...
+                                           epochs_rawInput, epochs_distr_rawInput, epochs_std_rawInput, ...
+                                           epochs_EOG, epochs_distr_EOG, epochs_std_EOG, ...
+                                           handles.parameters, handles);
+        else
             
-            % FASTER (3rd party) used with a wrapper funtion
-            epochs_concan_FASTER = pre_artifactFASTER_wrapper(epochs_concan_raw, handles.parameters, 'target', handles);
-            epochs_concan_FASTER_distr = pre_artifactFASTER_wrapper(epochs_concan_distr_raw, handles.parameters, 'distracter', handles);
-            epochs_concan_FASTER_std = pre_artifactFASTER_wrapper(epochs_concan_std_raw, handles.parameters, 'standard', handles);
-
-            % deconcatenate back
-            epochs_deconcan_FASTER = pre_deconcatenateEpochs(epochs_concan_FASTER, handles.parameters, handles);
-            epochs_deconcan_FASTER_distr = pre_deconcatenateEpochs(epochs_concan_FASTER_distr, handles.parameters, handles);
-            epochs_deconcan_FASTER_std = pre_deconcatenateEpochs(epochs_concan_FASTER_std, handles.parameters, handles);
-
-            % assign to different variable names so that the denoising goes
-            % okay and you can debug the FASTER step easily if you need
-            epochs_raw = epochs_deconcan_FASTER;
-            epochs_distr_raw = epochs_deconcan_FASTER_distr;
-            epochs_std_raw = epochs_deconcan_FASTER_std;
-
+            disp('     skipping FASTER Artifact Rejection, are you sure?')
+            artifactIndices_FASTER = [];
+            artifactIndices_FASTER_distr = [];
+            artifactIndices_FASTER_std = [];            
+            
         end
-
+        close all
         
 
-    %% TIME-FREQUENCY ANALYSIS FOR THE EPOCHS
-    
-    disp('    Time-Frequency Analysis (ERPWaveLab, Morlet, CWT)')
-    
-        % Continuous Wavelet Transform (CWT) using a Morlet wavelet and the
-        % ERPWaveLab toolbox, do for the "generally filtered"
-        [timeFreqEpochs.target.real, timeFreqEpochs.target.imag, timeFreq_target] = analyze_timeFreqAnalysisForCondition(epochs_raw, 'target', handles.parameters, handles);   
-        [timeFreqEpochs.distr.real, timeFreqEpochs.distr.imag, timeFreq_distr] = analyze_timeFreqAnalysisForCondition(epochs_distr_raw, 'distracter', handles.parameters, handles);
-        [timeFreqEpochs.std.real, timeFreqEpochs.std.imag, timeFreq_std] = analyze_timeFreqAnalysisForCondition(epochs_std_raw, 'standard', handles.parameters, handles);
-    
+    %% TIME-FREQUENCY ANALYSIS FOR THE EPOCHS    
+    disp('    Time-Frequency Analysis (Morlet, CWT)')  
+
+        [timeFreqEpochs, timeFreq_target, timeFreq_distr, timeFreq_std] = ...
+                pre_waveletWrapperForAllStimuli(epochs_raw, artifactIndices_FASTER, epochs_distr_raw, artifactIndices_FASTER_distr, epochs_std_raw, artifactIndices_FASTER_std, ...
+                alpha.amplit_gravity, handles.parameters, handles);
     
     %% PHASIC CARDIAC ANALYSIS (PCR) for the EPOCHS
     disp('    Phasic Cardiac Analysis (PCR, Kardia)  (placeholder)')
@@ -165,35 +164,8 @@ function [epochs_target, epochs_distracter, epochs_standard, ...
         
             
     %% PRE-PROCESS the data for the DENOISING
-    disp(' ')
-    
-        % We can do epoch by epoch correction, detrending epoch-by-epoch,
-        % removing artifacts epoch-by-epoch if wanted
-        if handles.parameters.artifacts.useICA == 1
-            if handles.parameters.artifacts.epochByEpochRemoveBaseline == 1
-                disp('    Epoch-by-epoch artifact/baseline correction to ERP epochs') 
-                epochs_filt_corr = pre_correctEpochByEpoch(epochs_filt, 'ERP', handles.parameters, handles);
-                epochs_CNV_filt_corr = pre_correctEpochByEpoch(epochs_CNV_filt, 'CNV', handles.parameters, handles);
-                
-                epochs_distr_filt_corr = pre_correctEpochByEpoch(epochs_distr_filt, 'ERP', handles.parameters, handles);
-                epochs_distr_CNV_filt_corr = pre_correctEpochByEpoch(epochs_CNV_distr_filt, 'CNV', handles.parameters, handles);
-                
-                epochs_std_filt_corr = pre_correctEpochByEpoch(epochs_std_filt, 'ERP', handles.parameters, handles);
-                epochs_std_CNV_filt_corr = pre_correctEpochByEpoch(epochs_CNV_std_filt, 'CNV', handles.parameters, handles);
-            else
-                disp('    Omitting Epoch-by-epoch artifact/baseline correction to ERP epochs') 
-                epochs_filt_corr = epochs_filt;
-                epochs_CNV_filt_corr = epochs_CNV_filt;
-                
-                epochs_distr_filt_corr = epochs_distr_filt;
-                epochs_distr_CNV_filt_corr = epochs_CNV_distr_filt;
-                
-                epochs_std_filt_corr = epochs_std_filt;
-                epochs_std_CNV_filt_corr = epochs_CNV_std_filt;
-                
-            end
-        end
-                        
+        disp(' ')    
+                       
         % EP_den auto requires all the epochs to be concatenated into a
         % single vector (single vector per channel)
         epochs_concan = pre_concatenateEpochs(epochs_filt, handles.parameters, handles);        
@@ -203,43 +175,8 @@ function [epochs_target, epochs_distracter, epochs_standard, ...
         epochs_concan_CNV_distr = pre_concatenateEpochs(epochs_CNV_distr_filt, handles.parameters, handles);
         
         epochs_concan_std = pre_concatenateEpochs(epochs_std_filt, handles.parameters, handles);        
-        epochs_concan_CNV_std = pre_concatenateEpochs(epochs_CNV_std_filt, handles.parameters, handles);
-        
-        % ICA could be done here for the concatenated vector if needed, one
-        % should be cautious though as the input vectors (channels) have
-        % been already "artifact corrected" above in
-        % "pre_artifactRemovalInputData" with the regress_eog method
-        if handles.parameters.artifacts.useICA == 1
-            
-            error('Fix to extend to std and distracter!')
-            epochs_concan_corr = pre_concatenateEpochs(epochs_filt_corr, handles.parameters, handles);
-            epochs_concan_CNV_corr = pre_concatenateEpochs(epochs_CNV_filt_corr, handles.parameters, handles);
-            
-            disp('       Applying ICA ("runica" from EEGLAB) for artifact removal')
-            epochs_concan = pre_artifactByICA(epochs_concan_corr, handles.parameters, handles);
-            epochs_concan_CNV = pre_artifactByICA(epochs_concan_CNV_corr, handles.parameters, handles);
-        else
-            disp('       ICA not applied to the data')
-        end
-
-    
-    %% TIME-FREQUENCY ANALYSIS FOR THE EPOCHS
-    %{
-    disp('    Time-Frequency Analysis (EEGLab, Morlet, CWT)')
-    
-        % Continuous Wavelet Transform (CWT) using a Morlet wavelet and the
-        % EEGLAB toolbox, do for the "generally filtered" and 
-        
-        % concatenate first
-        epochs_concan_raw = pre_concatenateEpochs(epochs_raw.ERP, handles.parameters, handles);
-        epochs_concan_distr_raw = pre_concatenateEpochs(epochs_distr_raw, handles.parameters, handles);
-        epochs_concan_std_raw = pre_concatenateEpochs(epochs_std_raw, handles.parameters, handles);
-        
-        % concatenated epochs
-        [ersp,itc,powbase,times,freqs,erspboot,itcboot] = analyze_timeFreqAnalysisEEGLAB(epochs_concan_raw, 'target', handles.parameters, handles);
-        %[timeFreqEpochs.distr.real, timeFreqEpochs.distr.imag, timeFreq_distr] = analyze_timeFreqAnalysisEEGLAB(epochs_concan_distr_raw, 'distracter', handles.parameters, handles);
-        %[timeFreqEpochs.std.real, timeFreqEpochs.std.imag, timeFreq_std] = analyze_timeFreqAnalysisEEGLAB(epochs_concan_std_raw, 'standard', handles.parameters, handles);
-    %}
+        epochs_concan_CNV_std = pre_concatenateEpochs(epochs_CNV_std_filt, handles.parameters, handles);        
+       
 
     %% DENOISE the EPOCHS to obtain single-trial ERPs without too much noise               
 
@@ -249,7 +186,10 @@ function [epochs_target, epochs_distracter, epochs_standard, ...
         % Automatic denoising of single-trial evoked potentials. 
         % NeuroImage 66:672–680. http://dx.doi.org/10.1016/j.neuroimage.2012.10.062.
         % Code: http://www2.le.ac.uk/centres/csn/software/ep_den
-            disp('        Denoising the ERP epochs')
+        handles.parameters.ep_den.denoiseWithEP = 1;
+        if handles.parameters.ep_den.denoiseWithEP == 1
+        
+            disp('    EP Denoising the ERP epochs')
 
             % ODDBALL / TARGET
             
@@ -277,6 +217,18 @@ function [epochs_target, epochs_distracter, epochs_standard, ...
 
                 % 2nd to obtain N2,P3 
                 epochs_ep_std = denoise_ep_den_auto_Wrapper(epochs_concan_std, handles.parameters.ep_den.scales_postStim, handles.parameters, handles);
+        else
+            
+            disp('    skipping EP Denoising the ERP epochs')
+            epochs_ep_CNV = [];
+            epochs_ep = [];
+            epochs_ep_CNV_distr = [];
+            epochs_ep_distr = [];
+            epochs_ep_CNV_std = [];
+            epochs_ep_std = [];
+            
+        end
+            
 
         % STEP / N1 measure, 
         % ----------------------------------------------------------------------------------------
@@ -317,9 +269,11 @@ function [epochs_target, epochs_distracter, epochs_standard, ...
             % YOU MIGHT WANT TO ADD A SWITCH INSTEAD analyze_ at some point
             % to select whether you wanna do EP or FILTERED.. this is just
             % a quick'n'dirty fix
+            
+            % i.e. too many inputs going in to the subfunction
         
         % ODDBALL / TARGET
-        disp('         Analyzing the ERP components')
+        disp('    Analyzing the ERP components')
         disp('            Oddballs/Targets')
         [ERP_components, epochs_ERP, epochs_ERP_CNV, epochs_ERP_raw, epochs_ERP_filt, epochs_ERP_CNV_filt, handles.parameters.oddballTask.timeVector] = ...
                 analyze_getERPcomponents(epochs_filt, epochs_CNV_filt, epochs_raw, epochs_filt, epochs_CNV_filt, 'filt', handles.parameters.oddballTask.timeWindows, handles.parameters, handles);

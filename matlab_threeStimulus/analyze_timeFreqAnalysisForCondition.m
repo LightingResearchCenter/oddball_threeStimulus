@@ -1,4 +1,4 @@
-function [realCoefs, imagCoefs, TFStat] = analyze_timeFreqAnalysisForCondition(epochsIn, erpType, parameters, handles)
+function [realCoefs, imagCoefs, TFStat] = analyze_timeFreqAnalysisForCondition(epochsIn, artifactIndices, erpType, IAF_peak, parameters, handles)
 
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction        
     if handles.flags.saveDebugMATs == 1
@@ -9,9 +9,14 @@ function [realCoefs, imagCoefs, TFStat] = analyze_timeFreqAnalysisForCondition(e
             close all
         else
             if handles.flags.saveDebugMATs == 1
-                path = handles.path;
-                save('debugPath.mat', 'path')
-                save(fullfile(path.debugMATs, debugMatFileName))            
+                if 1 == 1 % ~strcmp(erpType, 'standard')
+                    % do not save for standard tone as there are so many
+                    % trials that debugging and developing of this function
+                    % is so much slower compared to target and distracter
+                    path = handles.path;
+                    save('debugPath.mat', 'path')
+                    save(fullfile(path.debugMATs, debugMatFileName))            
+                end        
             end
         end 
     end
@@ -40,64 +45,36 @@ function [realCoefs, imagCoefs, TFStat] = analyze_timeFreqAnalysisForCondition(e
     points = round(linspace(1, noOfSamples, noOfSamples/parameters.timeFreq.timeResolutionDivider));
         % round to make sure that there are no non-integers being
         % passed as input arguments that will be used as indices
-        % inside the fastwavelet()
+        % inside the fastwavelet()    
         
-    % Now there are 6 channels coming in as the EOG and ECGs are
-    % not trimmed away so we only go through the EEG channels here  
-    realCoefs = zeros(numberOfEpochsIn, length(scales), length(points), parameters.EEG.nrOfChannels);
-    imagCoefs = zeros(numberOfEpochsIn, length(scales), length(points), parameters.EEG.nrOfChannels);
-    isNaN = zeros(numberOfEpochsIn, 1);
-
-        
-    %% Compute Time-Freq   
-        
+    %% Compute Time-Freq           
+    
+        EEG_AllTheEpochs = zeros(size(epochsIn.ERP{1},1), parameters.EEG.nrOfChannels, numberOfEpochsIn);    
         disp(['      .. combining epochs to a matrix (', erpType, ')'])
         for epoch = 1 : numberOfEpochsIn            
-            EEG_AllTheEpochs(:,:,epoch) = epochsIn.ERP{epoch}(:,1:parameters.EEG.nrOfChannels);        
-                       
-            % timep and freq should be the same for all epochs
-            % disp(['CH: ', (num2str(ch))])
-            % whos            
+            for ch = 1 : parameters.EEG.nrOfChannels                
+                if artifactIndices(epoch, ch) == 1
+                    EEG_AllTheEpochs(:,ch,epoch) = NaN;
+                else
+                    EEG_AllTheEpochs(:,ch,epoch) = epochsIn.ERP{epoch}(:,ch);
+                end                
+            end            
+            % vectorize maybe this later                       
+                % timep and freq should be the same for all epochs
+                % disp(['CH: ', (num2str(ch))])
+                % whos            
         end 
         
-        [realCoefs, imagCoefs, timep, freq, isNaN] = ...
-                analyze_timeFreqWrapper(EEG_AllTheEpochs, parameters, epoch, scales, points, timeVectorIn, erpType, handles);        
-
+        [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN] = ...
+                analyze_timeFreqWrapper(EEG_AllTheEpochs, parameters, epoch, scales, points, timeVectorIn, erpType, IAF_peak, handles);
         
-    %% Average the epochs 
-    
-        disp(['        .. averaging epochs (', erpType, ')'])
-        % now the input matrix is 4D and we want to average the epochs,
-        % which means the dimension should be 1
-        dim = 1;
-        [TFStat.real, TFStat.imag, TFStat.n] = analyze_timeFreqComputeStats(realCoefs, imagCoefs, isNaN, dim, parameters, handles);        
-        TFStat.timep = timep;
-        TFStat.freq = freqs;
-        TFStat.scale = scales;
-        try
-            TFStat.Fc = Fc;
-        catch
-            warning('fix Fc')
-            TFStat.Fc = 1;
-        end
-        TFStat.bandwidth = parameters.timeFreq.bandwidthParameter;
-
-        
-    %% DEBUG Plot
-    
-        %{
-        close all
-        figure    
-        contourLevels = 64;        
-        subplot(2,1,1)
-        contourf(TFStat.real.mean(:,:,1), 64, 'EdgeColor', 'none'); title('MEAN'); xlabel('Time'); ylabel('Hz');
-        colorbar
-        subplot(2,1,2)
-        contourf(TFStat.real.SD(:,:,1), 64, 'EdgeColor', 'none'); title('SD'); xlabel('Time'); ylabel('Hz');
-        colorbar
-        %whos        
-        %}
-                
+        % Assign to output structure
+        TFStat.real.mean = realCoefs;
+        TFStat.real.SD = realCoefs_SD;
+        TFStat.imag.mean = imagCoefs;
+        TFStat.imag.SD = imagCoefs_SD;
+        TFStat.n = sum(isNaN == 0)
+            
     
     function [realStat, imagStat, n] = analyze_timeFreqComputeStats(realCoefs, imagCoefs, isNaN, dim, parameters, handles)
                 
@@ -110,3 +87,5 @@ function [realCoefs, imagCoefs, TFStat] = analyze_timeFreqAnalysisForCondition(e
         imagStat.SD = squeeze(nanstd(imagCoefs, 0, dim));
         
             
+        
+        

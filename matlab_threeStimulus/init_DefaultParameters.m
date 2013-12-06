@@ -11,6 +11,7 @@ function parameters = init_DefaultParameters(handles)
         parameters.BioSemi.chName{7} = 'EOG'; % ch7 - EX7: EOG (was put below the right eye)
         parameters.BioSemi.chName{8} = 'HR'; % ch8 - EX8: Heart Rate (was put on the chest)   
         parameters.BioSemi.chOffset = 2; % number of channels to omit (i.e. the reference channels)
+        parameters.BioSemi.channelLocationsFile = 'centralChannelLocations.ced'; % needed for some EEGLAB functions/plugins
 
             % The input trigger signals are saved in an extra channel (the status channel), with the same sample rate as the electrode channels.
             % http://www.biosemi.com/faq/trigger_signals.htm
@@ -49,6 +50,16 @@ function parameters = init_DefaultParameters(handles)
         % General EEG Parameters
         % parameters.EEG.srate - read automatically during import of individual BDF file
         parameters.EEG.nrOfChannels = 4; % number of EEG channels
+        parameters.EEG.downsampledRate = 4096; % Hz
+                                           % There wil be problems with the
+                                           % next steps in the algorithm
+                                           % with changing this from the
+                                           % original sample rate (namely
+                                           % pre_deconcatenateEpochs.m),
+                                           % change later if you wanna have
+                                           % a working downsampling to cut
+                                           % a bit the processing time               
+    
             
     %% Band-pass filter parameters
     
@@ -100,7 +111,7 @@ function parameters = init_DefaultParameters(handles)
         % Fixed thresholds
         parameters.artifacts.fixedThr = 150; % fixed threshold (uV) of artifacts    
                                              % 100 uV in Molnar et al. (2008), http://dx.doi.org/10.1111/j.1469-8986.2008.00648.x
-        parameters.artifacts.fixedThrEOG = 150; % fixed threshold (uV) of EOG artifacts
+        parameters.artifacts.fixedThrEOG = 100; % fixed threshold (uV) of EOG artifacts
                                                % 70 uV in e.g. Acunzo et al. (2012), http://dx.doi.org/10.1016/j.jneumeth.2012.06.011
         parameters.artifacts.applyFixedThrRemoval = 1; % convert values above threshold to NaN
         parameters.artifacts.applyFixedThrEOGRemoval = 1; % convert values above threshold to NaN
@@ -124,9 +135,20 @@ function parameters = init_DefaultParameters(handles)
         parameters.artifacts.useFASTER = 1;
             parameters.artifacts.FASTER_lpf_wFreq = 95;
             parameters.artifacts.FASTER_lpf_bandwidth = 2.5;
+            parameters.artifacts.FASTER_zThreshold = 1.95; % default is 3 (for high-density EEG), the default value does
+                                                           % not reject much of artifacts so the smaller value is empirically
+                                                           % set for "better" performance
+            parameters.artifacts.FASTER_zThreshold_step4 = parameters.artifacts.FASTER_zThreshold;
+            parameters.artifacts.FASTER_skipICA = 1; % with our four EEG channels, there is typically no artifact channels, 
+                                                     % and this part just
+                                                     % is computationally
+                                                     % heavy for nothing
             
         % DETECT
         parameters.artifacts.useDETECT = 0;
+        
+        % ADJUST
+        parameters.artifacts.useADJUST = 0;
     
     %% Power spectrum analysis parameters
     
@@ -240,8 +262,14 @@ function parameters = init_DefaultParameters(handles)
         parameters.oddballTask.SOA_duration = 2.0; % [s], 
         parameters.oddballTask.ERP_duration = 0.5; % 0.50; % [s]
         parameters.oddballTask.ERP_baseline = 0.5; % [s], needed e.g. for ep_den
-            % in seconds, note that the trigger is for the whole 800 ms, from
-            % which we can trim some of the end away
+         
+        % [s], for removing baseline
+        parameters.oddballTask.ERP_baselineCorrection = -[parameters.oddballTask.ERP_baseline 0.1];
+            % typically is the same as the baseline but you could make it
+            % shorter like for example preceding 100 ms before the
+            % stimulus, or the -500ms to -100ms to avoid possible
+            % artifacting effect of anticipatory response such as CNV
+        
             
             % DC Offset / Detrend correction (pre_epochToERPs --> )
             %{
@@ -251,9 +279,9 @@ function parameters = init_DefaultParameters(handles)
             %}
             
             % Epoch baseline removel (remove the mean of the pre-stimulus
-            % baseline period for example)
-            parameters.oddballTask.baselineRemove_index1 = 1;
-            parameters.oddballTask.baselineRemove_index2 = 0 - (-parameters.oddballTask.ERP_baseline); % 500 ms
+            % baseline period for example)            
+            %parameters.oddballTask.baselineRemove_index1 = 1;
+            %parameters.oddballTask.baselineRemove_index2 = 0 - (-parameters.oddballTask.ERP_baselineCorrection); % 500 ms
 
             % for pre-stimulus power analysis
             % see e.g. Barry et al. (2000), http://dx.doi.org/10.1016/S0167-8760(00)00114-8

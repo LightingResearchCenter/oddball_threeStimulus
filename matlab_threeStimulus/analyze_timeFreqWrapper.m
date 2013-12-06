@@ -1,9 +1,9 @@
-function [realCoefs, imagCoefs, timep, freq, isNaN] = analyze_timeFreqWrapper(matrixIn, parameters, epochIndex, scales, points, timeVectorIn, erpType, handles)
+function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN] = analyze_timeFreqWrapper(matrixIn, parameters, epochIndex, scales, points, timeVectorIn, erpType, IAF_peak, handles)
         
     % For the time-frequency analysis we can use the fastwavelet.m
     % provided by the ERPWaveLab, other option would be to use "cwt"
     % from Matlab's Wavelet Toolbox if you have a license for it
-    % see e.g. http://www.bsp.brain.riken.jp/~phan/nfea/download.html     
+    % see e.g. http://www.bsp.brain.riken.jp/~phan/nfea/download.html         
     
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
     if handles.flags.saveDebugMATs == 1
@@ -32,6 +32,8 @@ function [realCoefs, imagCoefs, timep, freq, isNaN] = analyze_timeFreqWrapper(ma
     
     parameters.timeFreq.windowEpochs = 0;
     parameters.timeFreq.plotEpochs = 1;
+    
+    handles.style.lineGrey = [0.4 0.4 0.4];
     
     ITPC=0;
     ITLC=0;
@@ -69,6 +71,7 @@ function [realCoefs, imagCoefs, timep, freq, isNaN] = analyze_timeFreqWrapper(ma
                 end                           
             end
         
+            %% PLOT INPUT EPOCHS AND AVERAGE WAVEFORM
             if parameters.timeFreq.plotEpochs == 1
                 
                 rows = 3;
@@ -79,204 +82,271 @@ function [realCoefs, imagCoefs, timep, freq, isNaN] = analyze_timeFreqWrapper(ma
                     set(fig, 'Position', [0.05*scrsz(3) 0.20*scrsz(4) 0.92*scrsz(3) 0.62*scrsz(4)])
                 
                 for ch = 1 : noOfChannels
-                    
+                
+                    % EPOCHS
                     sp(1,ch) = subplot(rows,cols,ch);
                     hold on                 
 
                         trials = linspace(1, noOfEpochs, noOfEpochs);
                         epochsPerChannel = (squeeze(signal(:,ch,:)))';                    
+                        epochLimits(1,ch,:) = [min(min(epochsPerChannel)) max(max(epochsPerChannel))];
                         
                         [T, TR] = meshgrid(timeVectorIn, trials);     
-                        s = surf(T, TR, epochsPerChannel);                                  
-           
-                        set(s, 'EdgeColor', 'none')             
-                        xlabel('Time [s]'); ylabel('Epoch #');
-                        title(['Ch: ', num2str(ch)])
-                        % colorbar
+                        s(ch) = surf(T, TR, epochsPerChannel);                                        
+                        caxis manual                        
                         
+                        lab(ch,1,1) = xlabel('Time [s]'); 
+                        lab(ch,2,1) = ylabel('Epoch #');
+                        tit(ch,1) = title(['Ch: ', num2str(ch), ' (', parameters.BioSemi.chName{ch+parameters.BioSemi.chOffset}, ')']);                                                
+                        
+                        if ch == noOfChannels
+                            cb = colorbar('peer',gca,...
+                                [0.92415912031048 0.712749615975423 0.0161707632600259 0.204301075268817]);
+                            set(get(cb,'title'),'String','\muV');
+
+                        end
+                        ylim([1 noOfEpochs])
                         pos2D(1,ch,:) = get(gca, 'Position');
                         
                         %ans =
                         %0.3361    0.7093    0.1566    0.2157
 
+                    % AVERAGE WAVEFORM
                     sp(2,ch) = subplot(rows,cols,cols+ch);
                     
                         % whos
-                        epochAverage = nanmean(epochsPerChannel,1);
-                        plot(timeVectorIn, epochAverage);
-                        xlabel('Time [s]'); ylabel('\muV');
-                        title(['Averaged waveform'])
-                        drawnow
+                        dim = 1;
+                        epochAverage = nanmean(epochsPerChannel,dim);
+                        epochSD = nanstd(epochsPerChannel,0,dim);                        
+                        epochLimits(2,ch,:) = [min(epochAverage-epochSD) max(epochAverage+epochSD)];
+                        
+                        alpha = .4;                        
+                        pSh(ch,:) = plot_errorShade(timeVectorIn, epochAverage', epochSD', alpha, [0 0.60 1]);
+                        
+                        lab(ch,1,2) = xlabel('Time [s]'); 
+                        lab(ch,2,2) = ylabel('\muV');                        
+                        tit(ch,2) = title(['Averaged waveform']);                        
 
                         pos2D(2,ch,:) = get(gca, 'Position');
                         
                 end
                 
+                % STYLE
+                for ch = 1 : noOfChannels
+                    % fix the colorbar limits to be the same
+                    caxis(sp(1,ch), [min(min(epochLimits(1,:,:))) max(max(epochLimits(1,:,:)))])
+                end
+                set(s, 'EdgeColor', 'none')         
+                yLims = [min(min(epochLimits(2,:,:))) max(max(epochLimits(2,:,:)))];
+                set(sp(2,:), 'YLim', yLims)
+                
+                for ch = 1 : noOfChannels
+                    axes(sp(1,ch))
+                    zeroLineH(1,ch) = line([0 0], [1 noOfEpochs], 'Color', handles.style.lineGrey);                    
+                    axes(sp(2,ch))
+                    zeroLineH(2,ch) = line([0 0], yLims, 'Color', handles.style.lineGrey);
+                    zeroLineH(3,ch) = line([min(timeVectorIn) max(timeVectorIn)], [0 0], 'Color', handles.style.lineGrey);
+                    % push the average back to front
+                    uistack(pSh(ch,3), 'top')
+                end
+                drawnow
                 
             end
             
-        wname = 'cmor'; % the name of the Wavelet, continuous, Morlet
-
-        % Scales is the parameter b, 
-        fb = parameters.timeFreq.bandwidthParameter;        
-        resol = 12; % 12 by default        
+        %% WAVELET TRANSFORM
             
-        parameters.timeFreq.timeResolutionDivider = 32;
-        parameters.timeFreq.freqCutOff = [1 30];
-        parameters.timeFreq.freqDownsampleFactor = 1;        
+            wname = 'cmor'; % the name of the Wavelet, continuous, Morlet
 
-        timep = (linspace(min(timeVectorIn), max(timeVectorIn), length(points)))';
-
-        freqIndicesFound = 0;
-
-        %power = zeros(noOfChannels, length(scales), length(points), noOfEpochs);
-        for ch = 1 : noOfChannels
+            % Scales is the parameter b, 
+            fb = parameters.timeFreq.bandwidthParameter;        
+            resol = 12; % 12 by default        
             
-            perChannelEpochs = squeeze(signal(:,ch,:));            
-            [noOfSamples, noOfEpochs] = size(perChannelEpochs);
-    
-            artifactFreeEpochsFound = 0;
+            parameters.timeFreq.timeResolutionDivider = 32;
+            parameters.timeFreq.freqCutOff = [1 30];
+            parameters.timeFreq.freqDownsampleFactor = 1;        
 
-            for ep = 1 : noOfEpochs
-                
-                if ch == 1
-                    isNaN(ep) = logical(sum(isnan(perChannelEpochs(:,ep))));
-                    % use same indices for all the channels
-                end              
+            timep = (linspace(min(timeVectorIn), max(timeVectorIn), length(points)))';
 
-                % calculate TF only for clean epochs
-                if ~isNaN(ep)
-                    artifactFreeEpochsFound = artifactFreeEpochsFound + 1;
-                    [powerRaw, freq, scale, Cdelta, n, dj, dt, variance, coiRaw] = analyze_waveletWrapper(perChannelEpochs(:,ep), parameters.EEG.srate, parameters.timeFreq.timeResolutionDivider);
-                    % isNaN = logical((squeeze(sum(squeeze((sum(isnan(squeeze(powerRaw)),2))),1))))
-                    
+            freqIndicesFound = 0;
+
+            % find artifacted epochs
+            for ch = 1 : noOfChannels 
+                isNaN(:,ch) = logical(sum(isnan(squeeze(signal(:,ch,:)))))';
+            end
+
+            fprintf('         - ')
+            %power = zeros(noOfChannels, length(scales), length(points), noOfEpochs);
+            for ch = 1 : noOfChannels
+
+                fprintf(['ch', num2str(ch), ' '])
+                perChannelEpochs = squeeze(signal(:,ch,~isNaN(:,ch)));            
+                [noOfSamples, noOfEpochs] = size(perChannelEpochs);
+
+                %power
+                for ep = 1 : noOfEpochs
+
+                    %% WAVELET WRAPPER
+                    [power, WT, freq, scale, Cdelta, n, dj, dt, variance, coiRaw] = analyze_waveletWrapper(perChannelEpochs(:,ep), parameters.EEG.srate, parameters.timeFreq.timeResolutionDivider);                                         
+
                     % we can reduce the memory requirements slightly by cutting frequencies here
                     if freqIndicesFound == 0
-                        indicesTrim = analyze_getTFtrimIndices(freq, powerRaw, coiRaw, parameters);                                             
+                        indicesTrim = analyze_getTFtrimIndices(freq, [parameters.timeFreq.freqCutOff(1) parameters.timeFreq.freqCutOff(2)], [], [], parameters);                                             
                         freqIndicesFound = 1;
                     end
 
-                    powerTrim = powerRaw(indicesTrim(1):indicesTrim(2),:); % trim the frequency dimension
-                    freq = freq(indicesTrim(1):indicesTrim(2));
-
+                    WTtrim = WT(indicesTrim(1):indicesTrim(2),:); % trim the frequency dimension
+                    power = power(indicesTrim(1):indicesTrim(2),:); % trim the frequency dimension
+                    freq2 = freq(indicesTrim(1):indicesTrim(2));
                     %disp([min(freq) max(freq)])
                     %disp([min(timep) max(timep)])
-                    
-                    noOfNaNs_beforeInterpolation = sum(sum(isnan(powerTrim)));                    
-                    powerDownsampled = interp2(timeVectorIn, freq, powerTrim,timep,freq);                      
-                    noOfNaNs_afterInterpolation = sum(sum(isnan(powerDownsampled)));
-                    
+
+                    % downsample the time resolution, keeping the frequency
+                    % vector unchanged
+                    noOfNaNs_beforeInterpolation = sum(sum(isnan(WTtrim)));                    
+                    WT_Downsampled = interp2(timeVectorIn, freq2, WTtrim, timep, freq2);                      
+                    power = interp2(timeVectorIn, freq2, power, timep, freq2);                      
+                    noOfNaNs_afterInterpolation = sum(sum(isnan(WT_Downsampled)));
+
+                    %% NORMALIZE if needed
+                    normalizeTheWaveletSpectrum = 1; % could put this to init_DefaultParameters.m
+                                                     % but you basically
+                                                     % always want to
+                                                     % normalize?                    
+
+                        if normalizeTheWaveletSpectrum == 1 
+                            WT_Downsampled = analyze_normalizeWaveletSpectrum(WT_Downsampled, timep, freq, ...
+                                                parameters.oddballTask.ERP_baselineCorrection, parameters.timeFreq.timeResolutionDivider, parameters, handles);
+                            power = analyze_normalizeWaveletSpectrum(power, timep, freq, ...
+                                                parameters.oddballTask.ERP_baselineCorrection, parameters.timeFreq.timeResolutionDivider, parameters, handles);
+                        end
+
+                    % Check if the interpolation failed
                     if noOfNaNs_afterInterpolation > noOfNaNs_beforeInterpolation
                         warning('Number of NaNs increased after interpolation!')
                     elseif noOfNaNs_afterInterpolation ~= 0
                         warning('Some NaNs after interpolation!')
                     else
-                        power(ch,artifactFreeEpochsFound,:,:) = powerDownsampled;
+                        WTout(ep,:,:) = WT_Downsampled;
+                        powerOut(ep,:,:) = power;
                     end
-
-                    %coi(ch,ep,:,:)
-                    %pause
-
-                    % write out the results for better human readability of the
-                    % code
-                    [noOfChas, noOfEpchs, noOfScales, noOfTimePoint] = size(power);
-                    powerPerChannel = squeeze(power(ch,:,:,:)); % get rid of the singleton channel dimension
-                    [noOfEpchs, noOfScales, noOfTimePoint] = size(powerPerChannel);
-
-                    averPowerPerChannel = squeeze(nanmean(powerPerChannel(:,:,:),1));
-                    [noOfScales, noOfSamples] = size(averPowerPerChannel);
-
-                else
-
-                    % don't do anything for the artifacted epoch
-
-                end                      
-                
-            end
-
-            averageOfTheChannel(ch,:,:) = averPowerPerChannel;
-
-        end              
-
-        disp(['      - timeDiv: ', num2str(parameters.timeFreq.timeResolutionDivider), ', min f: ', num2str(min(freq)), ', max f: ', num2str(max(freq)), ', freqRes: ', num2str(freq(2)-freq(1)), ' Hz'])       
-
-        isNaN = logical(isNaN);        
-        [noOfChannels, noOfScales, noOfTimePoints, noOfEpochs] = size(power);                   
-        
-        %timep = (linspace(min(timeVectorIn), max(timeVectorIn), length(timeVectorIn)));        
-        [T, F] = meshgrid(timep, freq);
-                
-        % whos
-
-        % Plot the TF
-        if parameters.timeFreq.plotEpochs == 1
-            
-            for ch = 1 : noOfChannels
-
-                sp(3,ch) = subplot(rows,cols,(cols*2)+ch);
-                contourLevels = 64;            
-                    realCoefs(ch, :, :) = real(squeeze(averageOfTheChannel(ch,:,:)));
-                    imagCoefs(ch, :, :) = imag(squeeze(averageOfTheChannel(ch,:,:)));                    
-                    %debug_plotTF(scales, timep, freq, realCoefs, imagCoefs, T, F, handles) 
                     
-                    handle_contours = contourf(T, F, log(squeeze(realCoefs(ch, :, :))), 64, 'EdgeColor', 'none');
-                    xlabel('Time [ms]'); ylabel('Frequency [Hz]');
-                    title(['n = ', num2str(sum(isNaN == 0))])
-                    ylim([1 30])
-                    colorbar
+                    % EXTRA OUTPUTS (PARAMETERS CALCULATED)
+                    [ITPC, ITLC, ITLCN, ERSP, avWT, WTav, avWTi, WTavi] = ...
+                        analyze_wavelet_extraParametersAccum(WT_Downsampled, ITPC, ITLC, ITLCN, ERSP, avWT, WTav, avWTi, WTavi, parameters, handles);
 
-                    pos2D(3,ch,:) = get(gca, 'Position');
-                    %pos2D(1,ch,:)
-                    %pos2D(2,ch,:)
-                    %set(sp(1), 'Position', [pos2D(1,ch,1) pos2D(1,ch,2) pos2D(3,ch,3) pos2D(1,ch,4)])
-                    %set(sp(2), 'Position', [pos2D(2,ch,1) pos2D(2,ch,2) pos2D(3,ch,3) pos2D(2,ch,4)])
-                    %0.7484    0.1100    0.1146    0.2157                    
+                    % write out the results for better human readability of the code                   
+                    % [noOfEpochs2, noOfScales, noOfTimePoints] = size(power);
+                    averPowerPerChannel = squeeze(nanmean(powerOut(:,:,:),1));
+                    stdOfPowerPerChannel = squeeze(nanstd(powerOut(:,:,:),1));
+                    % [noOfScales, noOfTimePoints] = size(averPowerPerChannel);
+                    % disp([noOfScales noOfTimePoint])
 
-            end
-            
-            try
-                if handles.figureOut.debugON == 1 
-                    drawnow
-                    dateStr = plot_getDateString(); % get current date as string
-                    %cd(path.outputFigures)            
-                    fileNameOut = ['timeFreqDebug_',strrep(handles.inputFile, '.pdf', ''), '_', erpType, dateStr];
-
-                    disp(['         ... saving figure to disk (', fileNameOut, '.png]'])
-                    export_fig(fullfile(handles.path.figuresOut, fileNameOut), handles.figureOut.resolution, handles.figureOut.antialiasLevel, fig(1))
-                    %cd(path.code)
                 end
-            catch err
-                err
-            end
+                
+                [extraParam.ITPC{ch}, extraParam.ITLC{ch}, extraParam.ITLCN{ch}, extraParam.ERSP{ch}, extraParam.avWT{ch}, extraParam.WTav{ch}, extraParam.Induced{ch}] = ...
+                    analyze_wavelet_extraParameters(ITPC, ITLC, ITLCN, ERSP, avWT, WTav, avWTi, WTavi, noOfEpochs, parameters, handles);
+
+                % now the different channels might have different amount of
+                % epochs so we cannot put all the values to a single matrix, so
+                % we use a cell
+                %averPowerPerChannel = nanmean(WTout(:,:,:),1);
+                %stdOfPowerPerChannel = nanstd(WTout(:,:,:),1);
+                averageOfTheChannel{ch}(:,:) = averPowerPerChannel;
+                stdOfTheChannel{ch}(:,:) = stdOfPowerPerChannel;
+
+            end       
+
+            fprintf('\n')
+            disp(['            - timeDiv: ', num2str(parameters.timeFreq.timeResolutionDivider), ', min f: ', num2str(min(freq)), ', max f: ', num2str(max(freq)), ', freqRes: ', num2str(freq(2)-freq(1)), ' Hz'])       
+
+    %% PLOT THE TIME-FREQUENCY 
+    
+        isNaN = logical(isNaN);        
+        [noOfScales, noOfTimePoints, noOfEpochs] = size(WTout);                   
+        noOfChannels = length(averageOfTheChannel);
+        [T, F] = meshgrid(timep, freq2);  
+                   
+        for ch = 1 : noOfChannels
+
+            %% Output to the calling function
+            realCoefs{ch}(:,:) = real(squeeze(averageOfTheChannel{ch}(:,:)));
+                size(realCoefs{ch})
+            realCoefs_SD{ch}(:,:) = real(squeeze(stdOfTheChannel{ch}(:,:)));
+            imagCoefs{ch}(:,:) = imag(squeeze(averageOfTheChannel{ch}(:,:)));                    
+            imagCoefs_SD{ch}(:,:) = imag(squeeze(stdOfTheChannel{ch}(:,:)));
+                
+            %% Plot the TF
+            if parameters.timeFreq.plotEpochs == 1
+                
+                sp(3,ch) = subplot(rows,cols,(cols*2)+ch);
+                contourLevels = 256;
+                Z = averageOfTheChannel{ch};
+
+                
+                %debug_plotTF(scales, timep, freq, realCoefs, imagCoefs, T, F, handles) 
+                whos
+                [c, handle_contours{ch}] = contourf(T, F, Z, contourLevels, 'EdgeColor', 'none');                    
+                epochLimits(3,ch,:) = [min(min(Z)) max(max(Z))];
+                
+                lab(ch,1,3) = xlabel('Time [ms]'); 
+                lab(ch,2,3) = ylabel('Frequency [Hz]');                    
+                tit(ch,3) = title(['n = ', num2str(sum(isNaN(:,ch) == 0)), ', IAF = ', num2str(IAF_peak), ' Hz']);
+                ylim([1 30])
+
+                % annotate the individual alpha range                    
+                alphaLimits = IAF_peak + parameters.powerAnalysis.eegBins.freqs{1}; % 1 is now hard-coded, see init_defaultParameters.m to make this more robust
+
+                hold on
+                lineHandle(ch,1) = line([min(timep) max(timep)], [alphaLimits(1) alphaLimits(1)]);
+                lineHandle(ch,2) = line([min(timep) max(timep)], [alphaLimits(2) alphaLimits(2)]);
+                hold off
+
+                if ch == noOfChannels
+                    cb = colorbar('peer',gca,...
+                        [0.929333764553688 0.104454685099846 0.0161707632600259 0.205837173579109]);
+                    set(get(cb,'title'),'String','%');
+
+                end
+
+                pos2D(3,ch,:) = get(gca, 'Position');
+                %pos2D(1,ch,:)
+                %pos2D(2,ch,:)
+                %set(sp(1), 'Position', [pos2D(1,ch,1) pos2D(1,ch,2) pos2D(3,ch,3) pos2D(1,ch,4)])
+                %set(sp(2), 'Position', [pos2D(2,ch,1) pos2D(2,ch,2) pos2D(3,ch,3) pos2D(2,ch,4)])
+                %0.7484    0.1100    0.1146    0.2157                    
+
+            end                     
             
         end
+        
+        % STYLE
+        set(lineHandle, 'Color', 'w', 'LineStyle', '-')
+        set(sp, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase-2) 
+        set(tit, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase-1, 'FontWeight', 'bold') 
+        set(lab, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase-2, 'FontWeight', 'bold')            
+        
+            for ch = 1 : noOfChannels
+                caxis(sp(3,ch), [min(min(epochLimits(3,:,:))) max(max(epochLimits(3,:,:)))]);
+            end
+            
+        % AUTO-SAVE FIGURE
+        try
+            if handles.figureOut.debugON == 1 
+                drawnow
+                dateStr = plot_getDateString(); % get current date as string
+                %cd(path.outputFigures)            
+                fileNameOut = ['timeFreqDebug_',strrep(handles.inputFile, '.bdf', ''), '_', erpType, dateStr];
+
+                disp(['         ... saving figure to disk (', fileNameOut, '.png]'])
+                export_fig(fullfile(handles.path.figuresOut, fileNameOut), handles.figureOut.resolution, handles.figureOut.antialiasLevel, fig(1))
+                %cd(path.code)
+            end
+        catch err
+            err
+        end           
+        
 
         %% CHECK OTHER DERIVED measures from tfanalysis.m of ERPWAVELAB
+            % and add later
 
-
-    function indicesTrim = analyze_getTFtrimIndices(f, powerRaw, coiRaw, parameters)
-
-        % low cut
-        indexTemp = find(f == parameters.timeFreq.freqCutOff(1));           
-        if isempty(~indexTemp)      
-            freqDiff = (f - parameters.timeFreq.freqCutOff(1));
-            freqDiff(freqDiff > 0) = NaN;
-            [val1, fixed_ind1] = min(freqDiff);
-            disp(['    The closest match is = ', num2str(f(fixed_ind1)), ' Hz (index = ', num2str(fixed_ind1), ')'])
-            indexTemp = fixed_ind1;
-        end
-        indicesTrim(1) = indexTemp; % only one value should be found
-
-        % hi cut
-        indexTemp = find(f == parameters.timeFreq.freqCutOff(2));           
-        if isempty(~indexTemp)      
-            freqDiff = (f - parameters.timeFreq.freqCutOff(2));
-            % get the minimum of values above zero to ensure that the
-            % frequency picked is higher than the high cutoff
-            freqDiff(freqDiff < 0) = NaN;
-            [val2, fixed_ind2] = min(freqDiff);
-            disp(['    The closest match is = ', num2str(f(fixed_ind2)), ' Hz (index = ', num2str(fixed_ind2), ')'])
-            indexTemp = fixed_ind2;
-        end
-        indicesTrim(2) = indexTemp; % only one value should be found
 
