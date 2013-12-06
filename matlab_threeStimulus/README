@@ -12,6 +12,10 @@ EEG (general)
 * The BioSig project (not included), http://biosig.sourceforge.net/
 * EEGLAB (not included), so download and add to Matlab path, http://sccn.ucsd.edu/eeglab/
 
+ARTIFACT Rejection
+* FASTER (included), http://www.mee.tcd.ie/neuraleng/Research/Faster
+* ADJUST (included), http://www.unicog.org/pm/pmwiki.php/MEG/RemovingArtifactsWithADJUST
+
 DENOISING
 * EP_DEN (included) for single-trial denoising by Quiroga et al. -> P300, http://www.vis.caltech.edu/~rodri/EP_den/EP_den_home.htm
 * STEP (included) for single-trial denoising by Hu et al. -> N1, http://iannettilab.webnode.com/n1measure/
