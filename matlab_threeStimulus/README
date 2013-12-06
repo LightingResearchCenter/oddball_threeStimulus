@@ -24,6 +24,13 @@ ERP
 * ERPLAB (not included), http://erpinfo.org/erplab
 * ERPWAVELAB (not included) by Morten Mørup et al., no need to download, http://www.erpwavelab.org/
 
+WAVELET DENOISING (ECG)
+* WaveLab (not included), http://statweb.stanford.edu/~wavelab/Wavelab_850/index_wavelab850.html
+* WavDen (not included), http://www-ljk.imag.fr/SMS/software/GaussianWaveDen/
+
+EMD DENOISING (ECG)
+* EMD denoising by Yannis Kopsinis (included), http://www.see.ed.ac.uk/~ykopsini/software.html
+
 EXTRA
 * MFDFA by Espen Ihlen (included), http://www.ntnu.edu/inm/geri/software
 
