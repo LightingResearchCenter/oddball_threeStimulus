@@ -113,11 +113,7 @@ function [epochs_target, epochs_distracter, epochs_standard, ...
         if handles.parameters.artifacts.useFASTER == 1
             
             % use the ERP-filtered epochs as the reference as it should be
-            % smoother
-            ref = 
-            ref_distr =
-            ref_std = 
-                        
+            % smoother                        
             disp('    FASTER Artifact Rejection')           
             [epochs_raw, epochs_distr_raw, epochs_std_raw, artifactIndices_FASTER, artifactIndices_FASTER_distr, artifactIndices_FASTER_std]...
                 = pre_FASTER_forAllStimuli(epochs_raw, epochs_distr_raw, epochs_std_raw, ...

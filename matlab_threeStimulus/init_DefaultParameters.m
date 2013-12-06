@@ -109,9 +109,9 @@ function parameters = init_DefaultParameters(handles)
     %% Artifact rejection parameters    
     
         % Fixed thresholds
-        parameters.artifacts.fixedThr = 150; % fixed threshold (uV) of artifacts    
+        parameters.artifacts.fixedThr = 100; % fixed threshold (uV) of artifacts    
                                              % 100 uV in Molnar et al. (2008), http://dx.doi.org/10.1111/j.1469-8986.2008.00648.x
-        parameters.artifacts.fixedThrEOG = 100; % fixed threshold (uV) of EOG artifacts
+        parameters.artifacts.fixedThrEOG = 70; % fixed threshold (uV) of EOG artifacts
                                                % 70 uV in e.g. Acunzo et al. (2012), http://dx.doi.org/10.1016/j.jneumeth.2012.06.011
         parameters.artifacts.applyFixedThrRemoval = 1; % convert values above threshold to NaN
         parameters.artifacts.applyFixedThrEOGRemoval = 1; % convert values above threshold to NaN

@@ -26,7 +26,8 @@ function [rPeakTimes, rPeakAmplitudes] = QRS_peakDetection(ecg_data, fs)
         spIndex = 1;
         sp(spIndex) = subplot(rows,cols,spIndex);
         plot(t,ecg_data)
-        xlabel('second');ylabel('Volts');title('Input ECG Signal')
+        xlabel('second');ylabel('\muVolts');title('Input ECG Signal')
+        xlim([0 max(t)])
     end
         
 
@@ -40,7 +41,8 @@ function [rPeakTimes, rPeakAmplitudes] = QRS_peakDetection(ecg_data, fs)
         spIndex = 2;
         sp(spIndex) = subplot(rows,cols,spIndex);
         plot(t,ecg_data)
-        xlabel('second');ylabel('Volts');title(' ECG Signal after cancellation DC drift and normalization')
+        xlabel('second');ylabel('\muVolts');title(' ECG Signal after cancellation DC drift and normalization')
+        xlim([0 max(t)])
     end
     
 
@@ -61,7 +63,7 @@ function [rPeakTimes, rPeakAmplitudes] = QRS_peakDetection(ecg_data, fs)
         spIndex = 3;
         sp(spIndex) = subplot(rows,cols,spIndex);
         plot([0:length(x2)-1]/fs,x2)
-        xlabel('second');ylabel('Volts');title(' ECG Signal after LPF')
+        xlabel('second');ylabel('\muVolts');title(' ECG Signal after LPF')
         xlim([0 max(t)])
     end
 
@@ -81,7 +83,7 @@ function [rPeakTimes, rPeakAmplitudes] = QRS_peakDetection(ecg_data, fs)
         spIndex = 4;
         sp(spIndex) = subplot(rows,cols,spIndex);
         plot([0:length(x3)-1]/fs,x3)
-        xlabel('second');ylabel('Volts');title(' ECG Signal after HPF')
+        xlabel('second');ylabel('\muVolts');title(' ECG Signal after HPF')
         xlim([0 max(t)])
     end
     
@@ -104,7 +106,8 @@ function [rPeakTimes, rPeakAmplitudes] = QRS_peakDetection(ecg_data, fs)
         spIndex = 5;
         sp(spIndex) = subplot(rows,cols,spIndex);
         plot([0:length(x4)-1]/fs,x4)
-        xlabel('second');ylabel('Volts');title(' ECG Signal after Derivative')
+        xlabel('second');ylabel('\muVolts');title(' ECG Signal after Derivative')
+        xlim([0 max(t)])
     end
     
     
@@ -118,7 +121,8 @@ function [rPeakTimes, rPeakAmplitudes] = QRS_peakDetection(ecg_data, fs)
         spIndex = 6;
         sp(spIndex) = subplot(rows,cols,spIndex);
         plot([0:length(x5)-1]/fs,x5)
-        xlabel('second');ylabel('Volts');title(' ECG Signal Squareing')
+        xlabel('second');ylabel('\muVolts');title(' ECG Signal Squareing')
+        xlim([0 max(t)])
     end
 
     %% MOVING WINDOW INTEGRATION
@@ -136,7 +140,8 @@ function [rPeakTimes, rPeakAmplitudes] = QRS_peakDetection(ecg_data, fs)
         spIndex = 7;
         sp(spIndex) = subplot(rows,cols,spIndex);
         plot([0:length(x6)-1]/fs,x6)
-        xlabel('second');ylabel('Volts');title(' ECG Signal after Averaging')
+        xlabel('second');ylabel('\muVolts');title(' ECG Signal after Averaging')
+        xlim([0 max(t)])
     end
     
     %% FIND QRS POINTS WHICH IT IS DIFFERENT THAN PAN-TOMPKINS ALGORITHM
@@ -150,7 +155,7 @@ function [rPeakTimes, rPeakAmplitudes] = QRS_peakDetection(ecg_data, fs)
         hold on
         plot (t, ecg_data/max(ecg_data))
         box on
-        xlabel('second');ylabel('Integrated')
+        xlabel('second'); ylabel('\muVolts'); title('Integrated')
         xlim([1 3])
     end
 

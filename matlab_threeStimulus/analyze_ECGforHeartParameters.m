@@ -47,24 +47,29 @@ function heart = analyze_ECGforHeartParameters(ECG, ECG_raw, handles)
             ECG_raw = pre_remove5060hz_modified(ECG_raw, HDR, 'PCA 60');  
             heart.vector.ECG_afterNotch = ECG_raw;
     
-
-    %% Modified Pan-Tompkins algorithm implementaion)
+    %% WAVELET / EMD DENOISING
     
-        % the algorithm fails at 4,096 (too many peaks)        
-        x_new = (linspace(1, length(ECG_raw), length(ECG_raw) / parameters.heart.downsampleFactor))';        
-        ECG_raw_downsampled = pre_nyquistInterpolation(ECG_raw, length(x_new),1,0); % Nyquist interpolation  
+        ECG = pre_denoiseECG(heart.vector.ECG_time, ECG_raw, parameters.EEG.srate, parameters, handles);
+        ECG = ECG';
+            
+            
+    %% QRS-DETECTION: METHOD 1 - Modified Pan-Tompkins algorithm implementaion)              
+    
+        % the algorithm fails at 4,096 (too many peaks), so we need to downsample the signal       
+        parameters.heart.downsampleFactor = parameters.heart.downsampleFactor * 4;
+        x_new = (linspace(1, length(ECG), length(ECG) / parameters.heart.downsampleFactor))';
+        ECG_downsampled = pre_nyquistInterpolation(ECG, length(x_new),1,0); % Nyquist interpolation  
         heartrateSampleRate = parameters.EEG.srate/parameters.heart.downsampleFactor;
         disp(['          .. QRS Detection with Pan-Tompkins'])
-        [rPeakTimes, rPeakAmplitudes] = QRS_peakDetection(ECG_raw_downsampled, heartrateSampleRate);
+        [rPeakTimes, rPeakAmplitudes] = QRS_peakDetection(ECG_downsampled, heartrateSampleRate);
 
         % No peaks found
         if isnan(rPeakTimes)
             heart = analyze_ECG_fillTheFieldWithNan();
             return
-        end
-        
+        end        
         heart.vector.ECG_timeDownSampled = x_new / heartrateSampleRate;
-        heart.vector.ECG_rawDownSampled = ECG_raw_downsampled;
+        heart.vector.ECG_rawDownSampled = ECG_downsampled;
         
         recDuration = length(ECG_raw) / parameters.EEG.srate;
         HR = (1 / (recDuration / length(rPeakTimes))) * 60;
@@ -106,9 +111,9 @@ function heart = analyze_ECGforHeartParameters(ECG, ECG_raw, handles)
             %}
 
         %% By Grasshopper.iics : http://www.codeproject.com/Articles/309938/ECG-Feature-Extraction-with-Wavelet-Transform-and
-            % --> http://www.codeproject.com/Articles/4353/ECG-recording-storing-filtering-and-recognition
+            % --> http://www.codeproject.com/Articles/4353/ECG-recording-storing-filtering-and-recognition    
     
-        
+            
     %% Create R-R interval vector    
     [rrTimes, rrPeakInterval, rrPeakAmplitude] = pre_createRRintervalVector(rPeakTimes, rPeakAmplitudes, parameters, handles);
     

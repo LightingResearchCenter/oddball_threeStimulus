@@ -372,7 +372,7 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                 if handles.figureOut.ON == 1                     
                     drawnow
                     dateStr = plot_getDateString(); % get current date as string          
-                    fileNameOut = sprintf('%s%s%s%s', 'debug_FASTER', '_', erpType, '_', strrep(handles.inputFile, '.bdf', ''), '.png');
+                    fileNameOut = sprintf('%s%s%s%s', 'debug_FASTER', '_', strrep(handles.inputFile, '.bdf', ''), erpType,  '_', '.png');
                     export_fig(fullfile(handles.path.figuresOut, fileNameOut), handles.figureOut.resolution, handles.figureOut.antialiasLevel, fig)
                     %cd(path.code)
                 end
