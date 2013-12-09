@@ -18,25 +18,32 @@ function [epochs, epochs_distr, epochs_std, epoch_indicesOut] = pre_epochToERPs(
     end
     %}
     
+    
     % whos
     baselineCorr = (parameters.oddballTask.ERP_baseline * parameters.EEG.srate);
     endOfEpochCorr = baselineCorr + (parameters.oddballTask.ERP_duration * parameters.EEG.srate);
     
         if parameters.oddballTask.ERP_baseline ~= parameters.oddballTask.ERP_duration
-            warning('Your baseline and post-stimulus ERP windows are not the same length, considering making them equal for optimal performance of the EP_DEN denoising (init_defaultParameters')
+            %warning('Your baseline and post-stimulus ERP windows are not the same length, considering making them equal for optimal performance of the EP_DEN denoising (init_defaultParameters)')
             % The EP Wavelet Denoising algorithm would require the baseline
             % and ERP duration to have the same length
+            
+            % Now actually best probably to fix the baselines just to be
+            % different for EP DENOISING than for the rest of the analysis
+            % script, time-frequency analysis requires rather long duration
+            % after stimulus onset (900 ms in Peng et al. (2012), 
+         
         end
     
         integerTest = mod(baselineCorr,1);
         if integerTest ~= 0
-            warning('non-integer epoch definition, check .ERP_baseline from init_DefaultParameters.m. Floored the index')
+            %warning('non-integer epoch definition, check .ERP_baseline from init_DefaultParameters.m. Floored the index')
             baselineCorr = floor(baselineCorr);
         end
 
         integerTest = mod(endOfEpochCorr,1);
         if integerTest ~= 0
-            warning('non-integer epoch definition, check .ERP_duration from init_DefaultParameters.m. Floored the index')
+            %warning('non-integer epoch definition, check .ERP_duration from init_DefaultParameters.m. Floored the index')
             endOfEpochCorr = floor(endOfEpochCorr);
         end
     

@@ -14,8 +14,36 @@ function triggers = import_processTriggers(triggersRaw, triggerSignals, triggerP
     end
       
     % see, http://www.mathworks.com/help/comm/ref/de2bi.html, from Communications System Toolbox
-    % download: http://seed.ucsd.edu/mediawiki/images/6/66/De2bi.m    
-    triggerBinVector = logical(import_De2bi(triggersRaw, triggerPrecision));    
+    % download: http://seed.ucsd.edu/mediawiki/images/6/66/De2bi.m          
+    
+    triggerBinVector = logical(import_De2bi(triggersRaw, triggerPrecision));
+    %toc  % -> 1.502745 seconds.
+    
+        % Alternative ways
+        % http://stackoverflow.com/questions/5744576/convert-decimal-to-binary-vector
+        
+        %{
+        tic
+        out = zeros(length(triggersRaw), triggerPrecision);
+        for rows = 1 : length(triggersRaw)
+            out(rows,:) = binary2vector(triggersRaw(rows), triggerPrecision);
+        end    
+        toc  % -> 69.399970 seconds.
+
+        tic
+        out = zeros(length(triggersRaw), triggerPrecision);
+        for rows = 1 : length(triggersRaw)
+            binVec(rows,:) = dec2bin(triggersRaw(rows), triggerPrecision)-'0';
+        end        
+        toc  % -> long?
+
+        tic
+        binVec = zeros(length(triggersRaw), triggerPrecision);
+        for rows = 1 : length(triggersRaw)
+            binVec(rows,:) = bitget(triggersRaw(rows),1:triggerPrecision);
+        end  
+        toc % -> long?
+        %}
     
     if handles.flags.showDebugMessages == 1
         [rowsIn, colsIn] = size(triggerBinVector);
@@ -128,3 +156,25 @@ function triggers = import_processTriggers(triggersRaw, triggerSignals, triggerP
         Bit 23 (MSB)	
         High if ActiveTwo MK2
         %}    
+    
+    
+    function out = binary2vector(data,nBits)
+
+        powOf2 = 2.^[0:nBits-1];
+
+        %# do a tiny bit of error-checking
+        if data > sum(powOf2)
+           error('not enough bits to represent the data')
+        end
+
+        out = false(1,nBits);
+
+        ct = nBits;
+
+        while data>0
+        if data >= powOf2(ct)
+        data = data-powOf2(ct);
+        out(ct) = true;
+        end
+        ct = ct - 1;
+        end

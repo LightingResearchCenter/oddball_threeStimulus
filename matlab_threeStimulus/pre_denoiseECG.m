@@ -1,5 +1,6 @@
 function ECG = pre_denoiseECG(t, ECG_raw, Fs, parameters, handles)
         
+    %{
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
     if handles.flags.saveDebugMATs == 1
         debugMatFileName = 'tempECG_Denoising.mat';
@@ -15,6 +16,7 @@ function ECG = pre_denoiseECG(t, ECG_raw, Fs, parameters, handles)
             end
         end 
     end
+    %}
     
     % debug param
     timeOffset = 0.8;
@@ -62,6 +64,9 @@ function ECG = pre_denoiseECG(t, ECG_raw, Fs, parameters, handles)
     ECG = ECG(1:indEnd);
     t = t(1:indEnd);
     
+    % mean of 90-100% percentile
+    %ECG_highest_10percentPercentile = nanmean(prctile(ECG,[95 100]))
+    
     %% BANDPASS FILTER
         % remove trends with a bandpass filter, and some high-frequency noise
         % with a range of 2.3-30 Hz, see for example Data acquisition lab notes
@@ -77,7 +82,6 @@ function ECG = pre_denoiseECG(t, ECG_raw, Fs, parameters, handles)
             ECG = pre_bandbassFilter(ECG, Fs, cutOffs, filterOrder, filterOrder, handles);
             error('Bandpass filter parameters too "extreme"')
         end
-
                 
     
     

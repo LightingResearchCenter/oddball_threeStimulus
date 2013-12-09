@@ -1,7 +1,8 @@
 function [epochs, stimulusON] = pre_findERP_Epochs(data, triggers, triggerUsed, stimulusType, alpha, found_oddballON, epochIndices_IN, baselineCorr, endOfEpochCorr, epochs, parameters, handles)
     
+    
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
-    if 1 == 2 % this function is called so often that there is a significant overhead if you save this every time to disk
+    if 1 == 1 % this function is called so often that there is a significant overhead if you save this every time to disk
         debugMatFileName = 'tempFindEpochs_ERPs.mat';
         if nargin == 0
             load('debugPath.mat')
@@ -15,6 +16,7 @@ function [epochs, stimulusON] = pre_findERP_Epochs(data, triggers, triggerUsed, 
             end
         end
     end
+    
 
     j = 1;
         initCount = 0;
@@ -61,6 +63,7 @@ function [epochs, stimulusON] = pre_findERP_Epochs(data, triggers, triggerUsed, 
                     searchWindowSecs = 1.5;
                     audioTriggerTemp = triggers.audio(stimulusON(j,1):stimulusON(j,1)+(parameters.EEG.srate*searchWindowSecs));
                     audioOnsetIndexRaw = find(audioTriggerTemp == 0, 1, 'first');
+                    
                     try
                         audioOnsetIndex(j) = audioOnsetIndexRaw + stimulusON(j,1); % add back the trimmed portion
                     catch err
@@ -100,7 +103,7 @@ function [epochs, stimulusON] = pre_findERP_Epochs(data, triggers, triggerUsed, 
 
                 stimulusON(j,2) = i; % end            
 
-                durationOfStimulusWithJitter(j) = stimulusON(j,2) - (originalOnset(j) + baselineCorr); % duration of oddball in samples            
+                durationOfStimulusWithJitter(j) = stimulusON(j,2) - (originalOnset(j)); % duration of oddball in samples            
 
                     % the oddball OFFSET is now found at 200 ms (as that is how
                     % the trigger is defined), so we need to add 0.6 sec *
@@ -119,7 +122,7 @@ function [epochs, stimulusON] = pre_findERP_Epochs(data, triggers, triggerUsed, 
                 % here as now number of samples just added to start point, but
                 % this part of the code kept here to quantify the actual jitter
                 % if needed/wanted
-                stimulusON(j,2) = stimulusON(j,1) + endOfEpochCorr -1;                               
+                stimulusON(j,2) = stimulusON(j,1) + endOfEpochCorr -1;                   
                     
                 if rem(j,divider) == 0
                     fprintf('%s%s', num2str(j), ' ')
@@ -160,9 +163,6 @@ function [epochs, stimulusON] = pre_findERP_Epochs(data, triggers, triggerUsed, 
         epochs.meanStimulusDurationMilliSecStd = 1000*epochs.meanStimulusDurationStd/parameters.EEG.srate;
         
         fprintf('%s\n', ' ') % line change
-
-        
-
         
     else
         % now we have done it already so we could just avoid the for-loop
@@ -186,6 +186,9 @@ function [epochs, stimulusON] = pre_findERP_Epochs(data, triggers, triggerUsed, 
         
         durationOfStimulus(j) = stimulusON(j,2) - stimulusON(j,1);
         epochsRAW.ERP{j} = data(stimulusON(j,1):stimulusON(j,2), :); % time domain EEG of the oddball        
+        
+        %plot(epochsRAW.ERP{j})
+        %pause
 
         % if whole epoch is artifacted
         if sum(sum(isnan(epochsRAW.ERP{j}))) > 0
@@ -206,7 +209,8 @@ function [epochs, stimulusON] = pre_findERP_Epochs(data, triggers, triggerUsed, 
             % vectors of time and button presses, if you need to output,
             % index these
             reactionRaw.timeVec = (-durationOfStimulus(j):1:durationOfStimulus(j))';
-            reactionRaw.button  = triggers.button(stimulusON(j,1) : (stimulusON(j,2)+durationOfStimulus(j)));
+            %reactionRaw.button  = triggers.button(stimulusON(j,1) : (stimulusON(j,2)+durationOfStimulus(j)));
+            reactionRaw.button  = triggers.button(stimulusON(j,1) : (stimulusON(j,2)));
 
             % DEBUG        
             if (j == 241 || (length(stimulusON) == 39 && j == 39) || j == 41) && debugEpochExtraction == 1

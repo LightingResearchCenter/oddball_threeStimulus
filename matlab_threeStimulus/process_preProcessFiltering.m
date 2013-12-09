@@ -1,9 +1,10 @@
-function [dataMatrix_filtGeneral, firstBandpassFilteredMatrix, artifactNaN_indices, dataMatrix_filtAlpha, dataMatrix_filt, dataMatrix_filt_CNV] = process_preProcessFiltering(dataMatrixIn, handles)
+function [dataMatrix_filtGeneral, onlyNotchFilteredMatrix, artifactNaN_indices, dataMatrix_filtAlpha, dataMatrix_filt, dataMatrix_filt_CNV] = process_preProcessFiltering(dataMatrixIn, handles)
 
     % [rowsIn, colsIn] = size(dataMatrixIn); % e.g. a lot of rows x 8 channels
     offset = 2; % get rid of reference channels
 
     % remove the baseline (reference)
+    disp(['   remove reference (mean of ear electrodes)'])
     dataMatrix = pre_removeReference(dataMatrixIn(:,1), dataMatrixIn(:,2), dataMatrixIn, offset, handles.parameters, handles);
     
     %% GENERAL
@@ -21,7 +22,7 @@ function [dataMatrix_filtGeneral, firstBandpassFilteredMatrix, artifactNaN_indic
         rawMax = max(max(abs(matrixIn(:,1:handles.parameters.EEG.nrOfChannels))));
 
         % use subfunction wrapper
-        [dataMatrix_filtGeneral, firstBandpassFilteredMatrix, artifactNaN_indices] ...
+        [dataMatrix_filtGeneral, onlyNotchFilteredMatrix, artifactNaN_indices] ...
             = pre_componentArtifactFiltering(matrixIn, artifactIndices, rawMax, rowsIn, colsIn, ... % EEG matrix parameters
             handles.parameters.filter.bandPass_loFreq, handles.parameters.filter.bandPass_hiFreq, handles.parameters.filterOrder, handles.parameters.filterOrderSteep, ... % filter parameters
             dataType, handles.parameters, handles); % general settings                 
@@ -32,7 +33,7 @@ function [dataMatrix_filtGeneral, firstBandpassFilteredMatrix, artifactNaN_indic
         % Alpha-filtered ERP, as done by Barry et al. (2000) for
         % example, http://dx.doi.org/10.1016/S0167-8760(00)00114-8                   
         dataType = 'Alpha';
-        matrixIn = firstBandpassFilteredMatrix;
+        matrixIn = onlyNotchFilteredMatrix;
         artifactIndices = artifactNaN_indices;
         [rowsIn, colsIn] = size(matrixIn);
         rawMax = max(max(abs(matrixIn(:,1:handles.parameters.EEG.nrOfChannels))));
@@ -47,7 +48,7 @@ function [dataMatrix_filtGeneral, firstBandpassFilteredMatrix, artifactNaN_indic
 
         % For ERP (P3, N2, P3-N2)
         dataType = 'ERP';
-        matrixIn = firstBandpassFilteredMatrix;
+        matrixIn = onlyNotchFilteredMatrix;
         [rowsIn, colsIn] = size(matrixIn);
         rawMax = max(max(abs(matrixIn(:,1:handles.parameters.EEG.nrOfChannels))));
 
@@ -61,7 +62,7 @@ function [dataMatrix_filtGeneral, firstBandpassFilteredMatrix, artifactNaN_indic
 
         % For CNV
         dataType = 'CNV';
-        matrixIn = firstBandpassFilteredMatrix;
+        matrixIn = onlyNotchFilteredMatrix;
         [rowsIn, colsIn] = size(matrixIn);
         rawMax = max(max(abs(matrixIn(:,1:handles.parameters.EEG.nrOfChannels))));
 

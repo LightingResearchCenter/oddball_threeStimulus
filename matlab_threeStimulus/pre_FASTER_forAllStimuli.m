@@ -21,9 +21,25 @@ function [epochs_raw, epochs_distr_raw, epochs_std_raw, artifactIndices_FASTER, 
     end
 
     % get the fixed artifact indices for the raw input
-    [NaN_indices_EEG, NaN_indices_EOG, fixedIndices] = pre_artifactFASTER_fixedThresholds(epochs_rawInput, epochs_EOG, handles.parameters, handles);
-    [NaN_indices_EEG_distr, NaN_indices_EOG_distr, fixedIndices_distr] = pre_artifactFASTER_fixedThresholds(epochs_distr_rawInput, epochs_distr_EOG, handles.parameters, handles);
-    [NaN_indices_EEG_std, NaN_indices_EOG_std, fixedIndices_std] = pre_artifactFASTER_fixedThresholds(epochs_std_rawInput, epochs_std_EOG, handles.parameters, handles);
+    debugOn = 1; % show debug plots
+    
+    
+    disp('      .. Find artifacts (Fixed EEG/EOG, Moving Average, Step)')
+    
+        % TARGET
+        disp('       : TARGET')
+        [NaN_indices_EEG, NaN_indices_EOG, NaN_indices_moving, NaN_indices_step, fixedIndices] = ...
+            pre_artifactFASTER_fixedThresholds_ERPLAB(epochs_rawInput, epochs_EOG, debugOn, handles.parameters, handles);    
+
+        % DISTRACTER
+        disp('       : DISTRACTER')
+        [NaN_indices_EEG_distr, NaN_indices_EOG_distr, NaN_indices_moving_distr, NaN_indices_step_distr, fixedIndices_distr] = ...
+            pre_artifactFASTER_fixedThresholds_ERPLAB(epochs_distr_rawInput, epochs_distr_EOG, debugOn, handles.parameters, handles);
+        
+        % STANDARD
+        disp('       : STANDARD')
+        [NaN_indices_EEG_std, NaN_indices_EOG_std, NaN_indices_moving_std, NaN_indices_step_std, fixedIndices_std] = ...
+            pre_artifactFASTER_fixedThresholds_ERPLAB(epochs_std_rawInput, epochs_std_EOG, debugOn, handles.parameters, handles);
 
     % concatenate
     epochs_concan_raw = pre_concatenateEpochs(epochs_raw, handles.parameters, handles);
@@ -31,12 +47,15 @@ function [epochs_raw, epochs_distr_raw, epochs_std_raw, artifactIndices_FASTER, 
     epochs_concan_std_raw = pre_concatenateEpochs(epochs_std_raw, handles.parameters, handles);
 
     % FASTER (3rd party) used with a wrapper funtion
+    disp('        .. FASTER algorithm')
     [epochs_concan_FASTER, artifactIndices_FASTER] = pre_artifactFASTER_wrapper(epochs_concan_raw, fixedIndices,...
-        NaN_indices_EEG, NaN_indices_EOG, epochs_rawInput, handles.parameters, 'target', handles);
+        NaN_indices_EEG, NaN_indices_EOG, NaN_indices_moving, NaN_indices_step, epochs_rawInput, handles.parameters, 'target', handles);
+    
     [epochs_concan_FASTER_distr, artifactIndices_FASTER_distr] = pre_artifactFASTER_wrapper(epochs_concan_distr_raw, fixedIndices_distr,...
-        NaN_indices_EEG, NaN_indices_EOG, epochs_distr_rawInput, handles.parameters, 'distracter', handles);            
+        NaN_indices_EEG_distr, NaN_indices_EOG_distr, NaN_indices_moving_distr, NaN_indices_step_distr, epochs_distr_rawInput, handles.parameters, 'distracter', handles);            
+    
     [epochs_concan_FASTER_std, artifactIndices_FASTER_std] = pre_artifactFASTER_wrapper(epochs_concan_std_raw, fixedIndices_std,...
-        NaN_indices_EEG, NaN_indices_EOG, epochs_std_rawInput, handles.parameters, 'standard', handles);
+        NaN_indices_EEG_std, NaN_indices_EOG_std, NaN_indices_moving_std, NaN_indices_step_std, epochs_std_rawInput, handles.parameters, 'standard', handles);
 
     % deconcatenate back
     epochs_deconcan_FASTER = pre_deconcatenateEpochs(epochs_concan_FASTER, handles.parameters, handles);

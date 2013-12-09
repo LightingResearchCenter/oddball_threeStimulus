@@ -1,4 +1,5 @@
-function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fixedIndices, EEGfixedIndices, EOGfixedIndices, rawInput, parameters, erpType, handles)
+function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fixedIndices, EEGfixedIndices, EOGfixedIndices, ...
+                                            NaN_indices_moving, NaN_indices_step, rawInput, parameters, erpType, handles)
 
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction        
     if handles.flags.saveDebugMATs == 1
@@ -316,7 +317,9 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                 end
             end           
             
-            artifactsRemoved_fixed = sum(sum(fixedIndices));
+            artifactsRemoved_fixed = sum(sum(fixedIndices));            
+            artifacts_CRAP = NaN_indices_moving + NaN_indices_step;
+            artifactsRemoved_CRAP = sum(sum(artifacts_CRAP));
             disp(['          ... ', num2str(artifactsRemoved_fixed/parameters.EEG.nrOfChannels), ' epochs rejected (Fixed) from ', num2str(noOfEpochs1), ' epochs'])
         
             % update output
@@ -329,7 +332,7 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                 if strcmp(erpType, 'target') || strcmp(erpType, 'distracter')  || strcmp(erpType, 'standard')
                     subplotIndices = [2 5 8 11];
                     sp_i = plot_FASTER_steps(fig, sp, sp_i, leg, rows, cols, indelec_st2, zs_st2, indelec_st3, zs_st3, num_pca, activData, blinkData, zs_st4, ...
-                        epochPerChannelIsArtifacted, epochPerChannelStep2Corrected, fixedIndices, subplotIndices, parameters, handles);
+                        indelec_st4, indelec_st2, fixedIndices, artifacts_CRAP, subplotIndices, parameters, handles);
                 end
             end       
         
@@ -402,7 +405,8 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
 %% SUBFUNCTIONS
 %% -------------------------------
 
-    function sp_i = plot_FASTER_steps(fig, sp, sp_i, leg, rows, cols, indelec_st2, zs_st2, indelec_st3, zs_st3, num_pca, activData, blinkData, zs_st4, epochPerChannelIsArtifacted, epochPerChannelStep2Corrected, isNaN_fixed, subplotIndices, parameters, handles)
+    function sp_i = plot_FASTER_steps(fig, sp, sp_i, leg, rows, cols, indelec_st2, zs_st2, indelec_st3, zs_st3, num_pca, ...
+            activData, blinkData, zs_st4, epochPerChannelIsArtifacted, epochPerChannelStep2Corrected, isNaN_fixed, artifacts_CRAP, subplotIndices, parameters, handles)
 
         % STEP 2
         sp_i = sp_i + 1;
@@ -496,15 +500,17 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
         sp(sp_i) = subplot(rows,cols, subplotIndices(4));
         
             hold on
-            b(1) = bar(logical(sum(epochPerChannelStep2Corrected,2)), 'r');
-            b(2) = bar(logical(sum(epochPerChannelIsArtifacted,2)), 'g');
-            b(3) = bar(logical(sum(isNaN_fixed,2)), 'b');
+            b(1) = bar(0.5*double(logical(sum(epochPerChannelStep2Corrected,2))), 'k');
+            b(2) = bar(0.5*double(logical(sum(epochPerChannelIsArtifacted,2))), 'g');
+            b(3) = bar(logical(sum(artifacts_CRAP,2)), 'm');
+            b(4) = bar(logical(sum(isNaN_fixed,2)), 'b');
             hold off
             
             % change alpha of bars (transparency)
             alpha = .75;
             ch = get(b(1),'child');
                 set(ch,'facea',alpha)
+            alpha = .55;
             ch = get(b(2),'child');
                 set(ch,'facea',alpha)
             ch = get(b(3),'child');
@@ -513,14 +519,17 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                 xlabel('Epochs')
                 ylabel('Artifact (ON/OFF)')            
                 title('Artifacted Epochs')
-                set(gca, 'XLim', [1 length(isNaN_fixed)], 'YLim', [0 1.2]) 
+                set(gca, 'XLim', [1-0.5 length(isNaN_fixed)+0.5], 'YLim', [0 1.2]) 
                 
                 leg(5) = legend(['Step2, n=', num2str(sum(indelec_st2 == 1), '%3.0f')],...
                                 ['Step4, n=', num2str(sum(sum(epochPerChannelIsArtifacted))/parameters.EEG.nrOfChannels, '%3.2f')],...
+                                ['CRAP, n=', num2str(sum(sum(artifacts_CRAP))/parameters.EEG.nrOfChannels, '%3.2f')],...
                                 ['Fixed, n=', num2str(sum(sum(isNaN_fixed))/parameters.EEG.nrOfChannels, '%3.2f')]);
                     set(leg(5), 'Position', [0.576378809869376 0.255879059350504 0.0576923076923077 0.0506718924972004])
                     legend('boxoff')
                     
+                ch = get(b(1),'child');
+                    uistack(ch, 'top')
 
         % STEP 5: GRAND AVERAGE (skip)
         %sp(5) = subplot(rows,cols, subplotIndices(4));

@@ -1,4 +1,4 @@
-function b = De2bi(varargin)
+function b = import_De2bi(varargin)
 %DE2BI Convert decimal numbers to binary numbers.
 %   B = DE2BI(D) converts a nonnegative integer decimal vector D to a
 %   binary matrix B. Each row of the binary matrix B corresponds to one
@@ -176,7 +176,7 @@ elseif ~(strcmp(msbFlag, 'right-msb') || strcmp(msbFlag, 'left-msb'))
 end
 
 % Initial value.
-b = zeros(len_d, n);
+b = false(len_d, n); % PT: changed, instead of double use logical (less memory use)
 
 % Perform conversion.
 %Vectorized conversion for P=2 case

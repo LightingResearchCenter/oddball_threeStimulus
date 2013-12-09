@@ -80,8 +80,8 @@ function parameters = init_DefaultParameters(handles)
         parameters.filter.filterForAlpha = 1;
 
         % GENERAL
-        parameters.filter.bandPass_loFreq = 0.01;
-        parameters.filter.bandPass_hiFreq = 50;
+        parameters.filter.bandPass_loFreq = 0.001;
+        parameters.filter.bandPass_hiFreq = 55;
         parameters.filterOrder = 6; % filter order   
         parameters.filterOrderSteep = 100; % additional pass of filtering with steeper cut
         parameters.applySteepBandPass = 0;        
@@ -109,9 +109,9 @@ function parameters = init_DefaultParameters(handles)
     %% Artifact rejection parameters    
     
         % Fixed thresholds
-        parameters.artifacts.fixedThr = 100; % fixed threshold (uV) of artifacts    
+        parameters.artifacts.fixedThr = 150; % fixed threshold (uV) of artifacts    
                                              % 100 uV in Molnar et al. (2008), http://dx.doi.org/10.1111/j.1469-8986.2008.00648.x
-        parameters.artifacts.fixedThrEOG = 70; % fixed threshold (uV) of EOG artifacts
+        parameters.artifacts.fixedThrEOG = 100; % fixed threshold (uV) of EOG artifacts
                                                % 70 uV in e.g. Acunzo et al. (2012), http://dx.doi.org/10.1016/j.jneumeth.2012.06.011
         parameters.artifacts.applyFixedThrRemoval = 1; % convert values above threshold to NaN
         parameters.artifacts.applyFixedThrEOGRemoval = 1; % convert values above threshold to NaN
@@ -144,11 +144,30 @@ function parameters = init_DefaultParameters(handles)
                                                      % is computationally
                                                      % heavy for nothing
             
+        
+        % CRAP of ERPLAB
+        % http://erpinfo.org/erplab/erplab-documentation/documentation-archive-for-previous-versions/v3.x-documentation/tutorial/Artifact_Detection.html
+        % http://erpinfo.org/erplab/erplab-documentation/manual_4/Artifact_Detection.html               
+        parameters.artifacts.applyContinuousCRAP = 1;
+        parameters.artifacts.CRAP.continuous_ampth = [-120 120];
+        parameters.artifacts.CRAP.continuous_windowWidth = 2000;
+        parameters.artifacts.CRAP.continuous_windowStep = 1000;
+        
+            % Epoch correction in "pre_artifactFASTER_fixedThresholds_ERPLAB"
+            parameters.artifacts.CRAP.movWind_ampTh = [-100 100]; % uV
+            parameters.artifacts.CRAP.movWind_windowWidth = 200; % ms
+            parameters.artifacts.CRAP.movWind_windowStep = 20; % ms
+
+            parameters.artifacts.CRAP.step_ampTh = 15; % uV
+            parameters.artifacts.CRAP.step_windowWidth = 400; % ms
+            parameters.artifacts.CRAP.step_windowStep = 10; % ms
+                                                     
         % DETECT
         parameters.artifacts.useDETECT = 0;
         
         % ADJUST
         parameters.artifacts.useADJUST = 0;
+        
     
     %% Power spectrum analysis parameters
     
@@ -260,7 +279,7 @@ function parameters = init_DefaultParameters(handles)
         
         parameters.oddballTask.triggerDuration = 0.2; % [s]
         parameters.oddballTask.SOA_duration = 2.0; % [s], 
-        parameters.oddballTask.ERP_duration = 0.5; % 0.50; % [s]
+        parameters.oddballTask.ERP_duration = 0.9; % 0.50; % [s]
         parameters.oddballTask.ERP_baseline = 0.5; % [s], needed e.g. for ep_den
          
         % [s], for removing baseline

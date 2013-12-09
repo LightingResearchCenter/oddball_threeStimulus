@@ -61,7 +61,7 @@ function [epochs_target, epochs_distracter, epochs_standard, ...
             
             disp('     ERP FILTERED')  
             [epochs_filt, epochs_distr_filt, epochs_std_filt, epoch_indices] = pre_epochToERPs(dataMatrix_filt(:,:), triggers, [], alpha, handles.parameters, 'filt', handles);    
-        
+
             disp('     RAW INPUT')  
             [epochs_rawInput, epochs_distr_rawInput, epochs_std_rawInput, ~] = pre_epochToERPs(dataMatrixIn(:,:), triggers, epoch_indices, alpha, handles.parameters, 'rawInput', handles);       
                         

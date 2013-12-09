@@ -1,5 +1,21 @@
 function [dataMatrix, triggers, info, sampleRate] = IMPORT_eegData(i, fileNameIn, inputFiles, handles)   
 
+    [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
+    if handles.flags.saveDebugMATs == 1
+        debugMatFileName = 'tempIMPORT.mat';
+        if nargin == 0
+            load('debugPath.mat')
+            load(fullfile(path.debugMATs, debugMatFileName))
+            close all
+        else
+            if handles.flags.saveDebugMATs == 1
+                path = handles.path;
+                save('debugPath.mat', 'path')
+                save(fullfile(path.debugMATs, debugMatFileName))            
+            end
+        end  
+    end
+
     % Raw import, import as it is saved
     % fileNameIn
     disp(['  Import the BDF file (', fileNameIn{i}, ')'])

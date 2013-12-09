@@ -12,20 +12,20 @@ function power=spPCRower(F, PSD, freq, parameters, callType)
         for bin = indexBin : indexBin % noOfFreqBins       
             indexTemp = find(F == parameters.heart.freqBins.(freqBinNames{bin})(1));           
             if isempty(~indexTemp)
-                warning(['Start of the frequency bin ', num2str(parameters.heart.freqBins.(freqBinNames{bin})(1)), ' Hz not found for component "', freqBinNames{bin}, '"'])             
-                disp([freqBinNames{bin}, '  Check your frequency resolution settings (now ', num2str(parameters.heart.freqResolution), ' Hz or bin frequency ranges "parameters.heart.freqBins"'])
+                %warning(['Start of the frequency bin ', num2str(parameters.heart.freqBins.(freqBinNames{bin})(1)), ' Hz not found for component "', freqBinNames{bin}, '"'])             
+                %disp([freqBinNames{bin}, '  Check your frequency resolution settings (now ', num2str(parameters.heart.freqResolution), ' Hz or bin frequency ranges "parameters.heart.freqBins"'])
                 [val1, fixed_ind1] = min(abs(F-parameters.heart.freqBins.(freqBinNames{bin})(1)));
-                disp(['    The closest match is = ', num2str(val1), ' Hz (index = ', num2str(fixed_ind1), ')'])
+                disp(['               .. ', freqBinNames{bin}, ' The closest start freq match is = ', num2str(val1), ' Hz (index = ', num2str(fixed_ind1), ')'])
                 indexTemp = fixed_ind1;
             end
             freqIndices(bin,1) = indexTemp; % only one value should be found
             
             indexTemp = find(F == parameters.heart.freqBins.(freqBinNames{bin})(2));          
             if isempty(~indexTemp)
-                warning(['End of the frequency bin ', num2str(parameters.heart.freqBins.(freqBinNames{bin})(2)), ' Hz not found for component "', freqBinNames{bin}, '"'])
-                disp([freqBinNames{bin}, '  Check your frequency resolution settings (now ', num2str(parameters.heart.freqResolution), ' Hz or bin frequency ranges, "parameters.heart.freqBins"'])
+                %warning(['End of the frequency bin ', num2str(parameters.heart.freqBins.(freqBinNames{bin})(2)), ' Hz not found for component "', freqBinNames{bin}, '"'])
+                %disp([freqBinNames{bin}, '  Check your frequency resolution settings (now ', num2str(parameters.heart.freqResolution), ' Hz or bin frequency ranges, "parameters.heart.freqBins"'])
                 [val2, fixed_ind2] = min(abs(F - parameters.heart.freqBins.(freqBinNames{bin})(2)));
-                disp(['   The closest match is = ', num2str(val2), ' Hz (index = ', num2str(fixed_ind2), ')'])
+                disp(['               .. ', freqBinNames{bin}, ' The closest end freq match is = ', num2str(val2), ' Hz (index = ', num2str(fixed_ind2), ')'])
                 indexTemp = fixed_ind2;
             end
             freqIndices(bin,2) = indexTemp; % only one value should be found

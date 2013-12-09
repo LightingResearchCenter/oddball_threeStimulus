@@ -57,24 +57,38 @@ function heart = analyze_heart_DFA_Wrapper(heart, hp, thp, rrTimes, rrPeakInterv
         qmax = 5;
         qres = abs(((qmin - qmax) / 0.2))+1;    
         % eps = 1; % 1 millisecond with HRV
+        warning off 
         try
-            tic                
-            [s,q,Hq,h,Dh,logFq] = MFDFA(hp,m,scmin,scmax,ressc,qmin,qmax,qres);
+            tic                      
+            [s,q,Hq,h,Dh,logFq] = MFDFA(hp,m,scmin,scmax,ressc,qmin,qmax,qres);            
             timing = toc;
-        catch err            
+        catch err     
+            
             if strcmp(err.identifier, 'MATLAB:UndefinedFunction')
                 err
                 error('Have you added the MFDFA with subfolders to your Matlab path, as the function was not found now!')
+                
             elseif strcmp(err.identifier, 'MATLAB:badRectangle')
                 
                 % Improper assignment with rectangular empty matrix.
                 % Error in MFDFA_eps (line 78)
                 %    Fq0(ns)=exp(0.5*mean(log(RMS0{ns}.^2)));
+                disp('                  -> bad rectangle ')
+                err
+                err.identifier       
+                h = NaN;
+                Dh = NaN;
             
+            elseif strcmp(err.identifier, 'MATLAB:badsubscript')
+                
+                disp('                  -> bad susubscript ')
+                h = NaN;
+                Dh = NaN;
+                
             else
                 err
                 err.identifier
-                warning('Some other error here, add cases while you get new errors!')
+                disp('                  -> Some other error here, add cases while you get new errors!')
                 h = NaN;
                 Dh = NaN;
             end

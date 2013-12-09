@@ -24,8 +24,8 @@ function dataMatrix = pre_removeReference(refRightEar, refLeftEar, dataMatrixIn,
 
     % Remove the power line interference    
     HDR.SampleRate = parameters.EEG.srate;    
-    ref_right_notch60 = pre_remove5060hz_modified(refRightEar, HDR, 'NOTCH 60');
-    ref_left_notch60 = pre_remove5060hz_modified(refLeftEar, HDR, 'NOTCH 60');
+    ref_right_notch60 = pre_remove5060hz_modified(refRightEar, HDR, 'PCA 60');
+    ref_left_notch60 = pre_remove5060hz_modified(refLeftEar, HDR, 'PCA 60');
     
         if handles.flags.showDebugPlots == 1
             figure('Color', 'w')
@@ -33,7 +33,7 @@ function dataMatrix = pre_removeReference(refRightEar, refLeftEar, dataMatrixIn,
             plot(refRightEar, 'r')
             plot(ref_right_notch60, 'b')
             hold off
-            legend('In', 'After Notch60')
+            legend('In', 'After PCA60')
         end
 
     % add denoising filter if you want to have more of a general trend?

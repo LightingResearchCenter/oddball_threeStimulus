@@ -19,7 +19,7 @@ function [matrixOut, filtOnly, NaN_indices] = pre_componentArtifactFiltering(mat
     %}
 
     %% Notch filter the mains (60 Hz) 
-    % out using the modified fitler from BioSig
+    % out using the modified filter from BioSig
     if strcmp(dataType, 'General') == 1
         matrixOut1a = zeros(rowsIn, colsIn);  % e.g. a lot of rows x 6 channels            
         HDR.SampleRate = parameters.EEG.srate;
@@ -28,8 +28,11 @@ function [matrixOut, filtOnly, NaN_indices] = pre_componentArtifactFiltering(mat
             for j = 1 : colsIn                        
                 matrixOut1a(:,j) = pre_remove5060hz_modified(matrixIn(:,j), HDR, 'PCA 60');                
             end
+            
+        filtOnly = matrixOut1a;
     else
         matrixOut1a = matrixIn;
+        filtOnly = matrixIn;
     end
     
         
@@ -38,6 +41,7 @@ function [matrixOut, filtOnly, NaN_indices] = pre_componentArtifactFiltering(mat
     if strcmp(dataType, 'General') == 1
         [~, NaN_indices, numberOfNaNs] = pre_artifactFixedThreshold(matrixOut1a(:,1:handles.parameters.EEG.nrOfChannels), matrixOut1a(:,parameters.EEG.nrOfChannels + 1), parameters, handles);
         % noOfNans1 = sum(sum(isnan(matrixOut1a(:,1:handles.parameters.EEG.nrOfChannels)))) % there shouldn't be any at this point
+        disp(['    - BANDPASS FILTERING'])
     else
         NaN_indices = artifactIndices;
     end
@@ -45,16 +49,17 @@ function [matrixOut, filtOnly, NaN_indices] = pre_componentArtifactFiltering(mat
     %% band-pass filter the data using a a subfunction            
     matrixOut1 = zeros(rowsIn, colsIn);  % e.g. a lot of rows x 6 channels            
     
+        disp(['     .. ', dataType,  ' (', num2str(loFreq), '-', num2str(hiFreq), ' Hz), order = ', num2str(filterOrder), ', ZeroPhase'])
         for j = 1 : colsIn                        
             matrixOut1(:,j) = pre_bandbassFilter(matrixOut1a(:,j), parameters.EEG.srate, [hiFreq, loFreq], filterOrder, filterOrderSteep, handles);                
         end
         
-        filtOnly = matrixOut1;
+        
         
     % if parameters.artifacts.useFASTER == 1
         % we remove the artifacts for epochs later using FASTER, see the call from
         % PROCESS_singleFile()
-        matrixOut = matrixOut1;
+        % matrixOut = matrixOut1;
 
         % disp(['   Skipping BioSig Artifact removal, using FASTER later (', dataType, ') threshold: ', num2str(parameters.artifacts.fixedThr), ' uV, bandpass: ', num2str(loFreq), '-', num2str(hiFreq), ' Hz'])                
 
@@ -73,6 +78,7 @@ function [matrixOut, filtOnly, NaN_indices] = pre_componentArtifactFiltering(mat
         
    
     %% remove artifacts (i.e. deviant voltages, ECG and EOG artifacts)
+    %{
     
         % correct the NanIndices to have 6 columns
             [rows,cols] = size(NaN_indices);
@@ -107,6 +113,7 @@ function [matrixOut, filtOnly, NaN_indices] = pre_componentArtifactFiltering(mat
             disp(['   ', dataType, ': Not applying the regress_eog() -based artifact removal'])
 
         end
+    %}
 
     if strcmp(dataType, 'General') == 1
         % Don't convert the fixed threshold artifacts to NaNs
@@ -115,6 +122,8 @@ function [matrixOut, filtOnly, NaN_indices] = pre_componentArtifactFiltering(mat
     else
         % remove now the fixed threshold artifacts and do the other
         % operations
-        matrixOut(NaN_indices_corr) = NaN;
+        % matrixOut(NaN_indices_corr) = NaN;
+        % Don't convert the fixed threshold artifacts to NaNs
+        matrixOut = matrixOut1;
     end
     

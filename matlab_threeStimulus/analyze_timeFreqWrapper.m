@@ -134,7 +134,12 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN] 
                 % STYLE
                 for ch = 1 : noOfChannels
                     % fix the colorbar limits to be the same
-                    caxis(sp(1,ch), [min(min(epochLimits(1,:,:))) max(max(epochLimits(1,:,:)))])
+                    try
+                        caxis(sp(1,ch), [min(min(epochLimits(1,:,:))) max(max(epochLimits(1,:,:)))])
+                    catch err
+                        err
+                        error('Probably no epochs plotted so you cannot fix the colorbar limits, handle earlier that the script "knows" that there are no artifact-free epochs')
+                    end
                 end
                 set(s, 'EdgeColor', 'none')         
                 yLims = [min(min(epochLimits(2,:,:))) max(max(epochLimits(2,:,:)))];

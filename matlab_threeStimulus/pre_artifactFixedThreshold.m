@@ -1,5 +1,24 @@
 function [dataOut, NaN_indices, numberOfNaNs] = pre_artifactFixedThreshold(dataIn, EOG, parameters, handles)
     
+    %{
+    [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
+    if handles.flags.saveDebugMATs == 1
+        debugMatFileName = 'tempArtifactRemoval.mat';
+        if nargin == 0
+            load('debugPath.mat')
+            load(fullfile(path.debugMATs, debugMatFileName))
+            close all
+        else
+            if handles.flags.saveDebugMATs == 1
+                path = handles.path;
+                save('debugPath.mat', 'path')
+                save(fullfile(path.debugMATs, debugMatFileName))            
+            end
+        end  
+    end
+    %}
+    
+
     [dataSamples, dataChannels] = size(dataIn);
     
     % Use short variable names for detrending filtering
@@ -11,6 +30,8 @@ function [dataOut, NaN_indices, numberOfNaNs] = pre_artifactFixedThreshold(dataI
     %% Use fixed threshold        
     
         if parameters.artifacts.applyFixedThrRemoval == 1     
+            
+            disp(['    - ARTIFACT STATISTICS'])
 
             %{
             for i = 1 : dataChannels
@@ -43,11 +64,12 @@ function [dataOut, NaN_indices, numberOfNaNs] = pre_artifactFixedThreshold(dataI
             % status on command window of how many artifacts were found
             numberOfNaNs = length(NaN_indices_fixed(NaN_indices_fixed == 1));
             NaNPercentage = (numberOfNaNs / (dataSamples*dataChannels)) * 100;
-            disp(['     .. Fixed threshold - ', num2str(parameters.artifacts.fixedThr), ' uV, ', 'Number of NaNs: ', num2str(numberOfNaNs), ', percentage: ', num2str(NaNPercentage), '%'])
+            disp(['       FIXED'])
+            disp(['       .. Fixed threshold - ', num2str(parameters.artifacts.fixedThr), ' uV, ', 'Number of NaNs: ', num2str(numberOfNaNs), ', percentage: ', num2str(NaNPercentage), '%'])
 
         else
             NaN_indices_fixed = zeros(length(dataIn(:,1)),1);
-            disp(['     .. Artifacts not removed with fixed threshold'])                       
+            disp(['     .. Artifacts not searched with the fixed EEG threshold'])
         end
     
     %% Find excessive eye movements 
@@ -63,13 +85,36 @@ function [dataOut, NaN_indices, numberOfNaNs] = pre_artifactFixedThreshold(dataI
             % status on command window of how many artifacts were found
             numberOfNaNs_EOG = length(NaN_indices_EOG(NaN_indices_EOG == 1));
             NaNPercentage = (numberOfNaNs_EOG / dataSamples) * 100;
-            disp(['     .. .. EOG threshold - ', num2str(parameters.artifacts.fixedThrEOG), ' uV, ',  'Number of NaNs: ', num2str(numberOfNaNs_EOG), ', percentage: ', num2str(NaNPercentage), '%'])
+            disp(['       .. .. EOG threshold - ', num2str(parameters.artifacts.fixedThrEOG), ' uV, ',  'Number of NaNs: ', num2str(numberOfNaNs_EOG), ', percentage: ', num2str(NaNPercentage), '%'])
             
         else
             
             NaN_indices_EOG = zeros(length(dataIn(:,1)),1);
-            disp(['     .. Artifacts not removed with EOG threshold'])  
+            disp(['     .. Artifacts not searched with the fixed EOG threshold'])  
             
+        end
+        
+    %% C.R.A.P from ERPLAB
+    
+        
+        % Use EEGLAB structure fields
+        EEG.data = dataIn';
+        EEG.epoch = [];
+        EEG.srate = parameters.EEG.srate;
+        EEG.pnts = length(dataIn);
+        EEG.event(1).type = 0;
+        EEG.xmin = 0;
+        EEG.xmax = length(EEG.data) / parameters.EEG.srate;
+        EEG.setname = 'dummy blank string';
+        
+        if parameters.artifacts.applyContinuousCRAP == 1            
+            crap_NaNIndices = crap_mod(EEG, parameters.artifacts.CRAP.continuous_ampth, parameters.artifacts.CRAP.continuous_windowWidth, parameters.artifacts.CRAP.continuous_windowStep, ...
+                        1:parameters.EEG.nrOfChannels);
+            noOfNans = sum(crap_NaNIndices);
+            NaNPercentage = (noOfNans / dataSamples) * 100;
+            disp(['      C.R.A.P - ', num2str(parameters.artifacts.CRAP.continuous_ampth(1)), ' - ', num2str(parameters.artifacts.CRAP.continuous_ampth(2)), ' uV, '...
+                         'wWidth = ', num2str(parameters.artifacts.CRAP.continuous_windowWidth), ', wStep = ', num2str(parameters.artifacts.CRAP.continuous_windowStep), ' ms, '...
+                         'Number of NaNs: ', num2str(noOfNans), ', percentage: ', num2str(NaNPercentage), '%'])                               
         end
 
     %% Combine the indices
@@ -87,6 +132,16 @@ function [dataOut, NaN_indices, numberOfNaNs] = pre_artifactFixedThreshold(dataI
         
         NaN_indices = logical(NaN_indices_fixed + NaN_indices_EOG);
         dataOut = dataIn_detrended;
+        
+        %{
+        doNotRemoveArtifacs = 1;
+        if doNotRemoveArtifacs == 1
+            disp(['       .. .. Artifacts were not converted to NaNs at this point'])
+        else
+            dataOut(NaN_indices) = NaN;
+            disp(['       .. .. Artifacts were converted to NaNs'])
+        end
+        %}
         dataOut(NaN_indices) = NaN;
         
         

@@ -26,7 +26,14 @@ function heart = analyze_ECGforHeartParameters(ECG, ECG_raw, handles)
     
     debugPlotsOn = 0;    
     
-    
+    ECG_highest_10percentPercentile = nanmean(prctile(ECG,[90 100]));
+    maxOfECG = nanmax(ECG);
+    disp(['          . ECG: 90-100% percentile = ', num2str(ECG_highest_10percentPercentile), ', max = ', num2str(maxOfECG), ' uV'])
+    % If garbage data
+    if ECG_highest_10percentPercentile == 22 % IMPROVE THIS LATER, AMPLITUDE SHOULD BE LOW IF ELECTRODE COMES OFF DURING EXPERIMENT
+        heart = analyze_ECG_fillTheFieldWithNan();
+        return
+    end    
     
     %% DEBUG PLOT    
     if debugPlotsOn == 1  
@@ -55,16 +62,23 @@ function heart = analyze_ECGforHeartParameters(ECG, ECG_raw, handles)
             
     %% QRS-DETECTION: METHOD 1 - Modified Pan-Tompkins algorithm implementaion)              
     
+        % For a review of QRS detection methods, see for example:
+            % Arzeno NM, Deng Z-D, Poon C-S. 2008. 
+            % Analysis of First-Derivative Based QRS Detection Algorithms. 
+            % IEEE Transactions on Biomedical Engineering 55:478–484. 
+            % http://dx.doi.org/10.1109/TBME.2007.912658.
+    
         % the algorithm fails at 4,096 (too many peaks), so we need to downsample the signal       
-        parameters.heart.downsampleFactor = parameters.heart.downsampleFactor * 4;
+        parameters.heart.downsampleFactor = 1; %parameters.heart.downsampleFactor;
         x_new = (linspace(1, length(ECG), length(ECG) / parameters.heart.downsampleFactor))';
         ECG_downsampled = pre_nyquistInterpolation(ECG, length(x_new),1,0); % Nyquist interpolation  
         heartrateSampleRate = parameters.EEG.srate/parameters.heart.downsampleFactor;
         disp(['          .. QRS Detection with Pan-Tompkins'])
-        [rPeakTimes, rPeakAmplitudes] = QRS_peakDetection(ECG_downsampled, heartrateSampleRate);
-
+        [rPeakTimes, rPeakAmplitudes] = QRS_peakDetection(ECG_downsampled, heartrateSampleRate, handles);
+        
         % No peaks found
-        if isnan(rPeakTimes)
+        if logical(sum(isnan(rPeakTimes))) || length(rPeakTimes) < 20 % at least 20 peaks have to be found
+            disp('        garbage ECG !!! ')
             heart = analyze_ECG_fillTheFieldWithNan();
             return
         end        
