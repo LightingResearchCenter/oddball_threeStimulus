@@ -16,45 +16,63 @@ function [dataMatrix, triggers, info, sampleRate] = IMPORT_eegData(i, fileNameIn
         end  
     end
 
-    % Raw import, import as it is saved
-    % fileNameIn
-    disp(['  Import the BDF file (', fileNameIn{i}, ')'])
-    [info, dataMatrix, triggersRaw] = import_AndyReadBDFrev3(inputFiles, handles.parameters.SignalsToRead, handles.parameters.EEG.invertPolarity);     
-    sampleRate = info.srate; % [Hz]
-    info.calFactors = (info.PhysMax-info.PhysMin)./(info.DigMax-info.DigMin);
+    % The import is quite time-consuming, and the trigger processing jams
+    % the computer quite nicely, so we can import each .bdf only once and
+    % same the import to a MAT-file on disk
     
-        if handles.flags.showDebugMessages == 1; 
-            disp(info)            
-        end
+    [importedAlready, matFileToLoad] = import_checkIfAlreadyImported(fileNameIn{i}, handles.path.matFilesInput);
+    if importedAlready == 1
         
-        if handles.parameters.EEG.invertPolarity == 1
-           disp('INVERT POLARITY was TRUE so EEG signal is inverted!'); disp(' ');
-        end
+        disp([' ', fileNameIn{i}, ' imported previously, loading from the .MAT copy'])
+        load(fullfile(handles.path.matFilesInput, matFileToLoad))
+        
+    else
+    
+        % Raw import, import as it is saved
+        % fileNameIn
+        disp([' This file has not been imported previously'])
+        disp(['  Import the BDF file (', fileNameIn{i}, ')'])
+        [info, dataMatrix, triggersRaw] = import_AndyReadBDFrev3(inputFiles, handles.parameters.SignalsToRead, handles.parameters.EEG.invertPolarity);     
+        sampleRate = info.srate; % [Hz]
+        info.calFactors = (info.PhysMax-info.PhysMin)./(info.DigMax-info.DigMin);
 
-    % Process the triggers
-    triggers = import_processTriggers(triggersRaw, handles.parameters.triggerSignals, handles.parameters.triggerPrecision, handles);
-    
-    % Now the EEG data file is started manually some seconds before the
-    % PsychoPy routine is started, thus there is some extra at the end and
-    % at the beginning of the .BDF file so we can trim this excess out
-    % using the trigger .recON which is set high by the PsychoPy routine
-    % when the experiment is started
-    
-        % first the data matrix (EEG + EOG + ECG)
-        dataMatrixTemp = dataMatrix;
-        dataMatrix = dataMatrixTemp(triggers.recON,:);
-        
-        % correct the triggers also
-        triggerNames = fieldnames(triggers);
-        
-            for i = 1 : length(triggerNames)            
-                triggers.(triggerNames{i}) = triggers.(triggerNames{i})(triggers.recON);                
+            if handles.flags.showDebugMessages == 1; 
+                disp(info)            
             end
-    
-        samplesTrimmed = length(dataMatrixTemp) - length(dataMatrix);
-        samplesTrimSec = samplesTrimmed / sampleRate;
-        lengthSec = length(dataMatrix) / sampleRate;
-        disp(['     .. trimmed off ', num2str(samplesTrimmed),  ' samples (', num2str(samplesTrimSec, 4), ' seconds) [.recON trigger]'])
-        disp(['       .. duration of the recording: ', num2str(lengthSec, 4), ' seconds (', num2str(length(dataMatrix)), ' samples @ ', num2str(sampleRate), ' Hz)'])
-    
-    
+
+            if handles.parameters.EEG.invertPolarity == 1
+               disp('INVERT POLARITY was TRUE so EEG signal is inverted!'); disp(' ');
+            end
+
+        % Process the triggers
+        triggers = import_processTriggers(triggersRaw, handles.parameters.triggerSignals, handles.parameters.triggerPrecision, handles);
+
+        % Now the EEG data file is started manually some seconds before the
+        % PsychoPy routine is started, thus there is some extra at the end and
+        % at the beginning of the .BDF file so we can trim this excess out
+        % using the trigger .recON which is set high by the PsychoPy routine
+        % when the experiment is started
+
+            % first the data matrix (EEG + EOG + ECG)
+            dataMatrixTemp = dataMatrix;
+            dataMatrix = dataMatrixTemp(triggers.recON,:);
+
+            % correct the triggers also
+            triggerNames = fieldnames(triggers);
+
+                for i = 1 : length(triggerNames)            
+                    triggers.(triggerNames{i}) = triggers.(triggerNames{i})(triggers.recON);                
+                end
+
+            samplesTrimmed = length(dataMatrixTemp) - length(dataMatrix);
+            samplesTrimSec = samplesTrimmed / sampleRate;
+            lengthSec = length(dataMatrix) / sampleRate;
+            disp(['     .. trimmed off ', num2str(samplesTrimmed),  ' samples (', num2str(samplesTrimSec, 4), ' seconds) [.recON trigger]'])
+            disp(['       .. duration of the recording: ', num2str(lengthSec, 4), ' seconds (', num2str(length(dataMatrix)), ' samples @ ', num2str(sampleRate), ' Hz)'])
+            
+            disp(['       .. duration of the recording: ', num2str(lengthSec, 4), ' seconds (', num2str(length(dataMatrix)), ' samples @ ', num2str(sampleRate), ' Hz)'])
+            
+            disp(['          -- SAVING TO A .MAT FILE: ', fullfile(handles.path.matFilesInput, matFileToLoad)])
+            save(fullfile(handles.path.matFilesInput, matFileToLoad), 'dataMatrix', 'triggers', 'info', 'sampleRate')
+
+    end

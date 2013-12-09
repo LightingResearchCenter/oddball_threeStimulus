@@ -35,7 +35,10 @@ function [handles, flags] = init_DefaultSettings()
             handles.path.debugHeartOut = fullfile(handles.path.debugOut, 'HRV');
             handles.path.debugPreprocessing = fullfile(handles.path.debugOut, 'preProcessing');
             
-            handles.path.matFilesOut = '/home/petteri/EEG-threeStim/matOut/';
+            % OUT
+            handles.path.matFilesMain = '/home/petteri/EEG-threeStim/';
+            handles.path.matFilesOut = fullfile(handles.path.matFilesMain, 'matOut');
+            handles.path.matFilesInput = fullfile(handles.path.matFilesMain, 'inputMat');
 
     %% PLOT STYLING
     
