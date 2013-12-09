@@ -29,10 +29,9 @@ function [matrixOut, filtOnly, NaN_indices] = pre_componentArtifactFiltering(mat
                 matrixOut1a(:,j) = pre_remove5060hz_modified(matrixIn(:,j), HDR, 'PCA 60');                
             end
             
-        filtOnly = matrixOut1a;
+        
     else
-        matrixOut1a = matrixIn;
-        filtOnly = matrixIn;
+        matrixOut1a = matrixIn;        
     end
     
         
@@ -40,10 +39,41 @@ function [matrixOut, filtOnly, NaN_indices] = pre_componentArtifactFiltering(mat
     % and not pass the NaN values to the bandpass filter
     if strcmp(dataType, 'General') == 1
         [~, NaN_indices, numberOfNaNs] = pre_artifactFixedThreshold(matrixOut1a(:,1:handles.parameters.EEG.nrOfChannels), matrixOut1a(:,parameters.EEG.nrOfChannels + 1), parameters, handles);
-        % noOfNans1 = sum(sum(isnan(matrixOut1a(:,1:handles.parameters.EEG.nrOfChannels)))) % there shouldn't be any at this point
-        disp(['    - BANDPASS FILTERING'])
+        % noOfNans1 = sum(sum(isnan(matrixOut1a(:,1:handles.parameters.EEG.nrOfChannels)))) % there shouldn't be any at this point                
     else
         NaN_indices = artifactIndices;
+    end
+    
+    %% Correct for EOG/ECG trends
+    if strcmp(dataType, 'General') == 1
+        
+        EEGchans = parameters.EEG.nrOfChannels;
+        
+        % EOG
+        if parameters.artifacts.applyRegressEOG == 1        
+            EEG_withEOGcorr = pre_artifactRegressionWrapper(matrixOut1a, matrixOut1a(:,parameters.EEG.nrOfChannels + 1), EEGchans, parameters);
+            disp(['     .. correct for EOG channel (regress_eog)'])
+        end
+        
+        % ECG
+        if parameters.artifacts.applyRegressECG == 1 && parameters.artifacts.applyRegressEOG == 1
+            EEG_withECGcorr = pre_artifactRegressionWrapper(EEG_withEOGcorr, matrixOut1a(:,parameters.EEG.nrOfChannels + 2), EEGchans, parameters);
+            disp(['       .. correct for ECG channel (pulse-related artifact)'])
+            matrixOut1a(:,1:parameters.EEG.nrOfChannels) = EEG_withECGcorr;
+        elseif parameters.artifacts.applyRegressECG == 1
+            EEG_withECGcorr = pre_artifactRegressionWrapper(matrixOut1a, matrixOut1a(:,parameters.EEG.nrOfChannels + 2), EEGchans, parameters);
+            disp(['       .. correct for ECG channel (pulse-related artifact)'])
+            matrixOut1a(:,1:parameters.EEG.nrOfChannels) = EEG_withECGcorr;
+        else
+            matrixOut1a(:,1:parameters.EEG.nrOfChannels) = EEG_withEOGcorr;
+        end
+        
+        filtOnly = matrixOut1a;
+        disp(['    - BANDPASS FILTERING'])
+        
+    else
+        filtOnly = matrixIn;
+        
     end
     
     %% band-pass filter the data using a a subfunction            

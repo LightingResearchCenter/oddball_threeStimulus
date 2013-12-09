@@ -75,7 +75,7 @@ function dataOut = pre_artifactRemovalInputData(dataIn, EOG, ECG, i, dataType, p
         end
 
 
-    %% EOG Rejection
+    %% EOG Correction
 
         % Requires BioSig
         % http://sourceforge.net/projects/biosig/

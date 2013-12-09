@@ -2,6 +2,7 @@ function [epochs_raw, epochs_distr_raw, epochs_std_raw, artifactIndices_FASTER, 
     pre_FASTER_forAllStimuli(epochs_raw, epochs_distr_raw, epochs_std_raw, ...
     epochs_rawInput, epochs_distr_rawInput, epochs_std_rawInput, ...
     epochs_EOG, epochs_distr_EOG, epochs_std_EOG, ...
+    epochs_ECG, epochs_distr_ECG, epochs_std_ECG, ...
     parameters, handles)
             
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction        
@@ -23,23 +24,22 @@ function [epochs_raw, epochs_distr_raw, epochs_std_raw, artifactIndices_FASTER, 
     % get the fixed artifact indices for the raw input
     debugOn = 1; % show debug plots
     
-    
     disp('      .. Find artifacts (Fixed EEG/EOG, Moving Average, Step)')
     
         % TARGET
-        disp('       : TARGET')
+        fprintf('       : TARGET')
         [NaN_indices_EEG, NaN_indices_EOG, NaN_indices_moving, NaN_indices_step, fixedIndices] = ...
-            pre_artifactFASTER_fixedThresholds_ERPLAB(epochs_rawInput, epochs_EOG, debugOn, handles.parameters, handles);    
+            pre_artifactFASTER_fixedThresholds_ERPLAB(epochs_rawInput, epochs_EOG, epochs_ECG, debugOn, handles.parameters, handles);    
 
         % DISTRACTER
-        disp('       : DISTRACTER')
+        fprintf('\n'); fprintf('       : DISTRACTER')
         [NaN_indices_EEG_distr, NaN_indices_EOG_distr, NaN_indices_moving_distr, NaN_indices_step_distr, fixedIndices_distr] = ...
-            pre_artifactFASTER_fixedThresholds_ERPLAB(epochs_distr_rawInput, epochs_distr_EOG, debugOn, handles.parameters, handles);
+            pre_artifactFASTER_fixedThresholds_ERPLAB(epochs_distr_rawInput, epochs_distr_EOG, epochs_distr_ECG, debugOn, handles.parameters, handles);
         
         % STANDARD
-        disp('       : STANDARD')
+        fprintf('\n'); fprintf('       : STANDARD')
         [NaN_indices_EEG_std, NaN_indices_EOG_std, NaN_indices_moving_std, NaN_indices_step_std, fixedIndices_std] = ...
-            pre_artifactFASTER_fixedThresholds_ERPLAB(epochs_std_rawInput, epochs_std_EOG, debugOn, handles.parameters, handles);
+            pre_artifactFASTER_fixedThresholds_ERPLAB(epochs_std_rawInput, epochs_std_EOG, epochs_std_ECG, debugOn, handles.parameters, handles);
 
     % concatenate
     epochs_concan_raw = pre_concatenateEpochs(epochs_raw, handles.parameters, handles);

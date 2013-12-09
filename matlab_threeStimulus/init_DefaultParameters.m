@@ -127,9 +127,10 @@ function parameters = init_DefaultParameters(handles)
         
         % "Advanced artifact removal"
         parameters.artifacts.applyRegressEOG = 1; % apply regress_eog from BioSig to eliminate EOG/ECG-based artifacts
-        parameters.artifacts.epochByEpochRemoveBaseline = 0; % use rmbase() to remove baseline before ICA
-        parameters.artifacts.useICA = 0; % otherwise use the regress_eog
-        parameters.artifacts.show_ICA_verbose = 1;
+        parameters.artifacts.applyRegressECG = 1; % apply regress_eog from BioSig to eliminate EOG/ECG-based artifacts
+            %parameters.artifacts.epochByEpochRemoveBaseline = 0; % use rmbase() to remove baseline before ICA
+            %parameters.artifacts.useICA = 0; % otherwise use the regress_eog
+            %parameters.artifacts.show_ICA_verbose = 1;
         
         % FASTER
         parameters.artifacts.useFASTER = 1;
@@ -143,6 +144,11 @@ function parameters = init_DefaultParameters(handles)
                                                      % and this part just
                                                      % is computationally
                                                      % heavy for nothing
+                                                     
+            % correct the artifacts using the regress_eog from BioSig
+            % not advised to correct epoch-by-epoch
+            parameters.artifacts.FASTER_applyRegressionEOG = 0;
+            parameters.artifacts.FASTER_applyRegressionECG = 0;
             
         
         % CRAP of ERPLAB
