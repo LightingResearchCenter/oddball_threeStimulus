@@ -1,62 +1,42 @@
-function [ERP_components, epochs_ERP, epochs_ERP_CNV, epochs_ERP_raw, epochs_ERP_filt, epochs_ERP_CNV_filt, timeVector] ...
-        = analyze_getERPcomponents(epochs_ep, epochs_ep_CNV, epochs_raw, epochs_filt, epochs_CNV_filt, filtType, timeWindows, parameters, handles)
+function [ERP_components, timeVector] = analyze_getERPcomponents(epochsIn, filtType, timeWindows, parameters, handles)
+  
+    %{
+    [~, handles.flags] = init_DefaultSettings(); % use a subfunction        
+    if handles.flags.saveDebugMATs == 1
+        debugMatFileName = 'tempGetERPcomponents.mat';
+        if nargin == 0
+            load('debugPath.mat')
+            load(fullfile(path.debugMATs, debugMatFileName))
+            close all
+        else
+            if handles.flags.saveDebugMATs == 1
+                path = handles.path;
+                save('debugPath.mat', 'path')
+                save(fullfile(path.debugMATs, debugMatFileName))
+            end
+        end 
+    end
+    %}
+    
+    noOfEpochsIn = length(epochsIn.ERP);
+    [noOfSamples, noOfChannels] = size(epochsIn.ERP{1});
 
-    % CORRECT LATER, now the INPUTS do not match the ones that are being
-    % passed in from PROCESS_singleFile()
-        
-    debugMatFileName = 'tempERPAnalysis.mat';
-    if nargin == 0
-        load('debugPath.mat')
-        load(fullfile(path.debugMATs, debugMatFileName))
-        close all
-    else
-        if handles.flags.saveDebugMATs == 1
-            path = handles.path;
-            save('debugPath.mat', 'path')
-            save(fullfile(path.debugMATs, debugMatFileName))            
+    for ch = 1 : parameters.EEG.nrOfChannels
+
+        chName = parameters.BioSemi.chName{ch+parameters.BioSemi.chOffset};
+
+        for ep = 1 : noOfEpochsIn
+            
+            [ERP_components.(chName){ep}, timeVector] = analyze_perEpochFunction ([], ch, ep, ...
+                    epochsIn.ERP{ep}(:,ch), epochsIn.RT(ep), ...
+                    timeWindows, parameters, parameters.EEG.srate, handles);
+
         end
     end
-    
-    % INPUTS
-    %{
-    epochs_ep.RT_regular
-    epochs_ep.RT_irregular
-    epochs_ep.samplesPerEpoch        
-    epochs_ep.irregularIndices
-    epochs_ep.regularIndices
-    %}       
-    
-    % Loop through the epochs (i.e. the ERPs for oddballs), the channels in
-    % other words, as the epochs are concatenated into single vector    
-        
-        [rowsIn, colsIn] = size(epochs_ep.ERP);        
-                
-        
-        % Irregulars
-        for i = 1 : parameters.EEG.nrOfChannels
-            chName = parameters.BioSemi.chName{i+parameters.BioSemi.chOffset};
-            for j = 1 : length(epochs_ep.ERP)           
-                
-                [ERP_components.(chName){j}, timeVector] = analyze_perEpochFunction ([], i, j, ...
-                        epochs_ep.ERP{j}(:,i), epochs_ep.RT(j), ...
-                        epochs_ep_CNV.ERP{j}(:,i), epochs_ep_CNV.RT(j), ...
-                        timeWindows, parameters, parameters.EEG.srate, handles);
-
-                    
-                epochs_ERP.(chName){j}.epoch = epochs_ep.ERP{j}(:,i);
-                epochs_ERP_CNV.(chName){j}.epoch = epochs_ep_CNV.ERP{j}(:,i);
-                epochs_ERP_raw.(chName){j}.epoch = epochs_raw.ERP{j}(:,i);
-                epochs_ERP_filt.(chName){j}.epoch = epochs_filt.ERP{j}(:,i);
-                epochs_ERP_CNV_filt.(chName){j}.epoch = epochs_CNV_filt.ERP{j}(:,i);
-                                
-                % plot(epochs_ERP.irregular.(chName){j}.epoch); title(['IRREGULAR i (ch) = ', num2str(i), ', j (trial) =', num2str(j)]); pause
-                
-            end
-        end
 
       
     
-    function [components, timeVector] = analyze_perEpochFunction(condition, i, j, epoch, RT, epoch_CNV, RT_CNV, timeWindows, parameters, sampleRate, handles)
+    function [components, timeVector] = analyze_perEpochFunction(condition, ch, j, epoch, RT, timeWindows, parameters, sampleRate, handles)
         
         % Time Windoes defined in "init_DefaultParameters.m" like other analysis parameters 
         %timeWindows
@@ -67,7 +47,7 @@ function [ERP_components, epochs_ERP, epochs_ERP_CNV, epochs_ERP_raw, epochs_ERP
         numberOfSamplesPerEpoch = abs((-parameters.oddballTask.ERP_duration - parameters.oddballTask.ERP_baseline)) * sampleRate;
         timeVector = linspace(-parameters.oddballTask.ERP_baseline, parameters.oddballTask.ERP_duration, numberOfSamplesPerEpoch)';
         
-        % plot(timeVector, epoch); title(['IR/REGULAR i (ch) = ', num2str(i), ', j (trial) =', num2str(j)]); pause
+        % plot(timeVector, epoch); title(['IR/REGULAR ch (ch) = ', num2str(ch), ', j (trial) =', num2str(j)]); pause
         
         %% Contingent Negative Variation (CNV)
         
@@ -78,7 +58,7 @@ function [ERP_components, epochs_ERP, epochs_ERP_CNV, epochs_ERP_raw, epochs_ERP
 
             % Fixed time window of -300 to 0 ms used in Jongsma et al.
             % (2006), http://dx.doi.org/10.1016/j.clinph.2006.05.012            
-            components.CNV = analyze_perComponent(epoch_CNV, timeWindows.CNV, timeVector, sampleRate, condition, 'CNV', i, j, handles);
+            components.CNV = analyze_perComponent(epoch, timeWindows.CNV, timeVector, sampleRate, condition, 'CNV', ch, j, handles);
             
 
         %% N1
@@ -88,7 +68,7 @@ function [ERP_components, epochs_ERP, epochs_ERP_CNV, epochs_ERP_raw, epochs_ERP
             % Bright illumination reduces parietal EEG alpha activity during a sustained attention task. 
             % Brain Research. 
             % http://dx.doi.org/10.1016/j.brainres.2013.09.031            
-            components.N1 = analyze_perComponent(epoch, timeWindows.N1, timeVector, sampleRate, condition, 'N1', i, j, handles);
+            components.N1 = analyze_perComponent(epoch, timeWindows.N1, timeVector, sampleRate, condition, 'N1', ch, j, handles);
                         
             
         %% N2 (or N2b)
@@ -100,13 +80,13 @@ function [ERP_components, epochs_ERP, epochs_ERP_CNV, epochs_ERP_raw, epochs_ERP
             
             % Fixed time window of 180 to 220 ms used in Jongsma et al.
             % (2006), http://dx.doi.org/10.1016/j.clinph.2006.05.012
-            components.N2 = analyze_perComponent(epoch, timeWindows.N2, timeVector, sampleRate, condition, 'N2', i, j, handles);
+            components.N2 = analyze_perComponent(epoch, timeWindows.N2, timeVector, sampleRate, condition, 'N2', ch, j, handles);
         
         %% P3 
         
             % Fixed time window of 350 to 430 ms used in Jongsma et al.
             % (2006), http://dx.doi.org/10.1016/j.clinph.2006.05.012
-            components.P3 = analyze_perComponent(epoch, timeWindows.P3, timeVector, sampleRate, condition, 'P3', i, j, handles);
+            components.P3 = analyze_perComponent(epoch, timeWindows.P3, timeVector, sampleRate, condition, 'P3', ch, j, handles);
         
         %% P3-N2
         
@@ -116,7 +96,7 @@ function [ERP_components, epochs_ERP, epochs_ERP_CNV, epochs_ERP_raw, epochs_ERP
             % a P3–N2 component was constructed by subtracting the N2 amplitude from 
             % the P3 amplitude. This resulted in a more stable component, especially with regard
             %to the single-trial ERP analyses."
-            components.P3_N2 = analyze_subtractN2fromP3(components.N2, components.P3, i, j, handles);
+            components.P3_N2 = analyze_subtractN2fromP3(components.N2, components.P3, ch, j, handles);
 
             
         %% RT (Reaction time)
@@ -131,7 +111,7 @@ function [ERP_components, epochs_ERP, epochs_ERP_CNV, epochs_ERP_raw, epochs_ERP
         
 %% SUBFUNCTIONS
         
-    function component = analyze_perComponent(epoch, timeWindow, timeVector, sampleRate, condition, compString, i, j, handles)                       
+    function component = analyze_perComponent(epoch, timeWindow, timeVector, sampleRate, condition, compString, ch, j, handles)                       
             
             % Get indices for time points
             i1 = ceil(abs(((timeVector(1) - timeWindow(1)) * sampleRate) + 1));
@@ -142,7 +122,7 @@ function [ERP_components, epochs_ERP, epochs_ERP_CNV, epochs_ERP_raw, epochs_ERP
             % points (timeWindow), so that is why the start point is
             % "ceiling rounded", and the end point "floor rounded"
             if handles.flags.showDebugMessages == 1
-                if i == 1 && j == 1 && strcmp(condition, 'irreg') == 1
+                if ch == 1 && j == 1 && strcmp(condition, 'irreg') == 1
                     %disp(' ')
                     %disp('From: analyze_getERPcomponents.m')
                     disp(['        ', compString])
@@ -200,7 +180,7 @@ function [ERP_components, epochs_ERP, epochs_ERP_CNV, epochs_ERP_raw, epochs_ERP
 
             
             
-    function P3_N2 = analyze_subtractN2fromP3(N2, P3, i, j, handles)
+    function P3_N2 = analyze_subtractN2fromP3(N2, P3, ch, j, handles)
         
         componentNames = fieldnames(N2); % should be the same for P3
         

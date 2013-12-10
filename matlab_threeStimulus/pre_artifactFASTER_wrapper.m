@@ -22,7 +22,7 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
         end 
     end
     
-    disp(['     (', erpType, ')'])
+    disp(['        - ', erpType])
     
     epochsOut = epochsIn;    
     debugFASTER = 1;    
@@ -113,19 +113,24 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                         xlabel('Time [ms]')
                         ylabel('Epochs')            
                         title(['Epochs IN (', erpType, ')'])
+                        xlim([min(t*1000) max(t*1000)])
                         drawnow
                        
                 sp_i = sp_i + 1;
                 sp(sp_i) = subplot(rows,cols, [10]);
                 
                     % get the average waveform
-                    averWaveForm = nanmean(EEG.data(1:parameters.EEG.nrOfChannels+1,:,:),3);               
+                    averWaveForm = nanmean(EEG.data(1:parameters.EEG.nrOfChannels+1,:,:),3);       
+                    hold on
+                    line([min(t*1000) max(t*1000)], [0 0], 'Color', 'k')
                     plot(t*1000, averWaveForm)
+                    hold off                    
                     xlabel('Time [ms]')
                     ylabel('Amplitude [\muV]')
                     title(['Average Waveform'])
-                    
+                    xlim([min(t*1000) max(t*1000)])
                     yLimsIns = get(gca, 'YLim');                    
+                    drawnow
 
             end
         end
@@ -168,7 +173,7 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
             % Actually reject (exclude the NaN
             EEG.data = EEG.data(:,:,indelec_st2 == 0);
                 artifactsRemoved_step2 = sum(indelec_st2 == 1);
-                disp(['       ... ', num2str(artifactsRemoved_step2), ' epochs rejected (Step 2) from ', num2str(noOfEpochs1), ' epochs'])
+                disp(['         ... ', num2str(artifactsRemoved_step2), ' epochs rejected (Step 2) from ', num2str(noOfEpochs1), ' epochs'])
             
                 
         %% STEP 3: ICA
@@ -183,12 +188,12 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                 lpf_band = [w_l-(t_l/2) w_l+(t_l/2)];
                 blinkCh = parameters.EEG.nrOfChannels + 1;
 
-                disp('        ... computing ICA (runica), might take some time (try to switch to fastICA for speed)')      
+                disp('          ... computing ICA (runica), might take some time (try to switch to fastICA for speed)')      
                 [EEG, indelec_st3, zs_st3, num_pca, activData, blinkData] = faster_step3_ICA(EEGmatrix, EEG, k_value, ica_chans, chans_to_interp, lpf_band, blinkCh, epochLength, parameters);
                 
             else
             
-                disp('        ... skipping ICA for FASTER')
+                disp('          ... skipping ICA for FASTER')
                 indelec_st3 = NaN;
                 zs_st3 = NaN;
                 num_pca = NaN;
@@ -232,8 +237,9 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
             EEGout(:,:,step2_linearIndices_nonArtifact) = EEG.data(:,:,:);                  
             EEG.data = EEGout;
             
-            artifactsRemoved_step4 = sum(sum(epochPerChannelIsArtifacted == 1));
-            disp(['         ... ', num2str(artifactsRemoved_step4/parameters.EEG.nrOfChannels), ' epochs rejected (Step 4) from ', num2str(noOfEpochs2), ' epochs'])             
+            %artifactsRemoved_step4 = sum(sum(epochPerChannelIsArtifacted == 1));
+            artifactsRemoved_step4 = sum(epochPerChannelIsArtifacted == 1);
+            disp(['           ... ', num2str(artifactsRemoved_step4), ' epochs rejected (Step 4) from ', num2str(noOfEpochs2), ' epochs'])             
             artifactIndices = epochPerChannelIsArtifacted + epochPerChannelStep2Corrected;
             
             % average over channels
@@ -273,7 +279,7 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
         
             if parameters.artifacts.useADJUST == 1
                 
-                disp('          ... using ADJUST for artifact removal')      
+                disp('            ... using ADJUST for artifact removal')      
                 
                 % get the channel locations
                 EEG.chanlocs = readlocs(parameters.BioSemi.channelLocationsFile);
@@ -295,7 +301,7 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
             
             else
                 
-                disp('          ... skipping ADJUST for artifact removal')      
+                disp('            ... skipping ADJUST for artifact removal')      
                  
             end
             
@@ -317,13 +323,21 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                 end
             end           
             
-            artifactsRemoved_fixed = sum(sum(fixedIndices));            
+            %artifactsRemoved_fixed = sum(sum(fixedIndices));            
+            artifactsRemoved_fixed = sum(fixedIndices);
+            artifactsRemoved_fixed_EEG = sum(EEGfixedIndices);            
+            artifactsRemoved_fixed_EOG = sum(EOGfixedIndices);            
             artifacts_CRAP = NaN_indices_moving + NaN_indices_step;
-            artifactsRemoved_CRAP = sum(sum(artifacts_CRAP));
-            disp(['          ... ', num2str(artifactsRemoved_fixed/parameters.EEG.nrOfChannels), ' epochs rejected (Fixed) from ', num2str(noOfEpochs1), ' epochs'])
-        
+            artifactsRemoved_CRAP = sum(artifacts_CRAP);
+            disp(['             ... ', num2str(artifactsRemoved_CRAP), ' epochs rejected (CRAP) from ', num2str(noOfEpochs1), ' epochs'])
+            disp(['              ... ', num2str(artifactsRemoved_fixed_EEG), ' epochs rejected (Fixed EEG) from ', num2str(noOfEpochs1), ' epochs'])
+            disp(['               ... ', num2str(artifactsRemoved_fixed_EOG), ' epochs rejected (Fixed EOG) from ', num2str(noOfEpochs1), ' epochs'])
+            disp(['                ... ', num2str(artifactsRemoved_fixed), ' epochs rejected (Fixed: EEG+EOG+CRAP) from ', num2str(noOfEpochs1), ' epochs'])
+          
             % update output
             artifactIndices = logical(artifactIndices + fixedIndices);
+            
+            fixedThresholdIndices = EEGfixedIndices + EOGfixedIndices;
             
 
         %% PLOT ARTIFACT REMOVAL STEPS
@@ -332,7 +346,7 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                 if strcmp(erpType, 'target') || strcmp(erpType, 'distracter')  || strcmp(erpType, 'standard')
                     subplotIndices = [2 5 8 11];
                     sp_i = plot_FASTER_steps(fig, sp, sp_i, leg, rows, cols, indelec_st2, zs_st2, indelec_st3, zs_st3, num_pca, activData, blinkData, zs_st4, ...
-                        indelec_st4, indelec_st2, fixedIndices, artifacts_CRAP, subplotIndices, parameters, handles);
+                        indelec_st4, indelec_st2, fixedThresholdIndices, artifacts_CRAP, subplotIndices, parameters, handles);
                 end
             end       
         
@@ -352,6 +366,7 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                         xlabel('Time [ms]')
                         ylabel('Epochs')            
                         title(['Epochs OUT (', erpType, ')'])
+                        xlim([min(t*1000) max(t*1000)])
                         drawnow
                        
                 sp_i = sp_i + 1;
@@ -359,11 +374,15 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                 
                     % get the average waveform
                     averWaveForm = nanmean(EEG_mat(1:parameters.EEG.nrOfChannels,:,:),3);
+                    hold on
+                    line([min(t*1000) max(t*1000)], [0 0], 'Color', 'k')
                     plot(t*1000, averWaveForm)
+                    hold off
                     xlabel('Time [ms]')
                     ylabel('Amplitude [\muV]')
                     title(['Average Waveform'])
                     ylim(yLimsIns) % use the same y-limits as for the input to make comparison easier
+                    xlim([min(t*1000) max(t*1000)])
                     
                 set(leg, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase-2) 
                 set(gca, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase-1) 
@@ -500,10 +519,10 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
         sp(sp_i) = subplot(rows,cols, subplotIndices(4));
         
             hold on
-            b(1) = bar(0.5*double(logical(sum(epochPerChannelStep2Corrected,2))), 'k');
-            b(2) = bar(0.5*double(logical(sum(epochPerChannelIsArtifacted,2))), 'g');
-            b(3) = bar(logical(sum(artifacts_CRAP,2)), 'm');
-            b(4) = bar(logical(sum(isNaN_fixed,2)), 'b');
+            b(1) = bar(0.5*double(logical(sum(epochPerChannelStep2Corrected,2))), 0.5, 'k', 'EdgeColor', 'none');
+            b(2) = bar(0.5*double(logical(sum(epochPerChannelIsArtifacted,2))), 0.5,'g', 'EdgeColor', 'none');
+            b(3) = bar(logical(sum(artifacts_CRAP,2)), 0.5, 'm', 'EdgeColor', 'none');
+            b(4) = bar(logical(sum(isNaN_fixed,2)), 0.5, 'b', 'EdgeColor', 'none');
             hold off
             
             % change alpha of bars (transparency)
@@ -541,6 +560,7 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
     function plot_allTheEpochsToSingleSubplot(t, EEGepochs, parameters, yOffset)
        
         numberOfEpochs = size(EEGepochs,3);
+        xOff = 20; % [ms]
 
         hold on
         for ij = 1 : numberOfEpochs
@@ -559,13 +579,25 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
 
            yTickLabel{ij} = num2str(ij);
            drawnow
+           
+           maxY(ij) = max(max(yOff + squeeze(y(ij,:,:))));
+           maxAmplitude(ij) = maxY(ij) - yOff;
+           minY(ij) = min(min(yOff + squeeze(y(ij,:,:))));
+           
+           maxHandle(ij) = text(max(t)+xOff, yOff, num2str(maxAmplitude(ij), '%3.0f'));
+           if ij == numberOfEpochs
+               yOff = yOffset * (ij + 1);
+               maxHandle(ij+1) = text(max(t)+xOff, yOff, 'max');
+           end
 
         end
-
+        
+        set(maxHandle, 'FontSize', 6')
         set(gca, 'YTick', yTickPos, 'YTickLabel', yTickLabel)
         yLims = get(gca, 'YLim');        
-        yMin = nanmin(nanmin(nanmin(y)));
-        yMax = nanmax(nanmax(nanmax(yOff + y(:,:,:))));
+        yMin = nanmin(minY);
+        yMax = nanmax(maxY);
+        
         % not optimal for incoming data as gets the min and max from whole
         % matrix, fix later
         try

@@ -1,4 +1,4 @@
-function [epochs, epochs_distr, epochs_std, epoch_indicesOut] = pre_epochToERPs(data, triggers, epochIndices_IN, alpha, parameters, dataType, handles)
+function [epochs, epochs_distr, epochs_std, epoch_indicesOut] = pre_epochToERPs(data, triggers, epochIndices_IN, ERP_baseline, ERP_duration, alpha, parameters, dataType, handles)
 
     %{
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
@@ -20,10 +20,10 @@ function [epochs, epochs_distr, epochs_std, epoch_indicesOut] = pre_epochToERPs(
     
     
     % whos
-    baselineCorr = (parameters.oddballTask.ERP_baseline * parameters.EEG.srate);
-    endOfEpochCorr = baselineCorr + (parameters.oddballTask.ERP_duration * parameters.EEG.srate);
+    baselineCorr = (ERP_baseline * parameters.EEG.srate);
+    endOfEpochCorr = baselineCorr + (ERP_duration * parameters.EEG.srate);
     
-        if parameters.oddballTask.ERP_baseline ~= parameters.oddballTask.ERP_duration
+        if ERP_baseline ~= ERP_duration
             %warning('Your baseline and post-stimulus ERP windows are not the same length, considering making them equal for optimal performance of the EP_DEN denoising (init_defaultParameters)')
             % The EP Wavelet Denoising algorithm would require the baseline
             % and ERP duration to have the same length
@@ -52,7 +52,7 @@ function [epochs, epochs_distr, epochs_std, epoch_indicesOut] = pre_epochToERPs(
     
     
     %% ODDBALLS           
-    stimulusType = 'oddball';
+    stimulusType = 'target';
     [epochs, oddballON] = pre_findERP_Epochs(data, triggers, triggers.oddTone, stimulusType, alpha, [], epochIndices_IN, baselineCorr, endOfEpochCorr, epochs, parameters, handles);
     
     %% DISTRACTERS

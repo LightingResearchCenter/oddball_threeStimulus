@@ -1,9 +1,11 @@
-function [epochs_raw, epochs_distr_raw, epochs_std_raw, artifactIndices_FASTER, artifactIndices_FASTER_distr, artifactIndices_FASTER_std] = ...
-    pre_FASTER_forAllStimuli(epochs_raw, epochs_distr_raw, epochs_std_raw, ...
-    epochs_rawInput, epochs_distr_rawInput, epochs_std_rawInput, ...
-    epochs_EOG, epochs_distr_EOG, epochs_std_EOG, ...
-    epochs_ECG, epochs_distr_ECG, epochs_std_ECG, ...
-    parameters, handles)
+function [rejectedEpochs_target, rejectedEpochs_distr, rejectedEpochs_std, artifactIndices_FASTER_target, artifactIndices_FASTER_distr, artifactIndices_FASTER_std] = ...
+    pre_FASTER_forAllStimuli(rejectOn_target, rejectOn_distr, rejectOn_std, ... % reject
+    reference_target, reference_distr, reference_std, ... % reference
+    EOG_target, EOG_distr, EOG_std, ... % EOG
+    ECG_target, ECG_distr, ECG_std, ... % ECG
+    filteringType, rejectBasedOn, referenceType, ... % strings 
+    debugOn, ... % boolean flags
+    parameters, handles) % parameters
             
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction        
     if handles.flags.saveDebugMATs == 1
@@ -21,57 +23,71 @@ function [epochs_raw, epochs_distr_raw, epochs_std_raw, artifactIndices_FASTER, 
         end 
     end
 
-    % get the fixed artifact indices for the raw input
-    debugOn = 1; % show debug plots
+    debugOnlyTarget = 1; % faster development / debugging
     
-    disp('      .. Find artifacts (Fixed EEG/EOG, Moving Average, Step)')
+    disp('      .. Find artifacts (Fixed EEG/EOG, CRAP: Moving Average & Step)')    
     
-        % TARGET
-        fprintf('       : TARGET')
-        [NaN_indices_EEG, NaN_indices_EOG, NaN_indices_moving, NaN_indices_step, fixedIndices] = ...
-            pre_artifactFASTER_fixedThresholds_ERPLAB(epochs_rawInput, epochs_EOG, epochs_ECG, debugOn, handles.parameters, handles);    
-
-        % DISTRACTER
-        fprintf('\n'); fprintf('       : DISTRACTER')
-        [NaN_indices_EEG_distr, NaN_indices_EOG_distr, NaN_indices_moving_distr, NaN_indices_step_distr, fixedIndices_distr] = ...
-            pre_artifactFASTER_fixedThresholds_ERPLAB(epochs_distr_rawInput, epochs_distr_EOG, epochs_distr_ECG, debugOn, handles.parameters, handles);
+        handles.parameters.artifacts.CRAP.step_ampTh, 
+        handles.parameters.artifacts.CRAP.step_windowWidth
+        handles.parameters.artifacts.CRAP.step_windowStep
         
-        % STANDARD
-        fprintf('\n'); fprintf('       : STANDARD')
-        [NaN_indices_EEG_std, NaN_indices_EOG_std, NaN_indices_moving_std, NaN_indices_step_std, fixedIndices_std] = ...
-            pre_artifactFASTER_fixedThresholds_ERPLAB(epochs_std_rawInput, epochs_std_EOG, epochs_std_ECG, debugOn, handles.parameters, handles);
+        % TARGET
+        fprintf('         .. TARGET / ')
+        [NaN_indices_EEG_target, NaN_indices_EOG_target, NaN_indices_moving_target, NaN_indices_step_target, fixedIndices_target] = ...
+            pre_artifactFASTER_fixedThresholds_ERPLAB(rejectOn_target, EOG_target, ECG_target, debugOn, handles.parameters, handles);    
+        
+        if debugOnlyTarget ~= 1
+            
+            % DISTRACTER
+            fprintf('DISTRACTER / ')
+            [NaN_indices_EEG_distr, NaN_indices_EOG_distr, NaN_indices_moving_distr, NaN_indices_step_distr, fixedIndices_distr] = ...
+                pre_artifactFASTER_fixedThresholds_ERPLAB(rejectOn_distr, EOG_distr, ECG_distr, debugOn, handles.parameters, handles);
+
+            % STANDARD
+            fprintf('STANDARD'); fprintf('\n')
+            [NaN_indices_EEG_std, NaN_indices_EOG_std, NaN_indices_moving_std, NaN_indices_step_std, fixedIndices_std] = ...
+                pre_artifactFASTER_fixedThresholds_ERPLAB(rejectOn_std, EOG_std, ECG_std, debugOn, handles.parameters, handles);
+        end
 
     % concatenate
-    epochs_concan_raw = pre_concatenateEpochs(epochs_raw, handles.parameters, handles);
-    epochs_concan_distr_raw = pre_concatenateEpochs(epochs_distr_raw, handles.parameters, handles);
-    epochs_concan_std_raw = pre_concatenateEpochs(epochs_std_raw, handles.parameters, handles);
+    epochs_concan_target = pre_concatenateEpochs(rejectOn_target, handles.parameters, handles);
+    if debugOnlyTarget ~= 1
+        epochs_concan_distr = pre_concatenateEpochs(rejectOn_distr, handles.parameters, handles);
+        epochs_concan_std = pre_concatenateEpochs(rejectOn_std, handles.parameters, handles);
+    end
 
     % FASTER (3rd party) used with a wrapper funtion
-    disp('        .. FASTER algorithm')
-    [epochs_concan_FASTER, artifactIndices_FASTER] = pre_artifactFASTER_wrapper(epochs_concan_raw, fixedIndices,...
-        NaN_indices_EEG, NaN_indices_EOG, NaN_indices_moving, NaN_indices_step, epochs_rawInput, handles.parameters, 'target', handles);
+    disp('      .. FASTER algorithm')
+    [epochs_concan_FASTER_target, artifactIndices_FASTER_target] = pre_artifactFASTER_wrapper(epochs_concan_target, fixedIndices_target,...
+        NaN_indices_EEG_target, NaN_indices_EOG_target, NaN_indices_moving_target, NaN_indices_step_target, rejectOn_target, handles.parameters, 'target', handles);
     
-    [epochs_concan_FASTER_distr, artifactIndices_FASTER_distr] = pre_artifactFASTER_wrapper(epochs_concan_distr_raw, fixedIndices_distr,...
-        NaN_indices_EEG_distr, NaN_indices_EOG_distr, NaN_indices_moving_distr, NaN_indices_step_distr, epochs_distr_rawInput, handles.parameters, 'distracter', handles);            
-    
-    [epochs_concan_FASTER_std, artifactIndices_FASTER_std] = pre_artifactFASTER_wrapper(epochs_concan_std_raw, fixedIndices_std,...
-        NaN_indices_EEG_std, NaN_indices_EOG_std, NaN_indices_moving_std, NaN_indices_step_std, epochs_std_rawInput, handles.parameters, 'standard', handles);
+    if debugOnlyTarget ~= 1
+        [epochs_concan_FASTER_distr, artifactIndices_FASTER_distr] = pre_artifactFASTER_wrapper(epochs_concan_distr, fixedIndices_distr,...
+            NaN_indices_EEG_distr, NaN_indices_EOG_distr, NaN_indices_moving_distr, NaN_indices_step_distr, rejectOn_distr, handles.parameters, 'distracter', handles);            
+
+        [epochs_concan_FASTER_std, artifactIndices_FASTER_std] = pre_artifactFASTER_wrapper(epochs_concan_std, fixedIndices_std,...
+            NaN_indices_EEG_std, NaN_indices_EOG_std, NaN_indices_moving_std, NaN_indices_step_std, rejectOn_std, handles.parameters, 'standard', handles);
+    end
 
     % deconcatenate back
-    epochs_deconcan_FASTER = pre_deconcatenateEpochs(epochs_concan_FASTER, handles.parameters, handles);
-    epochs_deconcan_FASTER_distr = pre_deconcatenateEpochs(epochs_concan_FASTER_distr, handles.parameters, handles);
-    epochs_deconcan_FASTER_std = pre_deconcatenateEpochs(epochs_concan_FASTER_std, handles.parameters, handles);
+    epochs_deconcan_FASTER = pre_deconcatenateEpochs(epochs_concan_FASTER_target, handles.parameters, handles);
+    if debugOnlyTarget ~= 1
+        epochs_deconcan_FASTER_distr = pre_deconcatenateEpochs(epochs_concan_FASTER_distr, handles.parameters, handles);
+        epochs_deconcan_FASTER_std = pre_deconcatenateEpochs(epochs_concan_FASTER_std, handles.parameters, handles);
+    end
 
     % convert the artifacted epochs to NaN vectors, and assign to 
     % different variable names so that the denoising goes
     % okay and you can debug the FASTER step easily if you need
     %{
-    epochs_raw = pre_convertEpochs_to_NanVectors(epochs_deconcan_FASTER, artifactIndices_FASTER);
-    epochs_distr_raw = pre_convertEpochs_to_NanVectors(epochs_deconcan_FASTER_distr, artifactIndices_FASTER_distr);
-    epochs_std_raw = pre_convertEpochs_to_NanVectors(epochs_deconcan_FASTER_std, artifactIndices_FASTER_std);
+    rejectOn_target = pre_convertEpochs_to_NanVectors(epochs_deconcan_FASTER, artifactIndices_FASTER);
+    rejectOn_distr = pre_convertEpochs_to_NanVectors(epochs_deconcan_FASTER_distr, artifactIndices_FASTER_distr);
+    rejectOn_std = pre_convertEpochs_to_NanVectors(epochs_deconcan_FASTER_std, artifactIndices_FASTER_std);
     %}
 
     % rename to match to upcoming steps
-    epochs_raw = epochs_deconcan_FASTER;
-    epochs_distr_raw = epochs_deconcan_FASTER_distr;
-    epochs_std_raw = epochs_deconcan_FASTER_std;
+    rejectedEpochs_target = epochs_deconcan_FASTER;
+    if debugOnlyTarget ~= 1
+        rejectedEpochs_distr = epochs_deconcan_FASTER_distr;
+        rejectedEpochs_std = epochs_deconcan_FASTER_std;
+    end

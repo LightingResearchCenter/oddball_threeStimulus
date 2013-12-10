@@ -36,9 +36,9 @@ function MAIN_ANALYSIS()
     %% Define input
     
         
-        filesIn = {%'je_01_40.bdf'; 'je_02_40.bdf'; 'je_03_40.bdf'; 'je_04_40.bdf'; 'je_01_0.bdf'; 'je_02_0.bdf'; 'je_03_0.bdf'; 'je_04_0.bdf'; 'je_01_10.bdf'; 'je_02_10.bdf'; 'je_03_10.bdf'; 'je_04_10.bdf'; ...
-                   %'bl_01_10.bdf'; 'bl_02_10.bdf'; ...
-                   %'bl_03_10.bdf'; 'bl_04_10.bdf'; 'bl_01_40.bdf'; 'bl_02_40.bdf'; 'bl_03_40.bdf'; 'bl_04_40.bdf'; 'bl_01_0.bdf'; 'bl_02_0.bdf'; 'bl_03_0.bdf'; 'bl_04_0.bdf'; ...
+        filesIn = {'je_01_40.bdf'; 'je_02_40.bdf'; 'je_03_40.bdf'; 'je_04_40.bdf'; 'je_01_0.bdf'; 'je_02_0.bdf'; 'je_03_0.bdf'; 'je_04_0.bdf'; 'je_01_10.bdf'; 'je_02_10.bdf'; 'je_03_10.bdf'; 'je_04_10.bdf'; ...
+                   'bl_01_10.bdf'; 'bl_02_10.bdf'; ...
+                   'bl_03_10.bdf'; 'bl_04_10.bdf'; 'bl_01_40.bdf'; 'bl_02_40.bdf'; 'bl_03_40.bdf'; 'bl_04_40.bdf'; 'bl_01_0.bdf'; 'bl_02_0.bdf'; 'bl_03_0.bdf'; 'bl_04_0.bdf'; ...
                    'ka_01_10.bdf'; 'ka_02_10.bdf'; 'ka_03_10.bdf'; 'ka_04_10.bdf'; 'ka_01_40.bdf'; 'ka_02_40.bdf'; 'ka_03_40.bdf'; 'ka_04_40.bdf'; 'ka_01_0.bdf'; 'ka_02_0.bdf'; 'ka_03_0.bdf'; 'ka_04_0.bdf'; ...
                    'da_01_10.bdf'; 'da_02_10.bdf'; 'da_03_10.bdf'; 'da_04_10.bdf'; 'da_01_40.bdf'; 'da_02_40.bdf'; 'da_03_40.bdf'; 'da_04_40.bdf'; 'da_01_0.bdf'; 'da_02_0.bdf'; 'da_03_0.bdf'; 'da_04_0.bdf'; ...
                    'sh_01_40.bdf'; 'sh_02_40.bdf'; 'sh_03_40.bdf'; 'sh_04_40.bdf'; 'sh_01_0.bdf'; 'sh_02_0.bdf'; 'sh_03_0.bdf'; 'sh_04_0.bdf'; 'sh_01_10.bdf'; 'sh_02_10.bdf'; 'sh_03_10.bdf'; 'sh_04_10.bdf'; ...
@@ -48,7 +48,7 @@ function MAIN_ANALYSIS()
                     'hh_01_40.bdf'; 'hh_02_40.bdf'; 'hh_03_40.bdf'; 'hh_04_40.bdf'; 'hh_01_0.bdf'; 'hh_02_0.bdf'; 'hh_03_0.bdf'; 'hh_04_0.bdf'; 'hh_01_10.bdf'; 'hh_02_10.bdf'; 'hh_03_10.bdf'; 'hh_04_10.bdf'; ...
                    'ha_01_10.bdf'; 'ha_02_10.bdf'; 'ha_03_10.bdf'; 'ha_04_10.bdf'; 'ha_01_40.bdf'; 'ha_02_40.bdf'; 'ha_03_40.bdf'; 'ha_04_40.bdf'; 'ha_01_0.bdf'; 'ha_02_0.bdf'; 'ha_03_0.bdf'; 'ha_04_0.bdf'};
 
-        filesIn = {'bl_01_10.bdf'};     
+        %filesIn = {'bl_01_10.bdf'};     
         fileNameIn = filesIn;
         
         handles.inputFile = fileNameIn;
@@ -98,38 +98,18 @@ function MAIN_ANALYSIS()
                         handles.parameters.filter.bandPass_ERP_hiFreq = hiFreq(ik);
                         handles.parameters.filter.bandPass_ERP_loFreq = loFreq(ij);
 
-                        % IMPORT THE DATA
+                        %% IMPORT THE DATA
                         % You could modify what is inside here if you have EEG recorded
                         % with some other system than with BioSemi ActiveTwo
                         [dataMatrix, triggers, info, handles.parameters.EEG.srate] = IMPORT_eegData(i, fileNameIn, inputFiles, handles);
 
-                        % PROCESS the ERP
-                        [epochs_target, epochs_distracter, epochs_standard, ...
-                         epochsEP_target, epochsEP_distracter, epochsEP_standard, ...
-                         analyzed_target, analyzed_distracter, analyzed_standard, ...
-                         analyzed_aux, analyzed_extraSensors, analyzed_fractal, analyzed_TF...
-                         dataMatrix_filtGeneral, alpha, powers, handles] = ...
-                                PROCESS_singleFile(inputFiles, fileNameIn, dataMatrix, triggers, handles);        
-                                % Check later what is coming out in handles and try to refer to
-                                % exact variables changed (like sampleRate)                    
+                        %% PROCESS the ERP
+                        [epochs, analyzed, TF, dataMatrix_filtGeneral, alpha, powers, handles] = ...
+                            PROCESS_singleFile(inputFiles, fileNameIn, dataMatrix, triggers, handles);        
+                            % Check later what is coming out in handles and try to refer to
+                            % exact variables changed (like sampleRate)                      
 
-                        % Save data to disk
-                        fileMatOut = strrep(handles.inputFile, '.bdf', '_fullEpochs.mat');
-                            save(fullfile(handles.path.matFilesOut, fileMatOut), 'epochs_target', 'epochs_distracter', 'epochs_standard', 'epochsEP_target', 'epochsEP_distracter', 'epochsEP_standard', 'handles')                        
-                            % save(fullfile(handles.path.matFilesOut, fileMatOut), 'analyzed_target', 'analyzed_distracter', 'analyzed_standard', 'analyzed_aux', 'analyzed_extraSensors', 'alpha', 'handles')
-                        
-                        ERPsOut.target = analyzed_target.ERPcomponents;
-                        ERPsOut.distracter = analyzed_distracter.ERPcomponents;
-                        ERPsOut.standard = analyzed_standard.ERPcomponents;                        
-                        
-                        fileMatAnalyzedOut = strrep(handles.inputFile, '.bdf', '_analyzed.mat');                        
-                            save(fullfile(handles.path.matFilesOut, fileMatAnalyzedOut), 'ERPsOut', 'analyzed_aux', 'powers', 'alpha', 'handles')
-                            
-                        fileMatAnalyzedOut = strrep(handles.inputFile, '.bdf', '_extraAnalysis.mat');                        
-                            save(fullfile(handles.path.matFilesOut, fileMatAnalyzedOut), 'analyzed_extraSensors', 'analyzed_fractal', 'analyzed_TF', 'handles')
-
-
-                        % PLOT
+                        %% PLOT
                         PLOT_singleFile(epochs_target, epochs_distracter, epochs_standard, ...
                          epochsEP_target, epochsEP_distracter, epochsEP_standard, ...
                          analyzed_target, analyzed_distracter, analyzed_standard, ...

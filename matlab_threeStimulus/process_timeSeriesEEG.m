@@ -37,13 +37,13 @@ function [alpha, powers, amplit, PSD, SEM, heart, fractalAnalysis] = process_tim
     
         %% GET Slow Eye Movements from EOG Signal
         
-            disp(['       .. analyze EOG for Slow Eye Movements (placeholder)'])
+            disp(' '); disp(['       .. analyze EOG for Slow Eye Movements (placeholder)'])
             SEM = analyze_EOGforSEMs(EOG, EOG_raw, handles);
             
             
         %% ANALYZE ECG Lead (for HR, HRV, PCR, Fractality, etc.)
         
-            disp(['       .. analyze ECG for HR, HRV, DFA'])
+            disp(' '); disp(['       .. analyze ECG for HR, HRV, DFA'])
             heart = analyze_ECGforHeartParameters(ECG, ECG_raw, handles);
         
         %% Get Individual Alpha Peak
@@ -59,6 +59,7 @@ function [alpha, powers, amplit, PSD, SEM, heart, fractalAnalysis] = process_tim
             [alpha.PSD_peak, alpha.PSD_gravity] = analyze_findIndividualAlphaPeak(f, alphaPowerSpectrum.PSD, parameters.powerAnalysis.alphaRange);
                             
             % Debug for command window
+            disp(' '); 
             disp(['    .. Amplitude Spectrum Alpha IAF peak = ', num2str(alpha.amplit_peak), ' Hz'])
             disp(['    .. .. Amplitude Spectrum Alpha IAF gravity = ', num2str(alpha.amplit_gravity), ' Hz'])
             %disp(['     PSD peak = ', num2str(alpha.PSD_peak), ' Hz'])

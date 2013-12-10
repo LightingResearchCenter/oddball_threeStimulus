@@ -275,7 +275,7 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN] 
 
             %% Output to the calling function
             realCoefs{ch}(:,:) = real(squeeze(averageOfTheChannel{ch}(:,:)));
-                size(realCoefs{ch})
+                % size(realCoefs{ch})
             realCoefs_SD{ch}(:,:) = real(squeeze(stdOfTheChannel{ch}(:,:)));
             imagCoefs{ch}(:,:) = imag(squeeze(averageOfTheChannel{ch}(:,:)));                    
             imagCoefs_SD{ch}(:,:) = imag(squeeze(stdOfTheChannel{ch}(:,:)));
@@ -286,10 +286,8 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN] 
                 sp(3,ch) = subplot(rows,cols,(cols*2)+ch);
                 contourLevels = 256;
                 Z = averageOfTheChannel{ch};
-
                 
                 %debug_plotTF(scales, timep, freq, realCoefs, imagCoefs, T, F, handles) 
-                whos
                 [c, handle_contours{ch}] = contourf(T, F, Z, contourLevels, 'EdgeColor', 'none');                    
                 epochLimits(3,ch,:) = [min(min(Z)) max(max(Z))];
                 
@@ -350,8 +348,5 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN] 
             err
         end           
         
-
-        %% CHECK OTHER DERIVED measures from tfanalysis.m of ERPWAVELAB
-            % and add later
 
 

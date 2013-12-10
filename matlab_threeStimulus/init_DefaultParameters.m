@@ -127,10 +127,18 @@ function parameters = init_DefaultParameters(handles)
         
         % "Advanced artifact removal"
         parameters.artifacts.applyRegressEOG = 1; % apply regress_eog from BioSig to eliminate EOG/ECG-based artifacts
-        parameters.artifacts.applyRegressECG = 1; % apply regress_eog from BioSig to eliminate EOG/ECG-based artifacts
+        parameters.artifacts.applyRegressECG = 0; % apply regress_eog from BioSig to eliminate EOG/ECG-based artifacts
             %parameters.artifacts.epochByEpochRemoveBaseline = 0; % use rmbase() to remove baseline before ICA
             %parameters.artifacts.useICA = 0; % otherwise use the regress_eog
             %parameters.artifacts.show_ICA_verbose = 1;
+            
+            parameters.artifacts.regressBirectContamCutoffs = [0 7.5];
+                % EOG channel itself is contaminated by brain activity and
+                % we need to try to mitigate this by removing high
+                % frequencies from the EOG signal
+                % see e.g. Ghaderi et al. (2014), http://dx.doi.org/10.1016/j.jneumeth.2013.08.025
+                %          Romero et al. (2009), http://dx.doi.org/10.1007/s10439-008-9589-6
+            
         
         % FASTER
         parameters.artifacts.useFASTER = 1;
@@ -295,6 +303,11 @@ function parameters = init_DefaultParameters(handles)
             % stimulus, or the -500ms to -100ms to avoid possible
             % artifacting effect of anticipatory response such as CNV
         
+        parameters.oddballTask.ERP_denoisingEP_epochLimits = [-0.5 0.5];
+            % baseline and duration need to be same, and if we would use
+            % the 0.9 needed for timeFrequency limits we might have more
+            % epochs with artifacts 
+
             
             % DC Offset / Detrend correction (pre_epochToERPs --> )
             %{
@@ -342,6 +355,7 @@ function parameters = init_DefaultParameters(handles)
         % Jongsma et al. denoised the epoch twice, first for extracting the CNV
         % with a different scale setting, and then second time for the
         % remaining components    
+        parameters.ep_den.denoiseWithEP = 1;
         parameters.ep_den.scales_postStim = 8; % number of scales
         parameters.ep_den.scales_preStim = 10; % number of scales
 

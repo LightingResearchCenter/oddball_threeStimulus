@@ -1,6 +1,6 @@
 function [epochs, stimulusON] = pre_findERP_Epochs(data, triggers, triggerUsed, stimulusType, alpha, found_oddballON, epochIndices_IN, baselineCorr, endOfEpochCorr, epochs, parameters, handles)
     
-    
+    %{
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
     if 1 == 1 % this function is called so often that there is a significant overhead if you save this every time to disk
         debugMatFileName = 'tempFindEpochs_ERPs.mat';
@@ -16,7 +16,7 @@ function [epochs, stimulusON] = pre_findERP_Epochs(data, triggers, triggerUsed, 
             end
         end
     end
-    
+    %}
 
     j = 1;
         initCount = 0;
@@ -166,7 +166,7 @@ function [epochs, stimulusON] = pre_findERP_Epochs(data, triggers, triggerUsed, 
         
     else
         % now we have done it already so we could just avoid the for-loop
-        if strcmp(stimulusType, 'oddball')
+        if strcmp(stimulusType, 'target')
             stimulusON = epochIndices_IN.oddballON;
         elseif strcmp(stimulusType, 'distracter')
             stimulusON = epochIndices_IN.distracterON;

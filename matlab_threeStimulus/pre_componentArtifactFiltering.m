@@ -1,4 +1,4 @@
-function [matrixOut, filtOnly, NaN_indices] = pre_componentArtifactFiltering(matrixIn, artifactIndices, rawMax, rowsIn, colsIn, loFreq, hiFreq, filterOrder, filterOrderSteep, dataType, parameters, handles)   
+function [matrixOut, matrixRegress, filtOnly, NaN_indices] = pre_componentArtifactFiltering(matrixIn, artifactIndices, rawMax, rowsIn, colsIn, loFreq, hiFreq, filterOrder, filterOrderSteep, dataType, parameters, handles)   
 
     %{
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
@@ -17,143 +17,137 @@ function [matrixOut, filtOnly, NaN_indices] = pre_componentArtifactFiltering(mat
         end  
     end
     %}
+    
 
     %% Notch filter the mains (60 Hz) 
     % out using the modified filter from BioSig
-    if strcmp(dataType, 'General') == 1
-        matrixOut1a = zeros(rowsIn, colsIn);  % e.g. a lot of rows x 6 channels            
-        HDR.SampleRate = parameters.EEG.srate;
-
-            disp(['   remove 50/60 Hz (Notch, from BioSig package)'])
-            for j = 1 : colsIn                        
-                matrixOut1a(:,j) = pre_remove5060hz_modified(matrixIn(:,j), HDR, 'PCA 60');                
-            end
-            
-        
-    else
-        matrixOut1a = matrixIn;        
-    end
     
+        if strcmp(dataType, 'General') == 1
+            matrixOut1a = zeros(rowsIn, colsIn);  % e.g. a lot of rows x 6 channels            
+            HDR.SampleRate = parameters.EEG.srate;
+
+                disp(['   remove 50/60 Hz (Notch, from BioSig package)'])
+                for j = 1 : colsIn                        
+                    matrixOut1a(:,j) = pre_remove5060hz_modified(matrixIn(:,j), HDR, 'PCA 60');                
+                end
+                dataIn = matrixOut1a; % for debug plotting
+                filtOnly = matrixOut1a; 
+
+        else
+            matrixOut1a = matrixIn;        
+            filtOnly = matrixOut1a; 
+        end
+
         
     %% Remove here fixed threshold artifacts (or get only the indices, 
     % and not pass the NaN values to the bandpass filter
-    if strcmp(dataType, 'General') == 1
-        [~, NaN_indices, numberOfNaNs] = pre_artifactFixedThreshold(matrixOut1a(:,1:handles.parameters.EEG.nrOfChannels), matrixOut1a(:,parameters.EEG.nrOfChannels + 1), parameters, handles);
-        % noOfNans1 = sum(sum(isnan(matrixOut1a(:,1:handles.parameters.EEG.nrOfChannels)))) % there shouldn't be any at this point                
-    else
-        NaN_indices = artifactIndices;
-    end
-    
-    %% Correct for EOG/ECG trends
-    if strcmp(dataType, 'General') == 1
         
-        EEGchans = parameters.EEG.nrOfChannels;
-        
-        % EOG
-        if parameters.artifacts.applyRegressEOG == 1        
-            EEG_withEOGcorr = pre_artifactRegressionWrapper(matrixOut1a, matrixOut1a(:,parameters.EEG.nrOfChannels + 1), EEGchans, parameters);
-            disp(['     .. correct for EOG channel (regress_eog)'])
-        end
-        
-        % ECG
-        if parameters.artifacts.applyRegressECG == 1 && parameters.artifacts.applyRegressEOG == 1
-            EEG_withECGcorr = pre_artifactRegressionWrapper(EEG_withEOGcorr, matrixOut1a(:,parameters.EEG.nrOfChannels + 2), EEGchans, parameters);
-            disp(['       .. correct for ECG channel (pulse-related artifact)'])
-            matrixOut1a(:,1:parameters.EEG.nrOfChannels) = EEG_withECGcorr;
-        elseif parameters.artifacts.applyRegressECG == 1
-            EEG_withECGcorr = pre_artifactRegressionWrapper(matrixOut1a, matrixOut1a(:,parameters.EEG.nrOfChannels + 2), EEGchans, parameters);
-            disp(['       .. correct for ECG channel (pulse-related artifact)'])
-            matrixOut1a(:,1:parameters.EEG.nrOfChannels) = EEG_withECGcorr;
+        if strcmp(dataType, 'General') == 1
+            [~, NaN_indices, numberOfNaNs] = pre_artifactFixedThreshold(matrixOut1a(:,1:handles.parameters.EEG.nrOfChannels), matrixOut1a(:,parameters.EEG.nrOfChannels + 1), parameters, handles);
+            % noOfNans1 = sum(sum(isnan(matrixOut1a(:,1:handles.parameters.EEG.nrOfChannels)))) % there shouldn't be any at this point                
         else
-            matrixOut1a(:,1:parameters.EEG.nrOfChannels) = EEG_withEOGcorr;
+            NaN_indices = artifactIndices;
         end
-        
-        filtOnly = matrixOut1a;
-        disp(['    - BANDPASS FILTERING'])
-        
-    else
-        filtOnly = matrixIn;
-        
-    end
+
+        %% Correct for EOG/ECG trends
+        if strcmp(dataType, 'General') == 1
+
+            EEGchans = parameters.EEG.nrOfChannels;            
+            
+            % You may want to consider later if you want to do the
+            % regression for all types of filterings right here, and not
+            % just for the GENERAL one that is going to be used for example
+            % for TIME-FREQUENCY ANALYSIS, now the ERP method used for
+            % assessing amplitude changes in ERP has not been pushed
+            % through the regression correction
+
+            % EOG
+            if parameters.artifacts.applyRegressEOG == 1   
+                EOG = matrixOut1a(:,parameters.EEG.nrOfChannels + 1);
+                hiFreqEOG = parameters.artifacts.regressBirectContamCutoffs(2);
+                loFreqEOG = parameters.artifacts.regressBirectContamCutoffs(1);                
+                disp(['       EOG REGRESSION'])
+                disp(['        .. mitigate bidirectional contamination by filtering EOG (', num2str(loFreqEOG), '-', num2str(hiFreqEOG), ' Hz) before regression'])            
+                EOG = pre_bandbassFilter(EOG, parameters.EEG.srate, [hiFreqEOG, loFreqEOG], filterOrder, [], handles);   
+                EEG_withEOGcorr = pre_artifactRegressionWrapper(matrixOut1a, EOG, EEGchans, parameters);
+                disp(['          .. correct for EOG channel (regress_eog)'])
+            end
+
+            % ECG
+            disp(['       ECG REGRESSION'])
+            % not working very well atm at least (PT, 10 Dec 2013)
+            % work on this later, see e.g. http://fsl.fmrib.ox.ac.uk/eeglab/fmribplugin/
+            % and http://www.researchgate.net/publication/216221679_Matching_Pursuit_based_removal_of_cardiac_pulse-related_artifacts_in_EEGfMRI
+            
+            if parameters.artifacts.applyRegressECG == 1 && parameters.artifacts.applyRegressEOG == 1                
+                %EEG_withECGcorr = pre_artifactRegressionWrapper(EEG_withEOGcorr, matrixOut1a(:,parameters.EEG.nrOfChannels + 2), EEGchans, parameters);
+                disp(['        .. NOT CORRECTING ATM for ECG channel (pulse-related artifact)'])
+                EEG_withECGcorr = EEG_withEOGcorr;
+                matrixOut1a(:,1:parameters.EEG.nrOfChannels) = EEG_withECGcorr;
+                
+                
+            elseif parameters.artifacts.applyRegressECG == 1                
+                %EEG_withECGcorr = pre_artifactRegressionWrapper(matrixOut1a, matrixOut1a(:,parameters.EEG.nrOfChannels + 2), EEGchans, parameters);
+                disp(['        .. NOT CORRECTING ATM for ECG channel (pulse-related artifact)'])
+                EEG_withECGcorr = EEG_withEOGcorr;
+                matrixOut1a(:,1:parameters.EEG.nrOfChannels) = EEG_withECGcorr;                
+                
+            else
+                disp(['        .. skip correction of ECG channel (pulse-related artifact)'])
+                matrixOut1a(:,1:parameters.EEG.nrOfChannels) = EEG_withEOGcorr;
+                EEG_withECGcorr = EEG_withEOGcorr;
+            end
+            
+            % Output
+            if parameters.artifacts.applyRegressECG == 1 || parameters.artifacts.applyRegressEOG == 1
+                matrixRegress = EEG_withECGcorr;
+            else
+                matrixRegress = [];
+            end                       
+            
+            %% PLOT the REGRESSION
+            
+                t = linspace(1, length(matrixOut1a(:,1)), length(matrixOut1a(:,1))) / parameters.EEG.srate;
+                ch = 2; % 2 for Fz, 3 for Pz             
+                zoomRange = [160 165]; % in seconds
+                plot_artifactRegressionPlot(t, dataIn, EEG_withEOGcorr, EEG_withECGcorr, matrixRegress, ch, zoomRange, parameters, handles)           
+
+        else
+            filtOnly = matrixIn;
+            matrixRegress = matrixIn;
+        end
     
-    %% band-pass filter the data using a a subfunction            
-    matrixOut1 = zeros(rowsIn, colsIn);  % e.g. a lot of rows x 6 channels            
+    %% Band-pass filter the data using a a subfunction            
     
-        disp(['     .. ', dataType,  ' (', num2str(loFreq), '-', num2str(hiFreq), ' Hz), order = ', num2str(filterOrder), ', ZeroPhase'])
-        for j = 1 : colsIn                        
+        if strcmp(dataType, 'General')
+            disp(['    - BANDPASS FILTERING'])
+        end
+        matrixOut1 = zeros(rowsIn, colsIn);  % e.g. a lot of rows x 6 channels            
+    
+        disp(['        .. ', dataType,  ' (', num2str(loFreq), '-', num2str(hiFreq), ' Hz), order = ', num2str(filterOrder), ', ZeroPhase'])
+        for j = 1 : colsIn           
+            if strcmp(dataType, 'General')
+                if parameters.artifacts.applyRegressECG == 1 || parameters.artifacts.applyRegressEOG == 1
+                    matrixRegress = pre_bandbassFilter(matrixRegress, parameters.EEG.srate, [hiFreq, loFreq], filterOrder, filterOrderSteep, handles);                 
+                    if j == 1
+                        disp(['         .. filter the regression-corrected EEG as well'])
+                    end
+                end
+            end
             matrixOut1(:,j) = pre_bandbassFilter(matrixOut1a(:,j), parameters.EEG.srate, [hiFreq, loFreq], filterOrder, filterOrderSteep, handles);                
         end
         
         
-        
-    % if parameters.artifacts.useFASTER == 1
-        % we remove the artifacts for epochs later using FASTER, see the call from
-        % PROCESS_singleFile()
-        % matrixOut = matrixOut1;
+    %% OUTPUT
 
-        % disp(['   Skipping BioSig Artifact removal, using FASTER later (', dataType, ') threshold: ', num2str(parameters.artifacts.fixedThr), ' uV, bandpass: ', num2str(loFreq), '-', num2str(hiFreq), ' Hz'])                
-
-        % NOTE, now we have two artifact detection pipelines at the same
-        % really, as the following BioSig-based artifact correction /
-        % removal are used for time series EEG analysis (power analysis,
-        % multifractality analysis, etc. what you can think of for the full
-        % EEG recording
-
-        % And then we feed the non-artifact corrected (only bandpass + notch
-        % filtered) epochs to FASTER artifact correction which then outputs
-        % those epochs for time-frequency analysis, and for the ERP
-        % component analysis
-
-        %% YOU COULD OPTIMIZE LATER THIS!!! REMOVE REDUNDANCY        
-        
-   
-    %% remove artifacts (i.e. deviant voltages, ECG and EOG artifacts)
-    %{
-    
-        % correct the NanIndices to have 6 columns
-            [rows,cols] = size(NaN_indices);
-            NaN_indices_corr = zeros(rows,cols+2);
-            NaN_indices_corr(:, 1:parameters.EEG.nrOfChannels) = NaN_indices;
-            NaN_indices_corr = logical(NaN_indices_corr);
-    
-        % Use easier variable names
-            EEG = matrixOut1(:,1:parameters.EEG.nrOfChannels);
-            EOG = matrixOut1(:,parameters.EEG.nrOfChannels + 1);
-            ECG = matrixOut1(:,parameters.EEG.nrOfChannels + 2);
-    
-        if parameters.artifacts.useDETECT == 1
-            
-            disp(['   Remove the artifacts with DETECT'])            
-            indicesArtifact = pre_DETECT_wrapper(EEG, EOG, ECG, j, dataType, parameters, handles);
-    
-        elseif parameters.artifacts.applyRegressEOG == 1
-
-            disp(['   Remove the artifacts (', dataType, ') threshold: ', num2str(parameters.artifacts.fixedThr), ' uV, bandpass: ', num2str(loFreq), '-', num2str(hiFreq), ' Hz'])                                 
-
-            % use subfunction
+        if strcmp(dataType, 'General') == 1
+            % Don't convert the fixed threshold artifacts to NaNs
             matrixOut = matrixOut1;
-            matrixOut(:,1:parameters.EEG.nrOfChannels) = pre_artifactRemovalInputData(EEG, EOG, ECG, j, dataType, parameters, handles);
-
-            % debug info
-            filtMax = max(max(abs(matrixOut(:,1:parameters.EEG.nrOfChannels))));
-            disp(['       .. Max voltage of "', dataType, '" matrix: ', num2str(filtMax), ' uV, <-- from ', num2str(rawMax), ' uV'])
 
         else
-
-            disp(['   ', dataType, ': Not applying the regress_eog() -based artifact removal'])
-
+            % remove now the fixed threshold artifacts and do the other
+            % operations
+            % matrixOut(NaN_indices_corr) = NaN;
+            % Don't convert the fixed threshold artifacts to NaNs
+            matrixOut = matrixOut1;
         end
-    %}
-
-    if strcmp(dataType, 'General') == 1
-        % Don't convert the fixed threshold artifacts to NaNs
-        matrixOut = matrixOut1;
-
-    else
-        % remove now the fixed threshold artifacts and do the other
-        % operations
-        % matrixOut(NaN_indices_corr) = NaN;
-        % Don't convert the fixed threshold artifacts to NaNs
-        matrixOut = matrixOut1;
-    end
-    

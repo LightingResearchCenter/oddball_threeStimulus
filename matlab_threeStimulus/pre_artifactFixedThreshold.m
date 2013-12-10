@@ -65,11 +65,11 @@ function [dataOut, NaN_indices, numberOfNaNs] = pre_artifactFixedThreshold(dataI
             numberOfNaNs = length(NaN_indices_fixed(NaN_indices_fixed == 1));
             NaNPercentage = (numberOfNaNs / (dataSamples*dataChannels)) * 100;
             disp(['       FIXED'])
-            disp(['       .. Fixed threshold - ', num2str(parameters.artifacts.fixedThr), ' uV, ', 'Number of NaNs: ', num2str(numberOfNaNs), ', percentage: ', num2str(NaNPercentage), '%'])
+            disp(['        .. Fixed threshold - ', num2str(parameters.artifacts.fixedThr), ' uV, ', 'Number of NaNs: ', num2str(numberOfNaNs), ', percentage: ', num2str(NaNPercentage), '%'])
 
         else
             NaN_indices_fixed = zeros(length(dataIn(:,1)),1);
-            disp(['     .. Artifacts not searched with the fixed EEG threshold'])
+            disp(['        .. Artifacts not searched with the fixed EEG threshold'])
         end
     
     %% Find excessive eye movements 
@@ -85,12 +85,12 @@ function [dataOut, NaN_indices, numberOfNaNs] = pre_artifactFixedThreshold(dataI
             % status on command window of how many artifacts were found
             numberOfNaNs_EOG = length(NaN_indices_EOG(NaN_indices_EOG == 1));
             NaNPercentage = (numberOfNaNs_EOG / dataSamples) * 100;
-            disp(['       .. .. EOG threshold - ', num2str(parameters.artifacts.fixedThrEOG), ' uV, ',  'Number of NaNs: ', num2str(numberOfNaNs_EOG), ', percentage: ', num2str(NaNPercentage), '%'])
+            disp(['        .. .. EOG threshold - ', num2str(parameters.artifacts.fixedThrEOG), ' uV, ',  'Number of NaNs: ', num2str(numberOfNaNs_EOG), ', percentage: ', num2str(NaNPercentage), '%'])
             
         else
             
             NaN_indices_EOG = zeros(length(dataIn(:,1)),1);
-            disp(['     .. Artifacts not searched with the fixed EOG threshold'])  
+            disp(['        .. Artifacts not searched with the fixed EOG threshold'])  
             
         end
         
@@ -112,7 +112,9 @@ function [dataOut, NaN_indices, numberOfNaNs] = pre_artifactFixedThreshold(dataI
                         1:parameters.EEG.nrOfChannels);
             noOfNans = sum(crap_NaNIndices);
             NaNPercentage = (noOfNans / dataSamples) * 100;
-            disp(['      C.R.A.P - ', num2str(parameters.artifacts.CRAP.continuous_ampth(1)), ' - ', num2str(parameters.artifacts.CRAP.continuous_ampth(2)), ' uV, '...
+            disp(['       C.R.A.P'])
+                
+            disp(['        .. ', num2str(parameters.artifacts.CRAP.continuous_ampth(1)), ' - ', num2str(parameters.artifacts.CRAP.continuous_ampth(2)), ' uV, '...
                          'wWidth = ', num2str(parameters.artifacts.CRAP.continuous_windowWidth), ', wStep = ', num2str(parameters.artifacts.CRAP.continuous_windowStep), ' ms, '...
                          'Number of NaNs: ', num2str(noOfNans), ', percentage: ', num2str(NaNPercentage), '%'])                               
         end

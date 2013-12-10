@@ -211,7 +211,7 @@ function [heart, hp4] = analyze_HRV_Wrapper(heart, hpRaw, thpRaw, hp, thp, rrTim
     %% DEBUG
     if debugON == 1
         scrsz = handles.style.scrsz;
-        fig = figure('Color', 'w');
+        fig = figure('Color', 'w', 'Name', 'HRV');
             set(fig, 'Position', [0.5*scrsz(3) 0.05*scrsz(4) 0.45*scrsz(3) 0.90*scrsz(4)])
             rows = 3; cols = 1;
         

@@ -204,7 +204,7 @@ elseif (strcmp(mother,'PAUL'))  %--------------------------------  Paul
 	coi = fourier_factor*sqrt(2);
 	dofmin = 2;
 elseif (strcmp(mother,'DOG'))  %--------------------------------  DOG
-	if (param == -1), param = 2.;, end
+	if (param == -1), param = 2.; end
 	m = param;
 	expnt = -(scale.*k).^2 ./ 2.0;
 	norm = sqrt(scale*k(2)/gamma(m+0.5))*sqrt(n);
