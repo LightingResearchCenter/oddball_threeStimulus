@@ -285,7 +285,7 @@ function [epochs, analyzed, TF, dataMatrix_filtGeneral, alpha, powers, handles] 
                 for stim = 1 : length(stimTypes)
                     
                     if stim == 1; fprintf('       ... '); end
-                    fprintf(' / ', [stimTypes{stim}])
+                    fprintf([' / ', stimTypes{stim}])
                 
                     % Use subfunction
                     ERP_components.(filterTypes{filt}).(erpTypes{erpType}).(stimTypes{stim}) = ...
@@ -342,7 +342,7 @@ function [epochs, analyzed, TF, dataMatrix_filtGeneral, alpha, powers, handles] 
         % you can discard some data, and make sure that you only the needed
         % data is saved to disk, or if you just want to optimize the use of
         % disk space or something    
-        process_assignOutputsFromPROCESS(epochs, ERP_components, alpha, SEM, heart, fractalAnalysis, timeFreq, handles.parameters, handles)    
+        % process_assignOutputsFromPROCESS(epochs, ERP_components, alpha, SEM, heart, fractalAnalysis, timeFreq, handles.parameters, handles)    
       
                           
     disp('+++++         Processing of the file complete')

@@ -22,6 +22,9 @@ function [rejectedEpochs_target, rejectedEpochs_distr, rejectedEpochs_std, artif
             end
         end 
     end
+    
+    handles.parameters.artifacts.FASTER_zThreshold = 1.5;
+    handles.parameters.artifacts.FASTER_zThreshold_step4 = 1.5;
 
     debugOnlyTarget = 1; % faster development / debugging
     
@@ -32,9 +35,9 @@ function [rejectedEpochs_target, rejectedEpochs_distr, rejectedEpochs_std, artif
         handles.parameters.artifacts.CRAP.step_windowWidth = 50;
         handles.parameters.artifacts.CRAP.step_windowStep = 15;
         
-        handles.parameters.artifacts.CRAP.movWind_ampTh = [-70 70];
-        handles.parameters.artifacts.CRAP.movWind_windowWidth = 15;
-        handles.parameters.artifacts.CRAP.step_windowStep = 20;
+        handles.parameters.artifacts.CRAP.movWind_ampTh = [-65 65];
+        handles.parameters.artifacts.CRAP.movWind_windowWidth = 20;
+        handles.parameters.artifacts.CRAP.movWind_windowStep = 20;
     
         
         % TARGET
@@ -63,10 +66,7 @@ function [rejectedEpochs_target, rejectedEpochs_distr, rejectedEpochs_std, artif
     end
 
     % FASTER (3rd party) used with a wrapper funtion
-    disp('      .. FASTER algorithm')
-    handles.parameters.artifacts.FASTER_zThreshold = 1.2
-    handles.parameters.artifacts.FASTER_zThreshold_step4 = 1.2
-    whos
+    disp('      .. FASTER algorithm')    
     [epochs_concan_FASTER_target, artifactIndices_FASTER_target] = pre_artifactFASTER_wrapper(epochs_concan_target, fixedIndices_target,...
         NaN_indices_EEG_target, NaN_indices_EOG_target, NaN_indices_moving_target, NaN_indices_step_target, reference_target, vDiffOutMovWindow_target, vDiffOutStep_target, ...
         handles.parameters, 'target', handles);

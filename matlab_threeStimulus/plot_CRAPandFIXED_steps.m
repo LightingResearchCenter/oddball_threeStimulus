@@ -30,11 +30,9 @@ function [sp_i, sp] = plot_CRAPandFIXED_steps(fig, sp, sp_i, leg, rows, cols, ..
     i = 2;
     sp(sp_i) = subplot(rows,cols, subplotIndices(2));
     
-        hold on
-        % Threshold
-        yThr = handles.parameters.artifacts.CRAP.movWind_ampTh(2);
-        lin(1) = line([1 length(vDiffOutMovWindow)], [yThr yThr], 'Color', 'k', 'LineStyle', '-', 'LineWidth', 1);
-        p2 = plot(vDiffOutMovWindow);   
+        hold on        
+        yThr = handles.parameters.artifacts.CRAP.movWind_ampTh(2); % Threshold
+        p2 = plot(1:length(vDiffOutMovWindow), vDiffOutMovWindow, 1:length(vDiffOutMovWindow), yThr:yThr);   
         hold off
     
         lab(i,1) = xlabel('Epochs');
@@ -48,12 +46,9 @@ function [sp_i, sp] = plot_CRAPandFIXED_steps(fig, sp, sp_i, leg, rows, cols, ..
     i = 3;
     sp(sp_i) = subplot(rows,cols, subplotIndices(3));
     
-        p3 = plot(vDiffOutStep);
-        hold on
-        % Threshold
-        yThr = handles.parameters.artifacts.CRAP.step_ampTh;
-        lin(2) = line([1 length(vDiffOutMovWindow)], [yThr yThr], 'Color', 'k', 'LineStyle', '--', 'LineWidth', 2);
-        hold off
+        yThr = handles.parameters.artifacts.CRAP.step_ampTh; % Threshold
+        p3 = plot(1:length(vDiffOutStep), vDiffOutStep, 1:length(vDiffOutStep), yThr:yThr);        
+        
     
         lab(i,1) = xlabel('Epochs');
         lab(i,2) = ylabel(['max(diff) [\muV]']);
@@ -66,9 +61,8 @@ function [sp_i, sp] = plot_CRAPandFIXED_steps(fig, sp, sp_i, leg, rows, cols, ..
     i = 4;
     sp(sp_i) = subplot(rows,cols, subplotIndices(4));       
     
-        yMov = logical(sum(NaN_indices_moving,2));
+        yMov = sum(NaN_indices_moving,2)/parameters.EEG.nrOfChannels;
         yStep = logical(sum(NaN_indices_step,2));
-        whos
         hold on
         b(1) = bar(yMov, 0.5, 'g', 'EdgeColor', 'none');
         b(2) = bar(yStep, 0.5, 'b', 'EdgeColor', 'none');

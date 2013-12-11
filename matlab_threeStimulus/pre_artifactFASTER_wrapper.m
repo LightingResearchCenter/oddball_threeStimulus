@@ -102,6 +102,9 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                     rows = 4;
                     cols = 4;
                     
+                noOfValidTrials = sum(~isnan(permute(EEG.data(1:parameters.EEG.nrOfChannels,:,:),[2 1 3])),3); % per channel
+                noOfValidTrials = noOfValidTrials(1,:);
+                    
                 sp_i = 1;
                 sp(sp_i) = subplot(rows,cols, [1 5 9]);
                     yOffset = 55; % [uV]
@@ -127,7 +130,7 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                     hold off                    
                     lab(2,1) = xlabel('Time [ms]');
                     lab(2,2) = ylabel('Amplitude [\muV]');
-                    tit(2) = title(['Average Waveform']);
+                    tit(2) = title(['Average Waveform, n = [', num2str(noOfValidTrials), ']']);
                     xlim([min(t*1000) max(t*1000)])
                     yLimsIns = get(gca, 'YLim');                    
                     drawnow
@@ -210,40 +213,86 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
             
             EEGout = zeros(size(EEG.data,1), size(EEG.data,2), noOfEpochs1);
             EEGout(:,:,:) = NaN;
-            epochPerChannelIsArtifacted = zeros(noOfEpochs1,length(eeg_chans));
-            epochPerChannelStep2Corrected = zeros(noOfEpochs1,length(eeg_chans));
+            %epochPerChannelIsArtifacted = zeros(noOfEpochs1,length(eeg_chans));
+            %epochPerChannelStep2Corrected = zeros(noOfEpochs1,length(eeg_chans));
             
-            zs_st4 = zeros(noOfEpochs2, length(eeg_chans), 4); % 4 is the number of different "artifact scores"
+            zs_st4_allCh = zeros(noOfEpochs2, length(eeg_chans), 4); % 4 is the number of different "artifact scores"
             
             for v = 1 : noOfEpochs2
+                
+                %{
+                subplot(2,1,1)                
+                plot(EEG.data(:,:,v)')
+                %}
                 
                 list_properties = single_epoch_channel_properties(EEG, v, eeg_chans);                
                 rejection_options.measure = ones(1,size(list_properties,2)); % values of the statistical parameters (see flow chart)
                 rejection_options.z = parameters.artifacts.FASTER_zThreshold_step4 * ones(1,size(list_properties,2)); % Z-score threshold
                 
                 [indelec_st4, zs_st4_raw] = min_z_mod(list_properties,rejection_options);
-                zs_st4(v,:,:) = zs_st4_raw;
-                indicesOut = logical(min_z(list_properties, rejection_options));
-                lengths_ep{v} = eeg_chans(indicesOut);       
+                    % [noOfChannels, noOfMeasures] = size(zs_st4_raw)
+                    % noOfChannels = length(indelec_st4)
+                    
+                zs_st4_allCh(v,:,:) = zs_st4_raw;
+                indicesOut(v,:) = logical(min_z(list_properties, rejection_options));
+                lengths_ep{v} = eeg_chans(indicesOut(v,:));       
                 
-                % re-correct for baseline
+                % actually reject the epoch (convert the artifacted epochs
+                % to NaNs)
+                linearIndices = indicesOut(v,:) == 1;
+                EEG.data(linearIndices,:,v) = NaN;
+                
+                % re-correct for baseline (useful actually only if you had
+                % done ICA subtraction in STEP 3)
                 EEGrecorr = pre_removeBaseline_epochByEpoch(EEG.data(:,:,v)', v, parameters, handles);
                 EEG.data(:,:,v) = EEGrecorr';          
                 
+                % combine the 4 different measures so that we have an absolute max
+                % per channel, and if this exceeds the z-threshold, then
+                % the epoch is artifacted
+                [absMeasuresForChannelsPerEpoch,I] = max(abs(zs_st4_raw), [], 2);
+                for ch = 1 : length(eeg_chans) % keep the sign, for loop maybe more easier to read by human later                                        
+                    measuresForChannelsPerEpoch(ch) = zs_st4_raw(ch,I(ch));
+                end
+                zs_st4(v,:) = measuresForChannelsPerEpoch;
+                %{
+                subplot(2,1,2)
+                plot(EEG.data(:,:,v)')
+                title(['indicesOut: ', num2str(indicesOut(v,:))]);
+                legend('Fz', 'Cz', 'Pz', 'Oz', 'EOG', 'ECG')
+                pause
+                %}
+                              
             end
             
+            
+            
             % no we need to add the artifacted epochs back to the
-            % matrix             
+            % original matrix  (as Step 4 is not using the epochs rejected
+            % in Step 2)
             EEGout(:,:,step2_linearIndices_nonArtifact) = EEG.data(:,:,:);                  
             EEG.data = EEGout;
             
-            %artifactsRemoved_step4 = sum(sum(epochPerChannelIsArtifacted == 1));
-            artifactsRemoved_step4 = sum(epochPerChannelIsArtifacted == 1);
-            disp(['           ... ', num2str(artifactsRemoved_step4), ' epochs rejected (Step 4) from ', num2str(noOfEpochs2), ' epochs'])             
-            artifactIndices = epochPerChannelIsArtifacted + epochPerChannelStep2Corrected;
+                % the same for zs_st4
+                zs_st4temp = zeros(noOfEpochs1, length(eeg_chans));
+                zs_st4temp(:,:) = NaN;
+                zs_st4temp(step2_linearIndices_nonArtifact,:) = zs_st4;
+                zs_st4 = zs_st4temp;
+                
             
-            % average over channels
-            zs_st4 = nanmean(zs_st4, 3);
+            %artifactsRemoved_step4 = sum(sum(epochPerChannelIsArtifacted == 1));
+            epochPerChannelIsArtifacted_step4 = logical((squeeze(sum(isnan(EEG.data),2)))');
+            epochPerChannelIsArtifacted_step4 = epochPerChannelIsArtifacted_step4(:,1:length(eeg_chans));
+                  
+                % now this step4 contains step 2 also, separate if you want
+            
+            artifactsRemoved_step4 = sum(indicesOut == 1);
+            disp(['           ... ', num2str(artifactsRemoved_step4), ' epochs rejected (Step 4) from ', num2str(noOfEpochs2), ' epochs'])                       
+            
+            %artifactIndices = epochPerChannelIsArtifacted_step4 + indelec_st2;
+                        
+            
+            
             
             %% INTERPOLATION (skip)
             
@@ -310,10 +359,8 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
             % "pre_artifactFASTER_fixedThresholds.m"
             % fixedIndices          
                        
-            for ch =  1 : size(fixedIndices,2)
-                
-                for ep =  1 : size(fixedIndices,1)
-            
+            for ch =  1 : size(fixedIndices,2)                
+                for ep =  1 : size(fixedIndices,1)            
                     if fixedIndices(ep,ch) == 1
                         EEG.data(ch,:,ep) = NaN;
                     end
@@ -332,9 +379,23 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
             disp(['                ... ', num2str(artifactsRemoved_fixed), ' epochs rejected (Fixed: EEG+EOG+CRAP) from ', num2str(noOfEpochs1), ' epochs'])
           
             % update output
-            artifactIndices = logical(artifactIndices + fixedIndices);
-            
+            %faster_artifactIndices = logical(artifactIndices + fixedIndices);            
             fixedThresholdIndices = EEGfixedIndices + EOGfixedIndices;
+            
+        %% REJECT USING the CRAP 
+        
+            %NaN_indices_moving, NaN_indices_step
+            for ch =  1 : size(NaN_indices_moving,2)                
+                for ep =  1 : size(NaN_indices_moving,1)            
+                    if NaN_indices_moving(ep,ch) == 1
+                        EEG.data(ch,:,ep) = NaN;
+                    end
+                    if NaN_indices_step(ep,ch) == 1
+                        EEG.data(ch,:,ep) = NaN;
+                    end
+                end
+            end  
+            
             
 
         %% PLOT ARTIFACT REMOVAL STEPS
@@ -358,7 +419,7 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                     subplotIndices_FASTER = [3 7 11 15];                    
                     [sp_i, sp] = plot_FASTER_steps(fig, sp, sp_i, leg, rows, cols, ...
                         zs_st2, indelec_st3, zs_st3, num_pca, activData, blinkData, zs_st4, ...
-                        indelec_st4, indelec_st2, subplotIndices_FASTER, parameters, handles);                    
+                        epochPerChannelIsArtifacted_step4, indelec_st2, artifacts_CRAP, subplotIndices_FASTER, parameters, handles);                    
                     
                 end
             end       
@@ -383,7 +444,10 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                         drawnow
                        
                 sp_i = sp_i + 1;
-                sp(sp_i) = subplot(rows,cols, [16]);
+                sp(sp_i) = subplot(rows,cols, [16]);                
+                    
+                    noOfValidTrials = sum(~isnan(permute(EEG_mat(1:parameters.EEG.nrOfChannels,:,:),[2 1 3])),3); % per channel
+                    noOfValidTrials = noOfValidTrials(1,:);
                 
                     % get the average waveform
                     averWaveForm = nanmean(EEG_mat(1:parameters.EEG.nrOfChannels,:,:),3);
@@ -393,7 +457,7 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                     hold off
                     lab(4,1) = xlabel('Time [ms]');
                     lab(4,2) = ylabel('Amplitude [\muV]');
-                    tit(4) = title(['Average Waveform']);
+                    tit(4) = title(['Average Waveform, n = [', num2str(noOfValidTrials), ']']);
                     ylim(yLimsIns) % use the same y-limits as for the input to make comparison easier
                     xlim([min(t*1000) max(t*1000)])
                     

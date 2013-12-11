@@ -6,7 +6,7 @@ function plot_allTheEpochsToSingleSubplot(spHandle, t, EEGepochs, parameters, yO
     hold on
     for ij = 1 : numberOfEpochs
 
-       axes(spHandle) 
+       % axes(spHandle) 
 
        yOff = yOffset*ij; % update the horizontal line (baseline)
 

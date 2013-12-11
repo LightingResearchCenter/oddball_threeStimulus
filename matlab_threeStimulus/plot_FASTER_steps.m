@@ -1,5 +1,5 @@
 function [sp_i, sp] = plot_FASTER_steps(fig, sp, sp_i, leg, rows, cols, zs_st2, indelec_st3, zs_st3, num_pca, ...
-            activData, blinkData, zs_st4, epochPerChannelIsArtifacted, epochPerChannelStep2Corrected, subplotIndices, parameters, handles)
+            activData, blinkData, zs_st4, epochPerChannelIsArtifacted, epochPerChannelStep2Corrected, artifacts_CRAP, subplotIndices, parameters, handles)
 
     % STEP 2
     sp_i = sp_i + 1;
@@ -82,8 +82,11 @@ function [sp_i, sp] = plot_FASTER_steps(fig, sp, sp_i, leg, rows, cols, zs_st2, 
         % Thresholds
         plot(1:length(epochPerChannelStep2Corrected),parameters.artifacts.FASTER_zThreshold_step4*ones(1,length(epochPerChannelStep2Corrected)), 'k-.', 'linewidth', 2)
         plot(1:length(epochPerChannelStep2Corrected),-parameters.artifacts.FASTER_zThreshold_step4*ones(1,length(epochPerChannelStep2Corrected)), 'k-.', 'linewidth', 2)
-        leg(4) = legend('Variance', 'Median slope', 'Ampl. range', 'Electr. Drift', 'Location', 'Best');
-        legend('boxoff')
+        leg(4) = legend('Variance', 'Median slope', 'Ampl. range', 'Electr. Drift', 'Location', 'Best');        
+            if isnan(num_pca)
+                set(leg(4), 'Position',[0.584376133152028 0.52722931680673 0.0704887218045113 0.0659294512877939])
+                legend('boxoff')
+            end
         lab(3,1) = xlabel('Epochs');
         lab(3,2) = ylabel(['Z-score (thr = ', num2str(parameters.artifacts.FASTER_zThreshold_step4), ')']);
         tit(3) = title('STEP 4: SINGLE-Ch, SINGLE-Ep (abs mean of chs)');
@@ -96,9 +99,17 @@ function [sp_i, sp] = plot_FASTER_steps(fig, sp, sp_i, leg, rows, cols, zs_st2, 
     sp_i = sp_i + 1;
     sp(sp_i) = subplot(rows,cols, subplotIndices(4));
 
-        hold on
-        b(1) = bar(logical(sum(epochPerChannelStep2Corrected,2)), 0.5, 'k', 'EdgeColor', 'none');
-        b(2) = bar(logical(sum(epochPerChannelIsArtifacted,2)), 0.5,'g', 'EdgeColor', 'none');
+        hold on        
+        step2 = 0.5*sum(epochPerChannelStep2Corrected,2);
+        step4 = sum(epochPerChannelIsArtifacted,2)/parameters.EEG.nrOfChannels;
+        CRAP = sum(artifacts_CRAP,2)/parameters.EEG.nrOfChannels;        
+        allArtifacts = (step2 + step4 + CRAP) / 3;
+        noOfAll = sum(allArtifacts);
+        
+        
+        b(1) = bar(step2, 0.5, 'b', 'EdgeColor', 'none');
+        b(2) = bar(step4, 0.5,'r', 'EdgeColor', 'none');
+        b(3) = bar(allArtifacts, 0.5, 'k', 'EdgeColor', 'none');
 
         hold off
 
@@ -112,11 +123,12 @@ function [sp_i, sp] = plot_FASTER_steps(fig, sp, sp_i, leg, rows, cols, zs_st2, 
 
             lab(4,1) = xlabel('Epochs');
             lab(4,2) = ylabel('Artifact (ON/OFF)');
-            tit(4) = title('FASTER Artifacted Epochs');
+            tit(4) = title('FASTER Artifacts');
             set(gca, 'XLim', [1-0.5 length(epochPerChannelStep2Corrected)+0.5], 'YLim', [0 1.2]) 
 
             leg(5) = legend(['Step2, n=', num2str(sum(epochPerChannelStep2Corrected == 1), '%3.0f')],...
-                            ['Step4, n=', num2str(sum(sum(epochPerChannelIsArtifacted))/parameters.EEG.nrOfChannels, '%3.2f')]);
+                            ['Step4, n=', num2str(sum(sum(epochPerChannelIsArtifacted))/parameters.EEG.nrOfChannels, '%3.2f')], ...
+                            ['All, n=', num2str(noOfAll, '%3.2f')]);    
                 set(leg(5), 'Position', [0.657424812030075 0.26553751399776 0.0736215538847118 0.0354143337066069])
                 legend('boxoff')
 

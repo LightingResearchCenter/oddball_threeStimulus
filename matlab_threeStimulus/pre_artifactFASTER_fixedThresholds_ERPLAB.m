@@ -94,7 +94,7 @@ function [NaN_indices_EEG, NaN_indices_EOG, indices_moving, indices_step, vDiffO
             
             % debugging
             
-            if ep == 36
+            if ep == 40
                figure('Name', 'CRAP Debug')
                subplot(4,1,1)
                y = squeeze(vDiffOutMovWindow(ep,:,:))';
@@ -107,7 +107,7 @@ function [NaN_indices_EEG, NaN_indices_EOG, indices_moving, indices_step, vDiffO
                subplot(4,1,4)
                plot(EOGnotch); title('EOG');
                drawnow
-               % fd
+               %fd
             end
             
             
