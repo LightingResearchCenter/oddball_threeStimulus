@@ -1,5 +1,5 @@
 function [sp_i, sp] = plot_CRAPandFIXED_steps(fig, sp, sp_i, leg, rows, cols, ...
-                        NaN_indices_moving, NaN_indices_step, EEGfixedIndices, EOGfixedIndices, vDiffOutMovWindow, vDiffOutStep, ...
+                        NaN_indices_moving, NaN_indices_movingEOG, NaN_indices_step, EEGfixedIndices, EOGfixedIndices, vDiffOutMovWindow, vDiffOutMovWindowEOG, vDiffOutStep, ...
                         subplotIndices, parameters, handles)
 
     % whos
@@ -31,7 +31,7 @@ function [sp_i, sp] = plot_CRAPandFIXED_steps(fig, sp, sp_i, leg, rows, cols, ..
     sp(sp_i) = subplot(rows,cols, subplotIndices(2));
     
         hold on        
-        yThr = handles.parameters.artifacts.CRAP.movWind_ampTh(2); % Threshold
+        yThr = parameters.artifacts.CRAP.movWind_ampTh(2); % Threshold
         p2 = plot(1:length(vDiffOutMovWindow), vDiffOutMovWindow, 1:length(vDiffOutMovWindow), yThr:yThr);   
         hold off
     
@@ -39,22 +39,28 @@ function [sp_i, sp] = plot_CRAPandFIXED_steps(fig, sp, sp_i, leg, rows, cols, ..
         lab(i,2) = ylabel(['max(diff) [\muV]']);
         tit(i) = title(['CRAP - MovWindow: [', num2str(sum(NaN_indices_moving,1)), ']']);
         
-            leg(2) = legend(p2, 'Cz', 'Fz', 'Pz', 'Oz', 'Location', 'Best');
+            leg(2) = legend(p2, ['Fz, thr: [',num2str(handles.parameters.artifacts.CRAP.movWind_ampTh(1)),'-',num2str(handles.parameters.artifacts.CRAP.movWindEOG_ampTh(1)), '\muV'],...
+                                ['C, window: [',num2str(handles.parameters.artifacts.CRAP.movWind_windowWidth), 'ms'],...
+                                ['Pz, winStep: [',num2str(handles.parameters.artifacts.CRAP.movWind_windowStep), 'ms'],...
+                                 'Oz', 'Location', 'Best');
             legend('boxoff')
+
 
     sp_i = sp_i + 1;
     i = 3;
-    sp(sp_i) = subplot(rows,cols, subplotIndices(3));
+    sp(sp_i) = subplot(rows,cols, subplotIndices(3));  
     
-        yThr = handles.parameters.artifacts.CRAP.step_ampTh; % Threshold
-        p3 = plot(1:length(vDiffOutStep), vDiffOutStep, 1:length(vDiffOutStep), yThr:yThr);        
-        
-    
+        yThr = parameters.artifacts.CRAP.movWindEOG_ampTh(2); % Threshold
+        p3 = plot(1:length(vDiffOutMovWindowEOG), vDiffOutMovWindowEOG, 1:length(vDiffOutMovWindowEOG), yThr:yThr);        
+            
         lab(i,1) = xlabel('Epochs');
         lab(i,2) = ylabel(['max(diff) [\muV]']);
-        tit(i) = title(['CRAP - Step: [', num2str(sum(sum(NaN_indices_step,1))), ']']);
+        tit(i) = title(['CRAP - MovEOG: [', num2str(sum(sum(NaN_indices_movingEOG,1))), ']']);
         
-            leg(3) = legend('EOG', 'Location', 'Best');
+            legString = sprintf('%s\n%s\n%s\n', ['EOG, thr=', num2str(handles.parameters.artifacts.CRAP.movWindEOG_ampTh(1)), '-', num2str(handles.parameters.artifacts.CRAP.movWindEOG_ampTh(2)),' \muV'], ... 
+                            ['w=', num2str(handles.parameters.artifacts.CRAP.movWindEOG_windowWidth), ' ms'], ...
+                            ['step=', num2str(handles.parameters.artifacts.CRAP.movWindEOG_windowStep), 'ms']);
+            leg(3) = legend(legString, 'Location', 'Best');
             legend('boxoff')
 
     sp_i = sp_i + 1;

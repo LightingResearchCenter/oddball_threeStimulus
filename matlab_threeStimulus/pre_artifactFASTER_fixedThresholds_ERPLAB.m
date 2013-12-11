@@ -1,4 +1,5 @@
-function [NaN_indices_EEG, NaN_indices_EOG, indices_moving, indices_step, vDiffOutMovWindow, vDiffOutStep, isNaN] = pre_artifactFASTER_fixedThresholds_ERPLAB(EEG, EOG, ECG, debugOn, parameters, handles)
+function [NaN_indices_EEG, NaN_indices_EOG, indices_moving, indices_movingEOG, indices_step, vDiffOutMovWindow, vDiffOutMovWindowEOG, vDiffOutStep, isNaN] = ...
+    pre_artifactFASTER_fixedThresholds_ERPLAB(EEG, EOG, ECG, debugOn, parameters, handles)
 
     debugMatFileName = 'tempFASTERfixedThresholds.mat';
     if nargin == 0
@@ -90,7 +91,8 @@ function [NaN_indices_EEG, NaN_indices_EOG, indices_moving, indices_step, vDiffO
                     
         %% ERPLAB ARTIFACT DETECTION          
                    
-           [indices_moving(ep,:), indices_step(ep,:), vDiffOutMovWindow(ep,:,:), vDiffOutStep(ep,:,:)] = pre_artifact_ERPLAB(EEG_channels, EOGnotch, ep, parameters);            
+           [indices_moving(ep,:), indices_movingEOG(ep,:), indices_step(ep,:), vDiffOutMovWindow(ep,:,:), vDiffOutMovWindowEOG(ep,:,:), vDiffOutStep(ep,:,:)] = ...
+               pre_artifact_ERPLAB(EEG_channels, EOGnotch, ep, parameters);            
             
             % debugging
             
@@ -99,11 +101,14 @@ function [NaN_indices_EEG, NaN_indices_EOG, indices_moving, indices_step, vDiffO
                subplot(4,1,1)
                y = squeeze(vDiffOutMovWindow(ep,:,:))';
                plot(y); title(['MovingWindow (CRAP), max Diff = ', num2str(max(y))]);
+               
                subplot(4,1,2)
                plot(EEG_channels); title('EEG');
+               
                subplot(4,1,3)
-               y = squeeze(vDiffOutStep(ep,:,:))';
-               plot(y); title(['Step (CRAP), max Diff = ', num2str(max(y))]);
+               y = squeeze(vDiffOutMovWindowEOG(ep,:,:))';
+               plot(y); title(['MovingWindow EOG (CRAP), max Diff = ', num2str(max(y))]);
+               
                subplot(4,1,4)
                plot(EOGnotch); title('EOG');
                drawnow
@@ -238,7 +243,7 @@ function [NaN_indices_EEG, NaN_indices_EOG, indices_moving, indices_step, vDiffO
     
 
 %% SUBFUNCTION WRAPPER FOR THE CRAP from ERPLAB
-function [moving_isNaN, step_isNaN, vDiffOutMovWindow, vDiffOutStep] = pre_artifact_ERPLAB(epochIn, EOG, ep, parameters)
+function [moving_isNaN, movingEOG_isNaN, step_isNaN, vDiffOutMovWindow, vDiffOutMovWindowEOG, vDiffOutStep] = pre_artifact_ERPLAB(epochIn, EOG, ep, parameters)
 
     % Use EEGLAB structure fields
     EEG.data = epochIn';
@@ -265,7 +270,7 @@ function [moving_isNaN, step_isNaN, vDiffOutMovWindow, vDiffOutStep] = pre_artif
         moving_isNaN = logical(sum(indices_moving));
         
 
-    %% The Step Function
+    %% Moving window for EOG channel
 
         EEG.data = EOG';
 
@@ -274,10 +279,25 @@ function [moving_isNaN, step_isNaN, vDiffOutMovWindow, vDiffOutStep] = pre_artif
         % but it is useful for detecting other kinds of artifacts as well (e.g., blinks).  
         % The step function begins by defining a step-shaped function of a particular width 
         % (e.g., 200 ms at one voltage and then 200 ms at a different voltage)
+        [indices_movingEOG, vDiffOutMovWindowEOG] = crap_mod(EEG, parameters.artifacts.CRAP.movWindEOG_ampTh, parameters.artifacts.CRAP.movWindEOG_windowWidth, parameters.artifacts.CRAP.movWindEOG_windowStep, ...
+                                                1:1);
+
+        movingEOG_isNaN = logical(sum(indices_movingEOG));
+        
+    %% STEP?
+    
+        % check if really correct
+        EEG.data = EOG';
         [indices_step, vDiffOutStep] = crap_mod(EEG, parameters.artifacts.CRAP.step_ampTh, parameters.artifacts.CRAP.step_windowWidth, parameters.artifacts.CRAP.step_windowStep, ...
                                                 1:1);
 
         step_isNaN = logical(sum(indices_step));
+
+        %{
+        handles.parameters.artifacts.CRAP.step_ampTh = 10;
+        handles.parameters.artifacts.CRAP.step_windowWidth = 50;
+        handles.parameters.artifacts.CRAP.step_windowStep = 15;
+        %}
 
 
     %% Debug plot

@@ -1,5 +1,6 @@
 function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fixedIndices, EEGfixedIndices, EOGfixedIndices, ...
-                                            NaN_indices_moving, NaN_indices_step, referenceInput, vDiffOutMovWindow, vDiffOutStep, ...
+                                            NaN_indices_moving, NaN_indices_movingEOG, NaN_indices_step, ...
+                                            referenceInput, vDiffOutMovWindow, vDiffOutMovWindowEOG, vDiffOutStep, ...
                                             parameters, erpType, handles)
 
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction        
@@ -367,7 +368,7 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
             artifactsRemoved_fixed = sum(fixedIndices);
             artifactsRemoved_fixedEEG = sum(EEGfixedIndices);            
             artifactsRemoved_fixedEOG = sum(EOGfixedIndices);            
-            artifacts_CRAP = NaN_indices_moving + NaN_indices_step;
+            artifacts_CRAP = NaN_indices_moving + NaN_indices_step + repmat(NaN_indices_movingEOG,1,size(NaN_indices_moving,2));
             artifactsRemoved_CRAP = sum(artifacts_CRAP);
             disp(['             ... ', num2str(artifactsRemoved_CRAP), ' epochs rejected (CRAP) from ', num2str(noOfEpochs1), ' epochs'])
             disp(['              ... ', num2str(artifactsRemoved_fixedEEG), ' epochs rejected (Fixed EEG) from ', num2str(noOfEpochs1), ' epochs'])
@@ -406,9 +407,10 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                     % condition a bit, only one value per epoch
                     vDiffOutStep = squeeze(nanmax(permute(vDiffOutStep, [3 2 1])));
                     vDiffOutMovWindow = (squeeze(nanmax(permute(vDiffOutMovWindow, [3 2 1]))))';                    
+                    vDiffOutMovWindowEOG = (squeeze(nanmax(permute(vDiffOutMovWindow, [3 2 1]))))';     
                     
                     [sp_i, sp] = plot_CRAPandFIXED_steps(fig, sp, sp_i, leg, rows, cols, ...
-                        NaN_indices_moving, NaN_indices_step, EEGfixedIndices, EOGfixedIndices, vDiffOutMovWindow, vDiffOutStep, ...
+                        NaN_indices_moving, NaN_indices_movingEOG, NaN_indices_step, EEGfixedIndices, EOGfixedIndices, vDiffOutMovWindow, vDiffOutMovWindowEOG, vDiffOutStep, ...
                         subplotIndices_CRAP, parameters, handles);                   
 
                     % FASTER steps
