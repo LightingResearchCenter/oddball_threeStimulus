@@ -288,10 +288,16 @@ function [moving_isNaN, movingEOG_isNaN, step_isNaN, vDiffOutMovWindow, vDiffOut
     
         % check if really correct
         EEG.data = EOG';
+
+        % Probably use some other function than the crap_mod, check later?
+        % http://erpinfo.org/erplab/erplab-documentation/manual_4/Artifact_Detection.html
+
+
         [indices_step, vDiffOutStep] = crap_mod(EEG, parameters.artifacts.CRAP.step_ampTh, parameters.artifacts.CRAP.step_windowWidth, parameters.artifacts.CRAP.step_windowStep, ...
                                                 1:1);
 
         step_isNaN = logical(sum(indices_step));
+        
 
         %{
         handles.parameters.artifacts.CRAP.step_ampTh = 10;
