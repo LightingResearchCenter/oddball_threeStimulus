@@ -1,5 +1,6 @@
 function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fixedIndices, EEGfixedIndices, EOGfixedIndices, ...
-                                            NaN_indices_moving, NaN_indices_step, rawInput, parameters, erpType, handles)
+                                            NaN_indices_moving, NaN_indices_step, referenceInput, vDiffOutMovWindow, vDiffOutStep, ...
+                                            parameters, erpType, handles)
 
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction        
     if handles.flags.saveDebugMATs == 1
@@ -22,8 +23,7 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
         end 
     end
     
-    disp(['        - ', erpType])
-    
+    disp(['        - ', erpType])    
     epochsOut = epochsIn;    
     debugFASTER = 1;    
     
@@ -98,26 +98,26 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
 
                 scrsz = [1 1 1680 1050];
                 fig = figure('Color','w','Name',[erpType, ': FASTER Debug']);
-                    set(fig, 'Position', [0.10*scrsz(3) 0.075*scrsz(4) 0.82*scrsz(3) 0.85*scrsz(4)])
+                    set(fig, 'Position', [0.02*scrsz(3) 0.075*scrsz(4) 0.95*scrsz(3) 0.85*scrsz(4)])
                     rows = 4;
-                    cols = 3;
+                    cols = 4;
                     
                 sp_i = 1;
-                sp(sp_i) = subplot(rows,cols, [1 4 7]);
+                sp(sp_i) = subplot(rows,cols, [1 5 9]);
                     yOffset = 55; % [uV]
                     %plot(1,1)
-                    plot_allTheEpochsToSingleSubplot(t*1000, EEG.data(1:parameters.EEG.nrOfChannels+1,:,:), parameters, yOffset)
+                    plot_allTheEpochsToSingleSubplot(sp(sp_i),t*1000, EEG.data(1:parameters.EEG.nrOfChannels+1,:,:), parameters, yOffset)
                     leg(1) = legend('Base', 'Cz', 'Fz', 'Pz', 'Oz', 'EOG');
                         set(leg(1), 'Position',[0.0567851959361391 0.469834826427773 0.0598693759071118 0.120380739081747])
                         legend('boxoff')
-                        xlabel('Time [ms]')
-                        ylabel('Epochs')            
-                        title(['Epochs IN (', erpType, ')'])
+                        lab(1,1) = xlabel('Time [ms]');
+                        lab(1,2) = ylabel('Epochs');
+                        tit(1) = title(['Epochs IN (', erpType, ')']);
                         xlim([min(t*1000) max(t*1000)])
                         drawnow
                        
                 sp_i = sp_i + 1;
-                sp(sp_i) = subplot(rows,cols, [10]);
+                sp(sp_i) = subplot(rows,cols, [13]);
                 
                     % get the average waveform
                     averWaveForm = nanmean(EEG.data(1:parameters.EEG.nrOfChannels+1,:,:),3);       
@@ -125,9 +125,9 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                     line([min(t*1000) max(t*1000)], [0 0], 'Color', 'k')
                     plot(t*1000, averWaveForm)
                     hold off                    
-                    xlabel('Time [ms]')
-                    ylabel('Amplitude [\muV]')
-                    title(['Average Waveform'])
+                    lab(2,1) = xlabel('Time [ms]');
+                    lab(2,2) = ylabel('Amplitude [\muV]');
+                    tit(2) = title(['Average Waveform']);
                     xlim([min(t*1000) max(t*1000)])
                     yLimsIns = get(gca, 'YLim');                    
                     drawnow
@@ -189,7 +189,7 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                 blinkCh = parameters.EEG.nrOfChannels + 1;
 
                 disp('          ... computing ICA (runica), might take some time (try to switch to fastICA for speed)')      
-                [EEG, indelec_st3, zs_st3, num_pca, activData, blinkData] = faster_step3_ICA(EEGmatrix, EEG, k_value, ica_chans, chans_to_interp, lpf_band, blinkCh, epochLength, parameters);
+                [EEG, indelec_st3, zs_st3, num_pca, activData, blinkData] = pre_FASTER_step3_ICA(EEGmatrix, EEG, k_value, ica_chans, chans_to_interp, lpf_band, blinkCh, epochLength, parameters);
                 
             else
             
@@ -299,15 +299,12 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                 % re-assign
                 EEG.data = EEGorig;
             
-            else
-                
-                disp('            ... skipping ADJUST for artifact removal')      
-                 
-            end
-            
+            else                
+                disp('            ... skipping ADJUST for artifact removal')
+            end            
             
         
-        %% CORRECT USING FIXED THRESHOLDS
+        %% REJECT USING FIXED THRESHOLDS
             
             % obtained in "PROCESS_singleFile.m" using the subfunction
             % "pre_artifactFASTER_fixedThresholds.m"
@@ -325,13 +322,13 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
             
             %artifactsRemoved_fixed = sum(sum(fixedIndices));            
             artifactsRemoved_fixed = sum(fixedIndices);
-            artifactsRemoved_fixed_EEG = sum(EEGfixedIndices);            
-            artifactsRemoved_fixed_EOG = sum(EOGfixedIndices);            
+            artifactsRemoved_fixedEEG = sum(EEGfixedIndices);            
+            artifactsRemoved_fixedEOG = sum(EOGfixedIndices);            
             artifacts_CRAP = NaN_indices_moving + NaN_indices_step;
             artifactsRemoved_CRAP = sum(artifacts_CRAP);
             disp(['             ... ', num2str(artifactsRemoved_CRAP), ' epochs rejected (CRAP) from ', num2str(noOfEpochs1), ' epochs'])
-            disp(['              ... ', num2str(artifactsRemoved_fixed_EEG), ' epochs rejected (Fixed EEG) from ', num2str(noOfEpochs1), ' epochs'])
-            disp(['               ... ', num2str(artifactsRemoved_fixed_EOG), ' epochs rejected (Fixed EOG) from ', num2str(noOfEpochs1), ' epochs'])
+            disp(['              ... ', num2str(artifactsRemoved_fixedEEG), ' epochs rejected (Fixed EEG) from ', num2str(noOfEpochs1), ' epochs'])
+            disp(['               ... ', num2str(artifactsRemoved_fixedEOG), ' epochs rejected (Fixed EOG) from ', num2str(noOfEpochs1), ' epochs'])
             disp(['                ... ', num2str(artifactsRemoved_fixed), ' epochs rejected (Fixed: EEG+EOG+CRAP) from ', num2str(noOfEpochs1), ' epochs'])
           
             % update output
@@ -343,10 +340,26 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
         %% PLOT ARTIFACT REMOVAL STEPS
         
             if debugFASTER == 1
+                
                 if strcmp(erpType, 'target') || strcmp(erpType, 'distracter')  || strcmp(erpType, 'standard')
-                    subplotIndices = [2 5 8 11];
-                    sp_i = plot_FASTER_steps(fig, sp, sp_i, leg, rows, cols, indelec_st2, zs_st2, indelec_st3, zs_st3, num_pca, activData, blinkData, zs_st4, ...
-                        indelec_st4, indelec_st2, fixedThresholdIndices, artifacts_CRAP, subplotIndices, parameters, handles);
+                
+                    % CRAP and FIXED step
+                    subplotIndices_CRAP = [2 6 10 14];                             
+                    
+                    % condition a bit, only one value per epoch
+                    vDiffOutStep = squeeze(nanmax(permute(vDiffOutStep, [3 2 1])));
+                    vDiffOutMovWindow = (squeeze(nanmax(permute(vDiffOutMovWindow, [3 2 1]))))';                    
+                    
+                    [sp_i, sp] = plot_CRAPandFIXED_steps(fig, sp, sp_i, leg, rows, cols, ...
+                        NaN_indices_moving, NaN_indices_step, EEGfixedIndices, EOGfixedIndices, vDiffOutMovWindow, vDiffOutStep, ...
+                        subplotIndices_CRAP, parameters, handles);                   
+
+                    % FASTER steps
+                    subplotIndices_FASTER = [3 7 11 15];                    
+                    [sp_i, sp] = plot_FASTER_steps(fig, sp, sp_i, leg, rows, cols, ...
+                        zs_st2, indelec_st3, zs_st3, num_pca, activData, blinkData, zs_st4, ...
+                        indelec_st4, indelec_st2, subplotIndices_FASTER, parameters, handles);                    
+                    
                 end
             end       
         
@@ -358,19 +371,19 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
             if strcmp(erpType, 'target') || strcmp(erpType, 'distracter')  || strcmp(erpType, 'standard')
                                    
                 sp_i = sp_i + 1;
-                sp(sp_i) = subplot(rows,cols, [3 6 9]);
-                    plot_allTheEpochsToSingleSubplot(t*1000, EEG_mat(1:parameters.EEG.nrOfChannels,:,:), parameters, yOffset)
+                sp(sp_i) = subplot(rows,cols, [4 8 12]);
+                    plot_allTheEpochsToSingleSubplot(sp(sp_i),t*1000, EEG_mat(1:parameters.EEG.nrOfChannels,:,:), parameters, yOffset)
                     leg(2) = legend('Base', 'Cz', 'Fz', 'Pz', 'Oz');
                         set(leg(2), 'Position',[0.911647314949202 0.575867861142218 0.0511611030478955 0.120380739081747])
                         legend('boxoff')
-                        xlabel('Time [ms]')
-                        ylabel('Epochs')            
-                        title(['Epochs OUT (', erpType, ')'])
+                        lab(3,1) = xlabel('Time [ms]');
+                        lab(3,2) = ylabel('Epochs');
+                        tit(3) = title(['Epochs OUT (', erpType, ')']);
                         xlim([min(t*1000) max(t*1000)])
                         drawnow
                        
                 sp_i = sp_i + 1;
-                sp(sp_i) = subplot(rows,cols, [12]);
+                sp(sp_i) = subplot(rows,cols, [16]);
                 
                     % get the average waveform
                     averWaveForm = nanmean(EEG_mat(1:parameters.EEG.nrOfChannels,:,:),3);
@@ -378,14 +391,16 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                     line([min(t*1000) max(t*1000)], [0 0], 'Color', 'k')
                     plot(t*1000, averWaveForm)
                     hold off
-                    xlabel('Time [ms]')
-                    ylabel('Amplitude [\muV]')
-                    title(['Average Waveform'])
+                    lab(4,1) = xlabel('Time [ms]');
+                    lab(4,2) = ylabel('Amplitude [\muV]');
+                    tit(4) = title(['Average Waveform']);
                     ylim(yLimsIns) % use the same y-limits as for the input to make comparison easier
                     xlim([min(t*1000) max(t*1000)])
                     
                 set(leg, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase-2) 
-                set(gca, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase-1) 
+                set(sp, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase-1) 
+                set(tit, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase-1, 'FontWeight', 'bold') 
+                set(lab, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase-2, 'FontWeight', 'bold') 
                 
             end
             
@@ -419,272 +434,4 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
             nrOfEpochsOut = size(EEG.data, 3);
             %epochsOut
             %epochsIn
-        
-        
-%% SUBFUNCTIONS
-%% -------------------------------
 
-    function sp_i = plot_FASTER_steps(fig, sp, sp_i, leg, rows, cols, indelec_st2, zs_st2, indelec_st3, zs_st3, num_pca, ...
-            activData, blinkData, zs_st4, epochPerChannelIsArtifacted, epochPerChannelStep2Corrected, isNaN_fixed, artifacts_CRAP, subplotIndices, parameters, handles)
-
-        % STEP 2
-        sp_i = sp_i + 1;
-        sp(sp_i) = subplot(rows,cols, subplotIndices(1));
-
-            hold on
-            plot(zs_st2,'linewidth',1)
-
-            % Thresholds
-            plot(1:length(indelec_st2),parameters.artifacts.FASTER_zThreshold*ones(1,length(indelec_st2)),'k-.','linewidth',2)
-            plot(1:length(indelec_st2),-parameters.artifacts.FASTER_zThreshold*ones(1,length(indelec_st2)),'k-.','linewidth',2)
-            leg(2) = legend('mean dev. from ch.', 'Ep Var', 'Max \DeltaAmplitude', 'Location', 'EastOutside');
-            legend('boxoff')
-            xlabel('Epochs')
-            ylabel(['Z-score (thr = ', num2str(parameters.artifacts.FASTER_zThreshold), ')'])
-            title('STEP 2: EPOCHS')
-            grid off
-            axis tight
-
-        % STEP 3
-        %{
-        sp_i = sp_i + 1;
-        sp(sp_i) = subplot(rows,cols, subplotIndices(2));
-        
-            plot(activData, blinkData, 'ko', 'MarkerSize', 2)
-            xlabel('ICA Activation')
-            ylabel('EOG channel ("blinks")')            
-            title('STEP 3: Corrcoef()')
-            grid off
-            axis square
-        %}
-        
-        sp_i = sp_i + 1;
-        sp(sp_i) = subplot(rows,cols, subplotIndices(2));       
-                 
-            if ~isnan(num_pca)
-                x = linspace(1,num_pca,num_pca);
-
-                hold on
-                if size(zs_st3,3) > 1
-                    for ica = 1 : size(zs_st3,1)
-                        y = squeeze(zs_st3(ica,:,:));                
-                        plot(x,y,'o')
-                    end
-                else
-                    plot(x,zs_st3,'o')
-                end
-
-                % Thresholds
-                plot(1:length(indelec_st3),parameters.artifacts.FASTER_zThreshold*ones(1,length(indelec_st3)),'k-.','linewidth',2)
-                plot(1:length(indelec_st3),-parameters.artifacts.FASTER_zThreshold*ones(1,length(indelec_st3)),'k-.','linewidth',2)
-                leg(3) = legend('Median gradient', 'Mean slope', 'Kurtosis', 'Hurst', 'Blink', 'Location', 'EastOutside');
-                legend('boxoff')
-                xlabel('ICA components')
-                ylabel(['Z-score (thr = ', num2str(parameters.artifacts.FASTER_zThreshold), ')'])   
-                title('STEP 3: ICA')
-                grid off
-                axis tight
-                set(gca, 'XTick', x, 'XLim', [min(x)-0.5 max(x)+0.5])      
-            else
-                plot(0, 0)                
-                leg(3) = legend('nothing plotted');                    
-                    legend('hide')                    
-                    axis off
-                    title('STEP 3: ICA')
-            end
-            
-
-        % STEP 4: SINGLE-CHANNEL, SINGLE-EPOCH ARTIFACTS    
-        sp_i = sp_i + 1;
-        sp(sp_i) = subplot(rows,cols, subplotIndices(3));
-        
-            hold on
-            plot(zs_st4,'linewidth',1)
-
-            % Thresholds
-            plot(1:length(indelec_st2),parameters.artifacts.FASTER_zThreshold_step4*ones(1,length(indelec_st2)), 'k-.', 'linewidth', 2)
-            plot(1:length(indelec_st2),-parameters.artifacts.FASTER_zThreshold_step4*ones(1,length(indelec_st2)), 'k-.', 'linewidth', 2)
-            leg(4) = legend('Variance', 'Median slope', 'Ampl. range', 'Electr. Drift', 'Location', 'EastOutside');
-            legend('boxoff')
-            xlabel('Epochs')
-            ylabel(['Z-score (thr = ', num2str(parameters.artifacts.FASTER_zThreshold_step4), ')'])
-            title('STEP 4: SINGLE-Ch, SINGLE-Ep (abs mean of chs)')
-            grid off
-            % axis tight
-            xlim([1 length(zs_st4)])
-            
-        
-        % CONCLUSION
-        sp_i = sp_i + 1;
-        sp(sp_i) = subplot(rows,cols, subplotIndices(4));
-        
-            hold on
-            b(1) = bar(0.5*double(logical(sum(epochPerChannelStep2Corrected,2))), 0.5, 'k', 'EdgeColor', 'none');
-            b(2) = bar(0.5*double(logical(sum(epochPerChannelIsArtifacted,2))), 0.5,'g', 'EdgeColor', 'none');
-            b(3) = bar(logical(sum(artifacts_CRAP,2)), 0.5, 'm', 'EdgeColor', 'none');
-            b(4) = bar(logical(sum(isNaN_fixed,2)), 0.5, 'b', 'EdgeColor', 'none');
-            hold off
-            
-            % change alpha of bars (transparency)
-            alpha = .75;
-            ch = get(b(1),'child');
-                set(ch,'facea',alpha)
-            alpha = .55;
-            ch = get(b(2),'child');
-                set(ch,'facea',alpha)
-            ch = get(b(3),'child');
-                set(ch,'facea',alpha)
-            
-                xlabel('Epochs')
-                ylabel('Artifact (ON/OFF)')            
-                title('Artifacted Epochs')
-                set(gca, 'XLim', [1-0.5 length(isNaN_fixed)+0.5], 'YLim', [0 1.2]) 
-                
-                leg(5) = legend(['Step2, n=', num2str(sum(indelec_st2 == 1), '%3.0f')],...
-                                ['Step4, n=', num2str(sum(sum(epochPerChannelIsArtifacted))/parameters.EEG.nrOfChannels, '%3.2f')],...
-                                ['CRAP, n=', num2str(sum(sum(artifacts_CRAP))/parameters.EEG.nrOfChannels, '%3.2f')],...
-                                ['Fixed, n=', num2str(sum(sum(isNaN_fixed))/parameters.EEG.nrOfChannels, '%3.2f')]);
-                    set(leg(5), 'Position', [0.576378809869376 0.255879059350504 0.0576923076923077 0.0506718924972004])
-                    legend('boxoff')
-                    
-                ch = get(b(1),'child');
-                    uistack(ch, 'top')
-
-        % STEP 5: GRAND AVERAGE (skip)
-        %sp(5) = subplot(rows,cols, subplotIndices(4));
-
-        set(leg, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase-2) 
-        set(gca, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase-1) 
-       
-
-    function plot_allTheEpochsToSingleSubplot(t, EEGepochs, parameters, yOffset)
-       
-        numberOfEpochs = size(EEGepochs,3);
-        xOff = 20; % [ms]
-
-        hold on
-        for ij = 1 : numberOfEpochs
-
-           yOff = yOffset*ij; % update the horizontal line (baseline)
-
-           y(ij,:,:) = EEGepochs(:,:,ij);
-
-           % Horizontal line (baseline)
-           l(ij) = line([min(t) max(t)], [yOff yOff], 'Color', 'k');                                     
-
-           % Filtered
-           p_ERP(ij, :) = plot(t, yOff + squeeze(y(ij,:,:)));
-
-           yTickPos(ij) = yOff; % save for yTick positions (Trial)
-
-           yTickLabel{ij} = num2str(ij);
-           drawnow
-           
-           maxY(ij) = max(max(yOff + squeeze(y(ij,:,:))));
-           maxAmplitude(ij) = maxY(ij) - yOff;
-           minY(ij) = min(min(yOff + squeeze(y(ij,:,:))));
-           
-           maxHandle(ij) = text(max(t)+xOff, yOff, num2str(maxAmplitude(ij), '%3.0f'));
-           if ij == numberOfEpochs
-               yOff = yOffset * (ij + 1);
-               maxHandle(ij+1) = text(max(t)+xOff, yOff, 'max');
-           end
-
-        end
-        
-        set(maxHandle, 'FontSize', 6')
-        set(gca, 'YTick', yTickPos, 'YTickLabel', yTickLabel)
-        yLims = get(gca, 'YLim');        
-        yMin = nanmin(minY);
-        yMax = nanmax(maxY);
-        
-        % not optimal for incoming data as gets the min and max from whole
-        % matrix, fix later
-        try
-            set(gca, 'YLim', [yMin yMax])
-        catch err            
-            if strcmp(err.identifier, 'MATLAB:hg:propswch:PropertyError')
-                warning('yLimits are the same, most likely all the epochs are considered as artifacts?')
-            end
-        end
-
-    function [EEG, indelec_st3, zs_st3, num_pca, activData, blinkData] = faster_step3_ICA(EEGmatrix, EEG, k_value, ica_chans, chans_to_interp, lpf_band, blinkCh, epochLength, parameters)
-            
-        % quick'n'dirty
-        EEG.dataIN = EEG.data;
-        EEG.data = EEGmatrix';
-        
-        num_pca = min(floor(sqrt(size(EEG.data(:,:),2) / k_value)),(size(EEG.data,1) - length(chans_to_interp) - 1));
-        num_pca = min(num_pca,length(setdiff(ica_chans,chans_to_interp)));
-        
-        if num_pca == 0
-           warning(['num_pca = ', num2str(num_pca)]) 
-           num_pca = 1;
-        end
-
-        try
-            
-            % Original infomax implementation (slow)                
-            [EEG.icaweights, EEG.icasphere, compvars, bias, signs, lrates, EEG.icaact] = runica(EEGmatrix', 'extended', 1, 'pca', num_pca, 'verbose', 'off');
-            unmixing_matrix = EEG.icaweights*EEG.icasphere;
-
-            % We could use FastICA instead, suggested also in the discussion
-            % of FASTER, http://research.ics.aalto.fi/ica/fastica/
-            %{
-            [A, unmixing_matrix] = fastica(EEGmatrix', 'lastEig', num_pca, 'verbose', 'off', 'displayMode', 'off'); % gives only the estimated mixing matrix A and the separating matrix W.
-            
-                %size(EEG.icaweights), % number of PCAs x number of channels
-                %size(EEG.icasphere), % number of PCAs x number of ch
-                %size(unmixing_matrix)
-                
-                EEG.icaweights = A'; % is this correct?
-                %EEG.icasphere ?
-                
-                % how to define the number of PCAs, and EXTENDED?
-                % check that 'lastEig' is the same as above for runica
-                
-
-            % compute ICA activation waveforms = weights*sphere*(data-meandata)
-            % Usage: >> [activations] = icaact(data,weights,datamean);
-            %}
-            
-            % EEGLAB variables, see e.g. http://sccn.ucsd.edu/wiki/A05:_Data_Structures                
-                EEG.icachansind = ica_chans;
-                EEG.trials = length(EEGmatrix) / epochLength;
-                EEG.pnts = epochLength;                
-                
-            EEG.srate = parameters.EEG.srate;
-            EEG.icaact = icaact(EEGmatrix', unmixing_matrix);
-            EEG.icawinv = pinv(EEG.icaweights*EEG.icasphere); % http://sccn.ucsd.edu/pipermail/eeglablist/2009/002907.html                
-
-            % size(EEG.icaact) % number of PCAs x dataSamples
-            
-            
-        catch err
-            err
-            error('improve error catching!!')
-        end
-
-        % after the ICA routine we have the EEG data as 2-dimensional
-        % matrix, and we need to to separate the epochs to the third
-        % dimension
-        [list_properties, activData, blinkData] = component_properties_mod(EEG, blinkCh,lpf_band);
-        rejection_options.measure=ones(1,size(list_properties,2)); % values of the statistical parameters (see flow chart)
-        rejection_options.z = parameters.artifacts.FASTER_zThreshold * ones(1,size(list_properties,2)); % Z-score threshold
-        [indelec_st3, zs_st3] = min_z_mod(list_properties,rejection_options); % rejected components
-        
-        step3_linearIndices = find(indelec_st3);
-        if ~isempty(step3_linearIndices)
-            disp(['          - subtracting ICA artifacts, found ', num2str(length(step3_linearIndices)), ' artifacted ICA activation channels']) 
-            for i = 1 : length(step3_linearIndices)
-                for ch = 1 : ica_chans
-                    EEG.dataIN(:,ch) = EEG.icaact(:, step3_linearIndices(i));
-                end
-            end
-        else
-            disp(['          - No ICA artifacts found'])             
-        end
-        
-        % quick'n'dirty
-        EEG.data = EEG.dataIN;
-        

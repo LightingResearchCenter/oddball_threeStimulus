@@ -300,12 +300,18 @@ stepnts  = floor(stepms*fs/1000);% to samples
 winrej = []; k=1;
 
 for ch=1:nchan
+      
+      k = 1; % reset for every channel (PT), original implementation rejected all channels 
+             % if there was a problem on any channel
       q=1;
       while q<=nibound-1  % segments among boundaries
             bp1   = latebound(q)+1;
             bp2   = latebound(q+1);
             % fprintf('Exploring channel %g, segment %g to %g (in samples)...\n', chanArray(ch), bp1, bp2);
+            
             datax = EEG.data(chanArray(ch), bp1:bp2);
+            
+            % if you want to filter
             if ~isempty(fcutoff)
                   if fcutoff(1)~=fcutoff(2)
                         if length(bp1:bp2)>3*forder
@@ -362,60 +368,83 @@ for ch=1:nchan
                   else
                         if j==1
                               % fprintf('Isolating DC offset (mean) from windows within segment %g, channel %g \n', q, chanArray(ch))
-                        end
+                        end                        
                         datax2 = datax2-detrend(datax2, 'constant');
+                        % why DETREND here (PT), output is flat
+                        % plot(datax2); drawnow; pause(1.0)
                   end
                   vmin = min(datax2); vmax = max(datax2);
                   if length(ampth)==1
-                        vdiff   = abs(vmax - vmin);
+                        
+                        vdiff  = abs(vmax - vmin);
                         if vdiff>ampth
-                              winrej(k,:) = [t1 t2]; % start and end samples for rejection
-                              k=k+1;
+                            winrejIn{ch}(k,:) = [t1 t2]; % start and end samples for rejection
+                            k=k+1;
                         end
-                        vDiffOut(j) = vdiff;
+                        vDiffOut(ch,j) = vdiff;
                   else
                         if vmin<=ampth(1) || vmax>=ampth(2)
-                              winrej(k,:) = [t1 t2]; % start and end samples for rejection
-                              k=k+1;
+                            winrejIn{ch}(k,:) = [t1 t2]; % start and end samples for rejection
+                            k=k+1;
                         end
-                        vDiffOut(j) = max([abs(vmin) abs(vmax)]);
+                        vDiffOut(ch,j) = max([abs(vmin) abs(vmax)]);
                   end
                   j=j+stepnts;
             end
             q = q + 1; % next segment
       end
+      
+      %{
+      ch
+      try
+        winrej(ch,:,:)
+      catch err
+      end
+      %}
+      if k == 1 % no artifacts found for the channel
+        winrejIn{ch} = [];
+      end
 end
-if isempty(winrej)
-      % fprintf('\nCriterion was not found. No rejection was performed.\n');
-      NaN_indices = logical(zeros(length(EEG.data)));
-else
+
+NaN_indices = false(length(EEG.data), nchan);
+
+for ch = 1:nchan    
+    
+    if isempty(winrejIn{ch})
+        % fprintf('\nCriterion was not found. No rejection was performed.\n');
+        NaN_indices(:,ch) = 0;
+    else
       % Selects not overlapping start and end samples
-      winrej = sort(winrej,1);
-      [aa1 bb1] = unique( winrej(:,1),'first');
-      [aa2 bb2] = unique( winrej(:,2),'last');
-      winrej = [winrej(bb1,1) winrej(bb2,2)];
-      a = winrej(1,1); winrej2(1,:) = [a winrej(end,2)]; m=1;
-      for j=2:size(winrej,1)
-            if abs(winrej(j,2)-winrej(j-1,2))>winpnts
-                  b = winrej(j-1,2);
-                  winrej2(m,:) = [a b];
-                  a = winrej(j,1);
-                  m=m+1;
-            end
-      end
-      if winrej2(end,2)~=winrej(end,2)
-            winrej2(m,:) = [a winrej(end,2)];
-      end
-      
-      % rejects      
-      NaN_indices = zeros(length(EEG.data),1);
-      for rejEp = 1 : size(winrej2,1)
-          NaN_indices(winrej(rejEp,1):winrej(rejEp,2)) = 1;          
-      end
-      NaN_indices = logical(NaN_indices);
-      
-      
-      
+
+          winrej{ch} = sort(winrejIn{ch},1);
+          [aa1 bb1] = unique(winrej{ch}(:,1),'first');
+          [aa2 bb2] = unique(winrej{ch}(:,2),'last');
+          
+          winrej{ch} = [winrej{ch}(bb1,1) winrej{ch}(bb2,2)];
+          a = winrej{ch}(1,1); 
+          winrej2{ch}(1,:) = [a winrej{ch}(end,2)]; m=1;
+          for j=2:size(winrej{ch},1)
+                if abs(winrej{ch}(j,2)-winrej{ch}(j-1,2))>winpnts
+                      b = winrej{ch}(j-1,2);
+                      winrej2{ch}(m,:) = [a b];
+                      a = winrej{ch}(j,1);
+                      m=m+1;
+                end
+          end
+          if winrej2{ch}(end,2)~=winrej{ch}(end,2)
+                winrej2{ch}(m,:) = [a winrej{ch}(end,2)];
+          end
+       
+          % rejects      
+          % NaN_indices = zeros(length(EEG.data),1);
+          for rejEp = 1 : size(winrej2{ch},1)
+              NaN_indices(winrej{ch}(rejEp,1):winrej{ch}(rejEp,2),ch) = 1;          
+          end
+
+          % NaN_indices = logical(NaN_indices);
+          
+    end    
+end
       
       % PETTERI: The following checks are removed, and we only need the
       % indices found by the routine
