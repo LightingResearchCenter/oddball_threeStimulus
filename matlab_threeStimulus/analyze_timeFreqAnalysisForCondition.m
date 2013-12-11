@@ -1,4 +1,4 @@
-function [realCoefs, imagCoefs, TFStat] = analyze_timeFreqAnalysisForCondition(epochsIn, artifactIndices, erpType, IAF_peak, parameters, handles)
+function [realCoefs, imagCoefs, derivedMeasures, TFStat] = analyze_timeFreqAnalysisForCondition(epochsIn, artifactIndices, erpType, IAF_peak, parameters, handles)
 
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction        
     if handles.flags.saveDebugMATs == 1
@@ -73,7 +73,10 @@ function [realCoefs, imagCoefs, TFStat] = analyze_timeFreqAnalysisForCondition(e
         TFStat.real.SD = realCoefs_SD;
         TFStat.imag.mean = imagCoefs;
         TFStat.imag.SD = imagCoefs_SD;
-        TFStat.n = sum(isNaN == 0)
+        TFStat.n = sum(isNaN == 0);
+
+        % add ERSP, etc. here
+        derivedMeasures.dummy = [];
             
     
     function [realStat, imagStat, n] = analyze_timeFreqComputeStats(realCoefs, imagCoefs, isNaN, dim, parameters, handles)
