@@ -94,9 +94,9 @@ function [NaN_indices_EEG, NaN_indices_EOG, indices_moving, indices_movingEOG, i
            [indices_moving(ep,:), indices_movingEOG(ep,:), indices_step(ep,:), vDiffOutMovWindow(ep,:,:), vDiffOutMovWindowEOG(ep,:,:), vDiffOutStep(ep,:,:)] = ...
                pre_artifact_ERPLAB(EEG_channels, EOGnotch, ep, parameters);            
             
-            % debugging
-            
+            % debugging            
             if ep == 40
+               %{
                figure('Name', 'CRAP Debug')
                subplot(4,1,1)
                y = squeeze(vDiffOutMovWindow(ep,:,:))';
@@ -113,6 +113,7 @@ function [NaN_indices_EEG, NaN_indices_EOG, indices_moving, indices_movingEOG, i
                plot(EOGnotch); title('EOG');
                drawnow
                %fd
+               %}
             end
             
             
