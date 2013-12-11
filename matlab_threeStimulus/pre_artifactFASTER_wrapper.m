@@ -12,7 +12,7 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
             close all
         else
             if handles.flags.saveDebugMATs == 1
-                if ~strcmp(erpType, 'standard')
+                if ~strcmp(erpType, 'fff') % 'standard')
                     % do not save for standard tone as there are so many
                     % trials that debugging and developing of this function
                     % is so much slower compared to target and distracter
@@ -367,8 +367,23 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
             %artifactsRemoved_fixed = sum(sum(fixedIndices));            
             artifactsRemoved_fixed = sum(fixedIndices);
             artifactsRemoved_fixedEEG = sum(EEGfixedIndices);            
-            artifactsRemoved_fixedEOG = sum(EOGfixedIndices);            
-            artifacts_CRAP = NaN_indices_moving + NaN_indices_step + repmat(NaN_indices_movingEOG,1,size(NaN_indices_moving,2));
+            artifactsRemoved_fixedEOG = sum(EOGfixedIndices);     
+            
+            % replicate to all the channels
+            if size(NaN_indices_movingEOG,2) == 1
+                NaN_indices_movingEOG = repmat(NaN_indices_movingEOG, 1, size(NaN_indices_moving,2));
+            end
+            
+            try                
+                artifacts_CRAP = NaN_indices_moving + NaN_indices_step + NaN_indices_movingEOG;                
+            catch err              
+                size(NaN_indices_moving)
+                size(NaN_indices_step)
+                size(NaN_indices_movingEOG)
+                err.identifier
+                error('Dimensions do not match')
+                whos
+            end
             artifactsRemoved_CRAP = sum(artifacts_CRAP);
             disp(['             ... ', num2str(artifactsRemoved_CRAP), ' epochs rejected (CRAP) from ', num2str(noOfEpochs1), ' epochs'])
             disp(['              ... ', num2str(artifactsRemoved_fixedEEG), ' epochs rejected (Fixed EEG) from ', num2str(noOfEpochs1), ' epochs'])
@@ -378,6 +393,7 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
             % update output
             %faster_artifactIndices = logical(artifactIndices + fixedIndices);            
             fixedThresholdIndices = EEGfixedIndices + EOGfixedIndices;
+            artifactIndices = artifactIndices + fixedThresholdIndices;
             
         %% REJECT USING the CRAP 
         
@@ -387,13 +403,17 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                     if NaN_indices_moving(ep,ch) == 1
                         EEG.data(ch,:,ep) = NaN;
                     end
+                    if NaN_indices_movingEOG(ep,ch) == 1
+                        EEG.data(ch,:,ep) = NaN;
+                    end
                     if NaN_indices_step(ep,ch) == 1
                         EEG.data(ch,:,ep) = NaN;
                     end
                 end
             end  
             
-            
+            artifactIndices = artifactIndices + NaN_indices_movingEOG + NaN_indices_moving + NaN_indices_step;
+            artifactIndices = logical(artifactIndices);
 
         %% PLOT ARTIFACT REMOVAL STEPS
         
