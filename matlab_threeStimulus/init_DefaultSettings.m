@@ -26,8 +26,7 @@ function [handles, flags] = init_DefaultSettings()
 
             % derived pathnames
             % NO NEED to touch these unless you know what you are really doing
-            handles.path.dataFolder = fullfile(handles.path.homeFolder, 'EEG-threeStimOddball');
-            handles.path.debugMATs = fullfile(handles.path.dataFolder, 'debugMATs');
+            handles.path.dataFolder = fullfile(handles.path.homeFolder, 'EEG-threeStimOddball');            
             
             handles.path.figuresOut = fullfile(handles.path.codeFolder, 'figuresOut');
             
@@ -39,6 +38,9 @@ function [handles, flags] = init_DefaultSettings()
             handles.path.matFilesMain = '/home/petteri/EEG-threeStim/';
             handles.path.matFilesOut = fullfile(handles.path.matFilesMain, 'matOut');
             handles.path.matFilesInput = fullfile(handles.path.matFilesMain, 'inputMat');
+            handles.path.debugMATs = fullfile(handles.path.matFilesMain, 'debugMATs');
+            
+            % add try/catch for folders, first time use!
 
     %% PLOT STYLING
     
