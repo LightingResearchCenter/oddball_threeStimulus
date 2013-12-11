@@ -265,8 +265,6 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                               
             end
             
-            
-            
             % no we need to add the artifacted epochs back to the
             % original matrix  (as Step 4 is not using the epochs rejected
             % in Step 2)
@@ -289,9 +287,7 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
             artifactsRemoved_step4 = sum(indicesOut == 1);
             disp(['           ... ', num2str(artifactsRemoved_step4), ' epochs rejected (Step 4) from ', num2str(noOfEpochs2), ' epochs'])                       
             
-            %artifactIndices = epochPerChannelIsArtifacted_step4 + indelec_st2;
-                        
-            
+            artifactIndices = epochPerChannelIsArtifacted_step4 + repmat(indelec_st2,1,length(eeg_chans));
             
             
             %% INTERPOLATION (skip)

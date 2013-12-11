@@ -233,7 +233,6 @@ function [NaN_indices_EEG, NaN_indices_EOG, indices_moving, indices_step, vDiffO
     indices_step = repmat(indices_step, 1, parameters.EEG.nrOfChannels);
     
     % simple boolean, giving 1 when the epoch is artifacted 
-    whos
     isNaN = logical(NaN_indices_EEG + NaN_indices_EOG + indices_moving + indices_step);
 
     
