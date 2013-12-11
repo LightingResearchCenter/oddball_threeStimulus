@@ -6,7 +6,9 @@ function [rejectedEpochs_target, rejectedEpochs_distr, rejectedEpochs_std, artif
     filteringType, rejectBasedOn, referenceType, ... % strings 
     debugOn, ... % boolean flags
     parameters, handles) % parameters
-            
+    
+    localCall = 0;            
+
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction        
     if handles.flags.saveDebugMATs == 1
         debugMatFileName = 'tempFASTER_allStimuli.mat';
@@ -14,6 +16,7 @@ function [rejectedEpochs_target, rejectedEpochs_distr, rejectedEpochs_std, artif
             load('debugPath.mat')
             load(fullfile(path.debugMATs, debugMatFileName))
             close all
+            localCall = 1;
         else
             if handles.flags.saveDebugMATs == 1
                 path = handles.path;
@@ -26,23 +29,9 @@ function [rejectedEpochs_target, rejectedEpochs_distr, rejectedEpochs_std, artif
     handles.parameters.artifacts.FASTER_zThreshold = 1.5;
     handles.parameters.artifacts.FASTER_zThreshold_step4 = 1.5;
 
-    debugOnlyTarget = 1; % faster development / debugging
+    debugOnlyTarget = 0; % faster development / debugging
     
-    disp('      .. Find artifacts (Fixed EEG/EOG, CRAP: Moving Average & Step)')    
-            
-        % strictly speaking now not a step, moving window for EOG
-        handles.parameters.artifacts.CRAP.step_ampTh = 10;
-        handles.parameters.artifacts.CRAP.step_windowWidth = 50;
-        handles.parameters.artifacts.CRAP.step_windowStep = 15;
-        
-        handles.parameters.artifacts.CRAP.movWindEOG_ampTh = [-65 65];
-        handles.parameters.artifacts.CRAP.movWindEOG_windowWidth = 20;
-        handles.parameters.artifacts.CRAP.movWindEOG_windowStep = 20;
-        
-        handles.parameters.artifacts.CRAP.movWind_ampTh = [-65 65];
-        handles.parameters.artifacts.CRAP.movWind_windowWidth = 20;
-        handles.parameters.artifacts.CRAP.movWind_windowStep = 20;
-    
+    disp('      .. Find artifacts (Fixed EEG/EOG, CRAP: Moving Average & Step)')  
         
         % TARGET
         fprintf('         .. TARGET / ')
@@ -50,7 +39,7 @@ function [rejectedEpochs_target, rejectedEpochs_distr, rejectedEpochs_std, artif
             vDiffOutMovWindow_target, vDiffOutMovWindowEOG_target, vDiffOutStep_target, fixedIndices_target] = ...
             pre_artifactFASTER_fixedThresholds_ERPLAB(rejectOn_target, EOG_target, ECG_target, debugOn, handles.parameters, handles);    
         
-        if debugOnlyTarget ~= 1
+        if debugOnlyTarget ~= 1 || localCall == 0
             
             % DISTRACTER
             fprintf('DISTRACTER / ')
@@ -60,14 +49,14 @@ function [rejectedEpochs_target, rejectedEpochs_distr, rejectedEpochs_std, artif
 
             % STANDARD
             fprintf('STANDARD'); fprintf('\n')
-            [NaN_indices_EEG_std, NaN_indices_EOG_std, NaN_indices_moving_std, NaN_indices_step_std, NaN_indices_movingEOG_std, ...
+            [NaN_indices_EEG_std, NaN_indices_EOG_std, NaN_indices_moving_std, NaN_indices_movingEOG_std, NaN_indices_step_std, ...
                 vDiffOutMovWindow_std, vDiffOutMovWindowEOG_std, vDiffOutStep_std, fixedIndices_std] = ...
                 pre_artifactFASTER_fixedThresholds_ERPLAB(rejectOn_std, EOG_std, ECG_std, debugOn, handles.parameters, handles);
         end
 
     % concatenate
     epochs_concan_target = pre_concatenateEpochs(rejectOn_target, handles.parameters, handles);
-    if debugOnlyTarget ~= 1
+    if debugOnlyTarget ~= 1 || localCall == 0
         epochs_concan_distr = pre_concatenateEpochs(rejectOn_distr, handles.parameters, handles);
         epochs_concan_std = pre_concatenateEpochs(rejectOn_std, handles.parameters, handles);
     end
@@ -79,7 +68,7 @@ function [rejectedEpochs_target, rejectedEpochs_distr, rejectedEpochs_std, artif
         reference_target, vDiffOutMovWindow_target, vDiffOutMovWindowEOG_target, vDiffOutStep_target, ...
         handles.parameters, 'target', handles);
     
-    if debugOnlyTarget ~= 1
+    if debugOnlyTarget ~= 1 || localCall == 0
         [epochs_concan_FASTER_distr, artifactIndices_FASTER_distr] = pre_artifactFASTER_wrapper(epochs_concan_distr, fixedIndices_distr,...
             NaN_indices_EEG_distr, NaN_indices_EOG_distr, NaN_indices_moving_distr, NaN_indices_movingEOG_distr, NaN_indices_step_distr, ...
             reference_distr, vDiffOutMovWindow_distr, vDiffOutMovWindowEOG_distr, vDiffOutStep_distr, ...
@@ -93,7 +82,7 @@ function [rejectedEpochs_target, rejectedEpochs_distr, rejectedEpochs_std, artif
 
     % deconcatenate back
     epochs_deconcan_FASTER = pre_deconcatenateEpochs(epochs_concan_FASTER_target, handles.parameters, handles);
-    if debugOnlyTarget ~= 1
+    if debugOnlyTarget ~= 1 || localCall == 0
         epochs_deconcan_FASTER_distr = pre_deconcatenateEpochs(epochs_concan_FASTER_distr, handles.parameters, handles);
         epochs_deconcan_FASTER_std = pre_deconcatenateEpochs(epochs_concan_FASTER_std, handles.parameters, handles);
     end
@@ -109,7 +98,7 @@ function [rejectedEpochs_target, rejectedEpochs_distr, rejectedEpochs_std, artif
 
     % rename to match to upcoming steps
     rejectedEpochs_target = epochs_deconcan_FASTER;
-    if debugOnlyTarget ~= 1
+    if debugOnlyTarget ~= 1 || localCall == 0
         rejectedEpochs_distr = epochs_deconcan_FASTER_distr;
         rejectedEpochs_std = epochs_deconcan_FASTER_std;
     end

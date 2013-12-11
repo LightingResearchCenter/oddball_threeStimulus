@@ -152,7 +152,7 @@ function [epochs, analyzed, TF, dataMatrix_filtGeneral, alpha, powers, handles] 
             for erp = 1 : length(erpTypes)
                 for stim = 1 : length(stimTypes)
                     epochs.(filteringType).(erpTypes{erp}).(stimTypes{stim}) = ...
-                        pre_rejectEpochsBasedOnFASTER(epochs.(filteringType).(erpTypes{erp}).(stimTypes{stim}), artifactIndices_FASTER.(stimTypes{stim}), handles.parameters, handles);
+                        pre_rejectEpochsBasedOnFASTER(epochs.(filteringType).(erpTypes{erp}).(stimTypes{stim}), artifactIndices_FASTER.(stimTypes{stim}), stimTypes{stim}, erpTypes{erp}, handles.parameters, handles);
                 end
             end
                                                   
@@ -305,7 +305,7 @@ function [epochs, analyzed, TF, dataMatrix_filtGeneral, alpha, powers, handles] 
 
         filteringType = 'bandpass';
         erpType = 'GENERAL';
-        [timeFreqEpochs, timeFreq.target, timeFreq.distr, timeFreq.std] = ...
+        [timeFreqEpochs, timeFreq.target, timeFreq.distr, timeFreq.std, TF_derivedMeasures.target, TF_derivedMeasures.distr, TF_derivedMeasures.std] = ...
                 pre_waveletWrapperForAllStimuli(epochs.(filteringType).(erpType).target, artifactIndices_FASTER.target, ... % Target
                                                 epochs.(filteringType).(erpType).distr, artifactIndices_FASTER.distr, ... % Distracter
                                                 epochs.(filteringType).(erpType).std, artifactIndices_FASTER.std, ... % Standard
@@ -342,7 +342,7 @@ function [epochs, analyzed, TF, dataMatrix_filtGeneral, alpha, powers, handles] 
         % you can discard some data, and make sure that you only the needed
         % data is saved to disk, or if you just want to optimize the use of
         % disk space or something    
-        % process_assignOutputsFromPROCESS(epochs, ERP_components, alpha, SEM, heart, fractalAnalysis, timeFreq, handles.parameters, handles)    
+        process_assignOutputsFromPROCESS(epochs, ERP_components, alpha, SEM, heart, EOG, fractalAnalysis, timeFreqEpochs, timeFreq, TF_derivedMeasures, handles.parameters, handles)    
       
                           
     disp('+++++         Processing of the file complete')

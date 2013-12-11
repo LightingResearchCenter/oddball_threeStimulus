@@ -168,13 +168,18 @@ function parameters = init_DefaultParameters(handles)
         parameters.artifacts.CRAP.continuous_windowStep = 1000;
         
             % Epoch correction in "pre_artifactFASTER_fixedThresholds_ERPLAB"
-            parameters.artifacts.CRAP.movWind_ampTh = [-70 70]; % uV
-            parameters.artifacts.CRAP.movWind_windowWidth = 50; % ms
-            parameters.artifacts.CRAP.movWind_windowStep = 10; % ms
+            parameters.artifacts.CRAP.step_ampTh = 10;
+            parameters.artifacts.CRAP.step_windowWidth = 50;
+            parameters.artifacts.CRAP.step_windowStep = 15;
 
-            parameters.artifacts.CRAP.step_ampTh = 15; % uV
-            parameters.artifacts.CRAP.step_windowWidth = 400; % ms
-            parameters.artifacts.CRAP.step_windowStep = 10; % ms
+            parameters.artifacts.CRAP.movWindEOG_ampTh = [-65 65];
+            parameters.artifacts.CRAP.movWindEOG_windowWidth = 20;
+            parameters.artifacts.CRAP.movWindEOG_windowStep = 20;
+
+            parameters.artifacts.CRAP.movWind_ampTh = [-65 65];
+            parameters.artifacts.CRAP.movWind_windowWidth = 20;
+            parameters.artifacts.CRAP.movWind_windowStep = 20;
+    
                                                      
         % DETECT
         parameters.artifacts.useDETECT = 0;
