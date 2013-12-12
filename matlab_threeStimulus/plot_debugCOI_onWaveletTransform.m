@@ -30,11 +30,11 @@ function plot_debugCOI_onWaveletTransform(time, freq, period, power, coi, handle
     %
     %              contour(time,log(period),log(power))
     %              plot(time,log(coi),'k')    
+    
     scrsz = handles.style.scrsz;
     fig = figure('Color', 'w');
-        set(fig, 'Position', [0.4*scrsz(3) 0.05*scrsz(4) 0.45*scrsz(3) 0.91*scrsz(4)])
-        
-        whos
+        set(fig, 'Position', [0.4*scrsz(3) 0.05*scrsz(4) 0.45*scrsz(3) 0.91*scrsz(4)])        
+
         rows = 3;
         cols = 1;
         time = time * 1000; % to ms
@@ -69,8 +69,8 @@ function plot_debugCOI_onWaveletTransform(time, freq, period, power, coi, handle
         drawnow
         
     ind = 3;
-    sp(ind) = subplot(rows,cols,ind);
-    
+    sp(ind) = subplot(rows,cols,ind);    
+        
         power = analyze_rejectWT_underCOI(time, freq, power, coi, handles);
     
         hold on
