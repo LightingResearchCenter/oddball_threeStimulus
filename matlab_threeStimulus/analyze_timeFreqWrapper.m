@@ -59,16 +59,19 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN] 
 
             % window the signal epoch
             r = parameters.timeFreq.tukeyWindowR;
+            r = 50*r
             window = (tukeywin(noOfSamples,r)); % Tukey window with r=0.10 is 10% cosine window
             
             if parameters.timeFreq.windowEpochs == 1
-                disp(['          ..windowing the epochs with a ', num2str(r), '% Tukey (Cosine) window'])
+                disp(['          ..windowing the epochs with a ', num2str(100*r), '% Tukey (Cosine) window'])
                 for ep = 1 : noOfEpochs
                     for ch = 1 : noOfChannels
                         signal(:,ch,ep) = signal(:,ch,ep) .* window; 
                         % check if this is correct with wavelets actually?
                     end
-                end                           
+                end  
+            else
+                disp(['          ..not windowing the epochs with a ', num2str(100*r), '% Tukey (Cosine) window (for example)'])
             end
         
             %% PLOT INPUT EPOCHS AND AVERAGE WAVEFORM
@@ -236,13 +239,15 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN] 
                                                          % always want to
                                                          % normalize?                    
 
-                            if normalizeTheWaveletSpectrum == 1         
+                            if normalizeTheWaveletSpectrum == 1      
+                                
+                                debugOn = 0;
                                 
                                 [power, nonNormFreqIndex] = analyze_normalizeWaveletSpectrum(power, powerDownsWithCOI, timep, freq, ...
-                                                    parameters.oddballTask.ERP_baselineCorrection, parameters.timeFreq.timeResolutionDivider, parameters, handles);
+                                                    parameters.oddballTask.ERP_baselineCorrection, parameters.timeFreq.timeResolutionDivider, debugOn, parameters, handles);
                                                 
                                 [WT_Downsampled, nonNormFreqIndex] = analyze_normalizeWaveletSpectrum(WT_Downsampled, wtDownsWithCOI, timep, freq, ...
-                                                    parameters.oddballTask.ERP_baselineCorrection, parameters.timeFreq.timeResolutionDivider, parameters, handles);                                                
+                                                    parameters.oddballTask.ERP_baselineCorrection, parameters.timeFreq.timeResolutionDivider, debugOn, parameters, handles);                                                
                                 
                             end
 
@@ -290,7 +295,7 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN] 
                 end
             end
             fprintf('\n')
-            disp(['            - timeDiv: ', num2str(parameters.timeFreq.timeResolutionDivider), '(timeRes = ', num2str(timep(2)-timep(1)*1000), ' ms), min f: ', num2str(min(freq)), ', max f: ', num2str(max(freq)), ', freqRes: ', num2str(freq(2)-freq(1)), ' Hz'])       
+            disp(['            - timeDiv: ', num2str(parameters.timeFreq.timeResolutionDivider), ' (timeRes = ', num2str(1000*(timep(2)-timep(1))), ' ms), min f: ', num2str(min(freq)), ', max f: ', num2str(max(freq)), ', freqRes: ', num2str(freq(2)-freq(1)), ' Hz'])       
 
     %% PLOT THE TIME-FREQUENCY 
     
@@ -316,8 +321,11 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN] 
                 Z = averageOfTheChannel{ch};
                 
                 %debug_plotTF(scales, timep, freq, realCoefs, imagCoefs, T, F, handles) 
-                if ~isnan(Z)
-                    [c, handle_contours{ch}] = contourf(T, F, Z, contourLevels, 'EdgeColor', 'none');                                        
+                try
+                    [c, handle_contours{ch}] = contourf(T, F, Z, contourLevels, 'EdgeColor', 'none'); 
+                catch err
+                    % goes here when no valid epochs are found
+                    % err
                 end
                 
                 epochLimits(3,ch,:) = [min(min(Z)) max(max(Z))];
@@ -361,6 +369,8 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN] 
         
             for ch = 1 : noOfChannels
                 caxis(sp(3,ch), [min(min(epochLimits(3,:,:))) max(max(epochLimits(3,:,:)))]);
+                %caxis(sp(3,ch), [-200 200]);
+                set(sp(3,ch), 'YScale', 'log')
             end
             
         % AUTO-SAVE FIGURE

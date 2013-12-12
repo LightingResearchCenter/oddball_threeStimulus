@@ -1,5 +1,6 @@
-function [WTout, nonNormFreqIndex] = analyze_normalizeWaveletSpectrum(WT, WT_w_COI, t, f, baselineLimits, timeResolutionDivider, parameters, handles)
+function [WTout, nonNormFreqIndex] = analyze_normalizeWaveletSpectrum(WT, WT_w_COI, t, f, baselineLimits, timeResolutionDivider, debugOn, parameters, handles)
     
+    %{
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction        
     if handles.flags.saveDebugMATs == 1
         debugMatFileName = 'tempTFnorm.mat';
@@ -7,6 +8,7 @@ function [WTout, nonNormFreqIndex] = analyze_normalizeWaveletSpectrum(WT, WT_w_C
             load('debugPath.mat')
             load(fullfile(path.debugMATs, debugMatFileName))
             close all
+            debugOn = 1;
         else
             if handles.flags.saveDebugMATs == 1
                 path = handles.path;
@@ -19,8 +21,8 @@ function [WTout, nonNormFreqIndex] = analyze_normalizeWaveletSpectrum(WT, WT_w_C
     timeRes = t(2) - t(1);
     freqRes = f(2) - f(1);   
     sampleRate = parameters.EEG.srate / timeResolutionDivider;
-    %baselineLimits
-    debugOn = 1;
+    %baselineLimits    
+    %}
     
     
     %% COMPUTATION   
@@ -46,10 +48,8 @@ function [WTout, nonNormFreqIndex] = analyze_normalizeWaveletSpectrum(WT, WT_w_C
         % of Peng et al. (2012), http://dx.doi.org/10.1371/journal.pone.0034163
         % for example
         diff = WT - baselineVector;
-        WTout = (diff ./ baselineVector);
-        
-        whos
-        
+        WTout = 100 * (diff ./ baselineVector);
+
 
     
     %% DEBUG
