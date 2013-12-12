@@ -18,6 +18,8 @@ function [epochs, analyzed, TF, dataMatrix_filtGeneral, alpha, powers, handles] 
     end
     
     disp(' ')                
+    analyzed = [];
+    TF = [];
 
     %% PRE-PROCESS THE DATA            
     [dataMatrix_filtGeneral, dataMatrix_filtGeneralRegress, firstBandpassFilteredMatrix, artifactNaN_indices, dataMatrix_filtAlpha, dataMatrix_filt, dataMatrix_filt_CNV] = process_preProcessFiltering(dataMatrixIn, handles);
@@ -292,7 +294,7 @@ function [epochs, analyzed, TF, dataMatrix_filtGeneral, alpha, powers, handles] 
                         analyze_getERPcomponents(epochs.(filterTypes{filt}).(erpTypes{erpType}).(stimTypes{stim}), ...
                             filterTypes{filt}, handles.parameters.oddballTask.timeWindows, handles.parameters, handles);
                    
-                    if stim == length(stimTypes); fprintf(['       ... ', stimTypes{stim}]); end
+                    if stim == length(stimTypes); fprintf(['\n']); end
                         
                 end % end of stimulus types (target, distracter, standard)
                 
@@ -342,7 +344,7 @@ function [epochs, analyzed, TF, dataMatrix_filtGeneral, alpha, powers, handles] 
         % you can discard some data, and make sure that you only the needed
         % data is saved to disk, or if you just want to optimize the use of
         % disk space or something    
-        process_assignOutputsFromPROCESS(epochs, ERP_components, alpha, SEM, heart, EOG, fractalAnalysis, timeFreqEpochs, timeFreq, TF_derivedMeasures, handles.parameters, handles)    
+        % process_assignOutputsFromPROCESS(epochs, ERP_components, alpha, SEM, heart, EOG, fractalAnalysis, timeFreqEpochs, timeFreq, TF_derivedMeasures, handles.parameters, handles)    
       
                           
     disp('+++++         Processing of the file complete')

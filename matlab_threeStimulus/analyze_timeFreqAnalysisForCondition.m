@@ -21,6 +21,8 @@ function [realCoefs, imagCoefs, derivedMeasures, TFStat] = analyze_timeFreqAnaly
         end 
     end
 
+    parameters.timeFreq.timeResolutionDivider = 16;
+    
     numberOfEpochsIn = length(epochsIn.ERP);        
     [noOfSamples, noOfChannels] = size(epochsIn.ERP{1});   
     

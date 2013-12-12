@@ -30,7 +30,7 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN] 
     disp(['        .. analyzing epochs'])
     [noOfSamples, noOfChannels, noOfEpochs] = size(matrixIn);
     
-    parameters.timeFreq.windowEpochs = 0;
+    parameters.timeFreq.windowEpochs = 1;
     parameters.timeFreq.plotEpochs = 1;
     
     handles.style.lineGrey = [0.4 0.4 0.4];
@@ -166,7 +166,7 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN] 
             fb = parameters.timeFreq.bandwidthParameter;        
             resol = 12; % 12 by default        
             
-            parameters.timeFreq.timeResolutionDivider = 32;
+            % parameters.timeFreq.timeResolutionDivider = 32;
             parameters.timeFreq.freqCutOff = [1 30];
             parameters.timeFreq.freqDownsampleFactor = 1;        
 
@@ -184,90 +184,118 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN] 
             for ch = 1 : noOfChannels
 
                 fprintf(['ch', num2str(ch), ' '])
-                perChannelEpochs = squeeze(signal(:,ch,~isNaN(:,ch)));            
+                perChannelEpochs = squeeze(signal(:,ch,~isNaN(:,ch)));
                 [noOfSamples, noOfEpochs] = size(perChannelEpochs);
 
                 %power
-                for ep = 1 : noOfEpochs
+                if noOfEpochs ~= 0
+                    
+                    for ep = 1 : noOfEpochs
 
-                    %% WAVELET WRAPPER
-                    [power, WT, freq, scale, Cdelta, n, dj, dt, variance, coiRaw] = analyze_waveletWrapper(perChannelEpochs(:,ep), parameters.EEG.srate, parameters.timeFreq.timeResolutionDivider);                                         
-
-                    % we can reduce the memory requirements slightly by cutting frequencies here
-                    if freqIndicesFound == 0
-                        indicesTrim = analyze_getTFtrimIndices(freq, [parameters.timeFreq.freqCutOff(1) parameters.timeFreq.freqCutOff(2)], [], [], parameters);                                             
-                        freqIndicesFound = 1;
-                    end
-
-                    WTtrim = WT(indicesTrim(1):indicesTrim(2),:); % trim the frequency dimension
-                    power = power(indicesTrim(1):indicesTrim(2),:); % trim the frequency dimension
-                    freq2 = freq(indicesTrim(1):indicesTrim(2));
-                    %disp([min(freq) max(freq)])
-                    %disp([min(timep) max(timep)])
-
-                    % downsample the time resolution, keeping the frequency
-                    % vector unchanged
-                    noOfNaNs_beforeInterpolation = sum(sum(isnan(WTtrim)));                    
-                    WT_Downsampled = interp2(timeVectorIn, freq2, WTtrim, timep, freq2);                      
-                    power = interp2(timeVectorIn, freq2, power, timep, freq2);                      
-                    noOfNaNs_afterInterpolation = sum(sum(isnan(WT_Downsampled)));
-
-                    %% NORMALIZE if needed
-                    normalizeTheWaveletSpectrum = 1; % could put this to init_DefaultParameters.m
-                                                     % but you basically
-                                                     % always want to
-                                                     % normalize?                    
-
-                        if normalizeTheWaveletSpectrum == 1 
-                            WT_Downsampled = analyze_normalizeWaveletSpectrum(WT_Downsampled, timep, freq, ...
-                                                parameters.oddballTask.ERP_baselineCorrection, parameters.timeFreq.timeResolutionDivider, parameters, handles);
-                            power = analyze_normalizeWaveletSpectrum(power, timep, freq, ...
-                                                parameters.oddballTask.ERP_baselineCorrection, parameters.timeFreq.timeResolutionDivider, parameters, handles);
+                        %% WAVELET WRAPPER
+                        [powerRaw, WT, freq, scale, Cdelta, n, dj, dt, variance, coiRaw] = analyze_waveletWrapper(perChannelEpochs(:,ep), parameters.EEG.srate, parameters.timeFreq.timeResolutionDivider);                                         
+                        
+                        % we can reduce the memory requirements slightly by cutting frequencies here
+                        if freqIndicesFound == 0
+                            indicesTrim = analyze_getTFtrimIndices(freq, [parameters.timeFreq.freqCutOff(1) parameters.timeFreq.freqCutOff(2)], [], [], parameters);                                             
+                            freqIndicesFound = 1;
                         end
 
-                    % Check if the interpolation failed
-                    if noOfNaNs_afterInterpolation > noOfNaNs_beforeInterpolation
-                        warning('Number of NaNs increased after interpolation!')
-                    elseif noOfNaNs_afterInterpolation ~= 0
-                        warning('Some NaNs after interpolation!')
-                    else
-                        WTout(ep,:,:) = WT_Downsampled;
-                        powerOut(ep,:,:) = power;
+                        WTtrim = WT(indicesTrim(1):indicesTrim(2),:); % trim the frequency dimension
+                        power = powerRaw(indicesTrim(1):indicesTrim(2),:); % trim the frequency dimension
+                        freq2 = freq(indicesTrim(1):indicesTrim(2));
+                        %disp([min(freq) max(freq)])
+                        %disp([min(timep) max(timep)])                       
+                        
+                        powerDownsWithCOI = interp2(timeVectorIn, freq2, power, timep, freq2);
+                        wtDownsWithCOI = interp2(timeVectorIn, freq2, WTtrim, timep, freq2);
+                        
+                        % Reject low frequencies under the COI:                                                
+                        % a vector of N points that contains the maximum period of useful information
+                        % at that particular time. Periods greater than this are subject to edge effects.                        
+                        % plot_debugCOI_onWaveletTransform(timeVectorIn, freq, 1./freq, powerRaw, coiRaw, handles)
+                        [power, nanMask] = analyze_rejectWT_underCOI(timeVectorIn, freq2, power, coiRaw, parameters, handles);
+                        [WTtrim, nanMask] = analyze_rejectWT_underCOI(timeVectorIn, freq2, WTtrim, coiRaw, parameters, handles);
+                        
+                        % downsample the time resolution, keeping the frequency
+                        % vector unchanged
+                        % noOfNaNs_beforeInterpolation = sum(sum(isnan(WTtrim)));                    
+                        
+                        % now the WT and power contain NaNs as we rejected
+                        % some values based on the COI                                                
+                        power = interp2(timeVectorIn, freq2, power, timep, freq2);
+                        WT_Downsampled = interp2(timeVectorIn, freq2, WTtrim, timep, freq2);                        
+                               
+                        % noOfNaNs_afterInterpolation = sum(sum(isnan(WT_Downsampled)));                                                
+                        % coi_downsampled = interp1(timeVectorIn, coiRaw', timep);% Cone-of-Influence
+                        
+
+                        %% NORMALIZE if needed
+                        normalizeTheWaveletSpectrum = 1; % could put this to init_DefaultParameters.m
+                                                         % but you basically
+                                                         % always want to
+                                                         % normalize?                    
+
+                            if normalizeTheWaveletSpectrum == 1         
+                                
+                                [power, nonNormFreqIndex] = analyze_normalizeWaveletSpectrum(power, powerDownsWithCOI, timep, freq, ...
+                                                    parameters.oddballTask.ERP_baselineCorrection, parameters.timeFreq.timeResolutionDivider, parameters, handles);
+                                                
+                                [WT_Downsampled, nonNormFreqIndex] = analyze_normalizeWaveletSpectrum(WT_Downsampled, wtDownsWithCOI, timep, freq, ...
+                                                    parameters.oddballTask.ERP_baselineCorrection, parameters.timeFreq.timeResolutionDivider, parameters, handles);                                                
+                                
+                            end
+
+                        % Check if the interpolation failed           
+                        WTout{ch}(ep,:,:) = WT_Downsampled;
+                        powerOut{ch}(ep,:,:) = power;                        
+
+                        % EXTRA OUTPUTS (PARAMETERS CALCULATED)
+                        [ITPC, ITLC, ITLCN, ERSP, avWT, WTav, avWTi, WTavi] = ...
+                            analyze_wavelet_extraParametersAccum(WT_Downsampled, ITPC, ITLC, ITLCN, ERSP, avWT, WTav, avWTi, WTavi, parameters, handles);
+                        
+                        % write out the results for better human readability of the code                   
+                        % [noOfEpochs2, noOfScales, noOfTimePoints] = size(power);
+                        averPowerPerChannel = squeeze(nanmean(powerOut{ch}(:,:,:),1));
+                        stdOfPowerPerChannel = squeeze(nanstd(powerOut{ch}(:,:,:),1));
+                        % [noOfScales, noOfTimePoints] = size(averPowerPerChannel);
+                        % disp([noOfScales noOfTimePoint])
+
+
                     end
+
                     
-                    % EXTRA OUTPUTS (PARAMETERS CALCULATED)
-                    [ITPC, ITLC, ITLCN, ERSP, avWT, WTav, avWTi, WTavi] = ...
-                        analyze_wavelet_extraParametersAccum(WT_Downsampled, ITPC, ITLC, ITLCN, ERSP, avWT, WTav, avWTi, WTavi, parameters, handles);
+                    [extraParam.ITPC{ch}, extraParam.ITLC{ch}, extraParam.ITLCN{ch}, extraParam.ERSP{ch}, extraParam.avWT{ch}, extraParam.WTav{ch}, extraParam.Induced{ch}] = ...
+                        analyze_wavelet_extraParameters(ITPC, ITLC, ITLCN, ERSP, avWT, WTav, avWTi, WTavi, noOfEpochs, parameters, handles);
+                    
+                    % now the different channels might have different amount of
+                    % epochs so we cannot put all the values to a single matrix, so
+                    % we use a cell
+                    %averPowerPerChannel = nanmean(WTout(:,:,:),1);
+                    %stdOfPowerPerChannel = nanstd(WTout(:,:,:),1);
+                    averageOfTheChannel{ch} = averPowerPerChannel;
+                    stdOfTheChannel{ch} = stdOfPowerPerChannel;
 
-                    % write out the results for better human readability of the code                   
-                    % [noOfEpochs2, noOfScales, noOfTimePoints] = size(power);
-                    averPowerPerChannel = squeeze(nanmean(powerOut(:,:,:),1));
-                    stdOfPowerPerChannel = squeeze(nanstd(powerOut(:,:,:),1));
-                    % [noOfScales, noOfTimePoints] = size(averPowerPerChannel);
-                    % disp([noOfScales noOfTimePoint])
-
+                else                    
+                    
+                    powerOut{ch} = NaN;
+                    WTout{ch} = NaN;
+                    
+                    % if no valid epochs are found, something has to be done to
+                    % avoid the script from crashing
+                    rowsNaN = 1; colsNaN = 1;
+                    [WTout{ch}, powerOut{ch}, averageOfTheChannel{ch}, stdOfTheChannel{ch}, extraParam] = analyze_fillWaveletOutputWithNaNs(rowsNaN,colsNaN,ch,handles);                    
+                    % disp(['                 .. no valid epochs found, NaN-filled'])
+                    
                 end
-                
-                [extraParam.ITPC{ch}, extraParam.ITLC{ch}, extraParam.ITLCN{ch}, extraParam.ERSP{ch}, extraParam.avWT{ch}, extraParam.WTav{ch}, extraParam.Induced{ch}] = ...
-                    analyze_wavelet_extraParameters(ITPC, ITLC, ITLCN, ERSP, avWT, WTav, avWTi, WTavi, noOfEpochs, parameters, handles);
-
-                % now the different channels might have different amount of
-                % epochs so we cannot put all the values to a single matrix, so
-                % we use a cell
-                %averPowerPerChannel = nanmean(WTout(:,:,:),1);
-                %stdOfPowerPerChannel = nanstd(WTout(:,:,:),1);
-                averageOfTheChannel{ch}(:,:) = averPowerPerChannel;
-                stdOfTheChannel{ch}(:,:) = stdOfPowerPerChannel;
-
-            end       
-
+            end
             fprintf('\n')
-            disp(['            - timeDiv: ', num2str(parameters.timeFreq.timeResolutionDivider), ', min f: ', num2str(min(freq)), ', max f: ', num2str(max(freq)), ', freqRes: ', num2str(freq(2)-freq(1)), ' Hz'])       
+            disp(['            - timeDiv: ', num2str(parameters.timeFreq.timeResolutionDivider), '(timeRes = ', num2str(timep(2)-timep(1)*1000), ' ms), min f: ', num2str(min(freq)), ', max f: ', num2str(max(freq)), ', freqRes: ', num2str(freq(2)-freq(1)), ' Hz'])       
 
     %% PLOT THE TIME-FREQUENCY 
     
         isNaN = logical(isNaN);        
-        [noOfScales, noOfTimePoints, noOfEpochs] = size(WTout);                   
+        [noOfScales, noOfTimePoints, noOfEpochs] = size(WTout{1});                   
         noOfChannels = length(averageOfTheChannel);
         [T, F] = meshgrid(timep, freq2);  
                    
@@ -288,7 +316,10 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN] 
                 Z = averageOfTheChannel{ch};
                 
                 %debug_plotTF(scales, timep, freq, realCoefs, imagCoefs, T, F, handles) 
-                [c, handle_contours{ch}] = contourf(T, F, Z, contourLevels, 'EdgeColor', 'none');                    
+                if ~isnan(Z)
+                    [c, handle_contours{ch}] = contourf(T, F, Z, contourLevels, 'EdgeColor', 'none');                                        
+                end
+                
                 epochLimits(3,ch,:) = [min(min(Z)) max(max(Z))];
                 
                 lab(ch,1,3) = xlabel('Time [ms]'); 
@@ -350,3 +381,27 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN] 
         
 
 
+% Fills the output with NaN values in case where no epochs are found for
+% the channel (e.g. when the electrode came off during session and all data
+% is garbage)
+function [WTout, powerOut, averageOfTheChannel, stdOfTheChannel, extraParam] = analyze_fillWaveletOutputWithNaNs(rows,cols,ch,handles)
+
+    % one could fill out the values to have the same dimensions as the
+    % channels with some epohcs, but maybe it is less memory-demanding just
+    % to use NaN value, and handle the possible dimension mismatch in the
+    % batch part of the analysis (but still you have the rows, cols as
+    % input arguments if you want to do that)
+    
+    WTout = zeros(rows,cols) * NaN;
+    powerOut = zeros(rows,cols) * NaN;
+    averageOfTheChannel = zeros(rows,cols) * NaN;
+    stdOfTheChannel = zeros(rows,cols) * NaN;
+
+    extraParam.ITPC{ch} = zeros(rows,cols) * NaN;
+    extraParam.ITLC{ch} = zeros(rows,cols) * NaN;
+    extraParam.ITLCN{ch} = zeros(rows,cols) * NaN;
+    extraParam.ERSP{ch} = zeros(rows,cols) * NaN;
+    extraParam.avWT{ch} = zeros(rows,cols) * NaN;
+    extraParam.WTav{ch} = zeros(rows,cols) * NaN;
+    extraParam.Induced{ch} = zeros(rows,cols) * NaN;
+    

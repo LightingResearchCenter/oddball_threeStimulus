@@ -22,6 +22,15 @@ function [cwtpower,WT,f,scale,Cdelta,n,dj,dt,variance,coi]= analyze_waveletWrapp
     [wave,period,scale,coi] = analyze_waveletTransform(y,dt,pad,dj,s0,j1,mother);
         % Reference: Torrence, C. and G. P. Compo, 1998: A Practical Guide to
         % Wavelet Analysis. <I>Bull. Amer. Meteor. Soc.</I>, 79, 61-78.    
+        
+        % coi = if specified, then return the Cone-of-Influence, which is a vector
+        %        of N points that contains the maximum period of useful information
+        %        at that particular time.
+        %        Periods greater than this are subject to edge effects.
+        %        This can be used to plot COI lines on a contour plot by doing:
+        %
+        %              contour(time,log(period),log(power))
+        %              plot(time,log(coi),'k')
     
     cwtpower = (abs(wave)).^2 ; % compute wavelet power spectrum              
     %cwtpower = wave; % compute wavelet power spectrum              
@@ -31,3 +40,4 @@ function [cwtpower,WT,f,scale,Cdelta,n,dj,dt,variance,coi]= analyze_waveletWrapp
     
     f=fliplr(1./period); %frequency in ascending order
     cwtpower=flipud(cwtpower); %flip to match freq. order
+ 

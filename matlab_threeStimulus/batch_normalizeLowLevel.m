@@ -19,9 +19,9 @@ function [out, LE, UE] = batch_normalizeLowLevel(in, dataType, meanIn, meanOut, 
     % if you wanna play with this as well, so that is why this is a
     % subfunction, while rather simple
     
-    diff = zeros(1, length(in));
+    %diff = zeros(1, length(in));
     diff = in - norm;
-    out = diff ./ (norm);
+    out = diff ./ norm;
     
     if strcmp(dataType, 'SD')
         %dataType

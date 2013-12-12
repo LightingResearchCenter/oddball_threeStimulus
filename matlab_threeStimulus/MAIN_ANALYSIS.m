@@ -48,7 +48,7 @@ function MAIN_ANALYSIS()
                     'hh_01_40.bdf'; 'hh_02_40.bdf'; 'hh_03_40.bdf'; 'hh_04_40.bdf'; 'hh_01_0.bdf'; 'hh_02_0.bdf'; 'hh_03_0.bdf'; 'hh_04_0.bdf'; 'hh_01_10.bdf'; 'hh_02_10.bdf'; 'hh_03_10.bdf'; 'hh_04_10.bdf'; ...
                    'ha_01_10.bdf'; 'ha_02_10.bdf'; 'ha_03_10.bdf'; 'ha_04_10.bdf'; 'ha_01_40.bdf'; 'ha_02_40.bdf'; 'ha_03_40.bdf'; 'ha_04_40.bdf'; 'ha_01_0.bdf'; 'ha_02_0.bdf'; 'ha_03_0.bdf'; 'ha_04_0.bdf'};
 
-        % filesIn = {'ka_01_10.bdf'};     
+        filesIn = {'bl_02_40.bdf'};     
         fileNameIn = filesIn;
         
         handles.inputFile = fileNameIn;
@@ -110,12 +110,13 @@ function MAIN_ANALYSIS()
                             % exact variables changed (like sampleRate)                      
 
                         %% PLOT
+                        %{
                         PLOT_singleFile(epochs_target, epochs_distracter, epochs_standard, ...
                          epochsEP_target, epochsEP_distracter, epochsEP_standard, ...
                          analyzed_target, analyzed_distracter, analyzed_standard, ...
                          analyzed_aux, analyzed_extraSensors, analyzed_fractal, analyzed_TF, ...
                          dataMatrix_filtGeneral, alpha, powers, info, handles)
-                         
+                         %}
                         
                     end
                 end
