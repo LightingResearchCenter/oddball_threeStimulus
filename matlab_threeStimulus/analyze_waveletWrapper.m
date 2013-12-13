@@ -1,5 +1,5 @@
 % Modified from HRVAS toolbox
-function [cwtpower,WT,f,scale,Cdelta,n,dj,dt,variance,coi]= analyze_waveletWrapper(y,fs,timeDiv)
+function [cwtpower,WT,f,scale,Cdelta,n,dj,dt,variance,coi]= analyze_waveletWrapper(y,fs,timeDiv,k)
     
     variance = std(y)^2;
     y = (y - mean(y)) / sqrt(variance);
@@ -19,7 +19,7 @@ function [cwtpower,WT,f,scale,Cdelta,n,dj,dt,variance,coi]= analyze_waveletWrapp
     Cdelta = 0.776;   % this is for the MORLET wavelet
     
     % Wavelet transform
-    [wave,period,scale,coi] = analyze_waveletTransform(y,dt,pad,dj,s0,j1,mother);
+    [wave,period,scale,coi] = analyze_waveletTransform(y,dt,pad,dj,s0,j1,mother,k);
         % Reference: Torrence, C. and G. P. Compo, 1998: A Practical Guide to
         % Wavelet Analysis. <I>Bull. Amer. Meteor. Soc.</I>, 79, 61-78.    
         

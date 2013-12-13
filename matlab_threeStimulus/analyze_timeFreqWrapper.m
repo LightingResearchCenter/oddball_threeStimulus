@@ -1,4 +1,5 @@
-function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN, allEpochs, derivedMeasures] = analyze_timeFreqWrapper(matrixIn, parameters, epochIndex, scales, points, timeVectorIn, erpType, IAF_peak, handles)
+function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN, allEpochs, derivedMeasures] = ...
+    analyze_timeFreqWrapper(matrixIn, epochIndex, scales, points, timeVectorIn, erpType, IAF_peak, parameters, handles)
         
     % For the time-frequency analysis we can use the fastwavelet.m
     % provided by the ERPWaveLab, other option would be to use "cwt"
@@ -211,7 +212,8 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN, 
                         % information on the induced potential
 
                         %% WAVELET WRAPPER
-                        [powerRaw, WT, freq, scale, Cdelta, n, dj, dt, variance, coiRaw] = analyze_waveletWrapper(perChannelEpochs(:,ep), parameters.EEG.srate, parameters.timeFreq.timeResolutionDivider);                                         
+                        [powerRaw, WT, freq, scale, Cdelta, n, dj, dt, variance, coiRaw] = ...
+                            analyze_waveletWrapper(perChannelEpochs(:,ep), parameters.EEG.srate, parameters.timeFreq.timeResolutionDivider, parameters.timeFreq.morletK);                                         
                         
                         % we can reduce the memory requirements slightly by cutting frequencies here
                         if freqIndicesFound == 0
@@ -354,8 +356,18 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN, 
                 epochLimits(3,ch,:) = [min(min(Z)) max(max(Z))];
                 
                 lab(ch,1,3) = xlabel('Time [ms]'); 
-                lab(ch,2,3) = ylabel('Frequency [Hz]');                    
-                tit(ch,3) = title(['n = ', num2str(sum(isNaN(:,ch) == 0)), ', IAF = ', num2str(IAF_peak), ' Hz']);
+                lab(ch,2,3) = ylabel('Frequency [Hz]');             
+                titFirstLine = ['n = ', num2str(sum(isNaN(:,ch) == 0))];
+                if ch == 1
+                    titStr = sprintf('%s\n%s', titFirstLine, ['Morlet k0 = ', num2str(parameters.timeFreq.morletK)]);
+                elseif ch == 2
+                    titStr = sprintf('%s\n%s', titFirstLine, ['f_c = ', num2str(parameters.timeFreq.Fc)]);
+                elseif ch == 3
+                    titStr = sprintf('%s\n%s', titFirstLine, ['timeDiv = ', num2str(parameters.timeFreq.timeResolutionDivider), ' (timeRes = ', num2str(1000*(timep(2)-timep(1))), ' ms']);
+                else
+                    titStr = sprintf('%s\n%s', [titFirstLine, ', IAF = ', num2str(IAF_peak), ' Hz'], ['min frequency above COI = ', num2str(freq2(nonNormFreqIndex)), ' Hz']);
+                end
+                tit(ch,3) = title(titStr);
                 ylim([1 30])
 
                 % annotate the individual alpha range                    

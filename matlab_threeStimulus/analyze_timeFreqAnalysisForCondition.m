@@ -22,20 +22,22 @@ function [realCoefs, imagCoefs, allEpochs, derivedMeasures, TFStat] = analyze_ti
     end
 
     parameters.timeFreq.timeResolutionDivider = 16;
-    
-    numberOfEpochsIn = length(epochsIn.ERP);        
-    [noOfSamples, noOfChannels] = size(epochsIn.ERP{1});   
-    
-    handles.parameters.timeFreq.Fc = 1; % central frequency?
+    parameters.timeFreq.Fc = 1; % central frequency?
         % restriction (δ, same as bandwidth parameter), delta, see Peng et al. (2012), pg. 8, point (1)
         % http://dx.doi.org/10.1371/journal.pone.0034163
         
+    parameters.timeFreq.morletK = 12; % Empirically found to produce the sharpest plots
+        % in Żygierewicz et al. (2005), http://dx.doi.org/10.1016/j.jneumeth.2005.01.013                                    
+                        
+    numberOfEpochsIn = length(epochsIn.ERP);        
+    [noOfSamples, noOfChannels] = size(epochsIn.ERP{1}); 
+        
     if parameters.timeFreq.logFrq == 1
         freqs = logspace(parameters.timeFreq.scaleLimits(1), parameters.timeFreq.scaleLimits(2), parameters.timeFreq.numberOfFreqs);
-        scales = handles.parameters.timeFreq.Fc * parameters.EEG.srate ./ freqs;
+        scales = parameters.timeFreq.Fc * parameters.EEG.srate ./ freqs;
     else
         freqs = linspace(parameters.timeFreq.scaleLimits(1), parameters.timeFreq.scaleLimits(2), parameters.timeFreq.numberOfFreqs);
-        scales = handles.parameters.timeFreq.Fc * parameters.EEG.srate ./ freqs;
+        scales = parameters.timeFreq.Fc * parameters.EEG.srate ./ freqs;
     end
     
     % original time vector in, e.g. -500 ms to 500 ms
@@ -68,7 +70,7 @@ function [realCoefs, imagCoefs, allEpochs, derivedMeasures, TFStat] = analyze_ti
         end 
         
         [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN, allEpochs, derivedMeasures] = ...
-                analyze_timeFreqWrapper(EEG_AllTheEpochs, parameters, epoch, scales, points, timeVectorIn, erpType, IAF_peak, handles);
+                analyze_timeFreqWrapper(EEG_AllTheEpochs, epoch, scales, points, timeVectorIn, erpType, IAF_peak, parameters, handles);
         
         % Assign to output structure
         TFStat.real.mean = realCoefs;
