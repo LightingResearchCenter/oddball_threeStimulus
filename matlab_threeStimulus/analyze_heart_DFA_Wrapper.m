@@ -119,7 +119,7 @@ function heart = analyze_heart_DFA_Wrapper(heart, hp, thp, rrTimes, rrPeakInterv
         
             scrsz = handles.style.scrsz;
             fig = figure('Color', 'w', 'Name', 'Fractal ECG');
-                set(fig, 'Position', [0.45*scrsz(3) 0.16*scrsz(4) 0.47*scrsz(3) 0.77*scrsz(4)])
+                set(fig, 'Position', [0.5*scrsz(3) 0.16*scrsz(4) 0.47*scrsz(3) 0.77*scrsz(4)])
                 rows = 3;
                 cols = 1;
 

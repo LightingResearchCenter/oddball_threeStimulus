@@ -39,7 +39,7 @@ function [rPeakTimes, rPeakAmplitudes] = QRS_peakDetection(ecg_data, Fs, handles
     if debugPlot == 1
         fig = figure('name', 'QRS: Pan-Tompkins', 'Color', 'w');
         scrsz = get(0,'ScreenSize'); % get screen size for plotting
-            set(fig, 'Position', [0.3*scrsz(3) 0.05*scrsz(4) 0.55*scrsz(3) 0.90*scrsz(4)])
+            set(fig, 'Position', [0.03*scrsz(3) 0.05*scrsz(4) 0.55*scrsz(3) 0.90*scrsz(4)])
             rows = 4;
             cols = 3;
         

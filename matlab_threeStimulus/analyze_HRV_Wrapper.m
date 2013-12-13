@@ -213,7 +213,7 @@ function [heart, hp4] = analyze_HRV_Wrapper(heart, hpRaw, thpRaw, hp, thp, rrTim
     if debugON == 1
         scrsz = handles.style.scrsz;
         fig = figure('Color', 'w', 'Name', 'HRV');
-            set(fig, 'Position', [0.5*scrsz(3) 0.05*scrsz(4) 0.45*scrsz(3) 0.90*scrsz(4)])
+            set(fig, 'Position', [0.25*scrsz(3) 0.05*scrsz(4) 0.45*scrsz(3) 0.90*scrsz(4)])
             rows = 3; cols = 1;
         
         % Original time series
