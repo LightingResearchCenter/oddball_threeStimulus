@@ -25,7 +25,7 @@ function process_assignOutputsFromPROCESS(epochs, ERP_components, alpha, powers,
         end
     end    
     whos
-    $}
+    %}
     
     % get rid of the "double existence" of the parameters structures
     parameters = handles.parameters;
