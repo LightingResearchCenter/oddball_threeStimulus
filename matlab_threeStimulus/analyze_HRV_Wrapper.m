@@ -174,8 +174,9 @@ function [heart, hp4] = analyze_HRV_Wrapper(heart, hpRaw, thpRaw, hp, thp, rrTim
                 [hp4, nyqFreq] = ougp_gpousmooth2(thp, hp, parameters.heart.freqRange, 'bp');
                     % if you get only NaNs out, check the freqRange used
             catch err
-                err
-                whos
+                % err
+                % whos
+                disp('                .. transpose thp and hp to avoid crash')
                 [hp4, nyqFreq] = ougp_gpousmooth2(thp', hp', parameters.heart.freqRange, 'bp');
             end
             F = parameters.heart.freqRange(1) : parameters.heart.freqResolution : parameters.heart.freqRange(2);
