@@ -1,4 +1,4 @@
-function [ITPC, ITLC, ITLCN, ERSP, avWT, WTav, Induced] = analyze_wavelet_extraParameters(ITPC, ITLC, ITLCN, ERSP, avWT, WTav, avWTi, WTavi, noOfEpochs, parameters, handles)
+function [ITPC, ITLC, ITLCN, ERSP, avWT, WTav, Induced] = analyze_wavelet_derivedParameters(ITPC, ITLC, ITLCN, ERSP, avWT, WTav, avWTi, WTavi, noOfEpochs, parameters, handles)
 
     % Inter-Trial Phase Coherence (ITPC)
     ITPC = ITPC / noOfEpochs;

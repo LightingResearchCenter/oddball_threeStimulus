@@ -1,4 +1,4 @@
-function [ITPC, ITLC, ITLCN, ERSP, avWT, WTav, avWTi, WTavi] = analyze_wavelet_extraParametersAccum(WT, ITPC, ITLC, ITLCN, ERSP, avWT, WTav, avWTi, WTavi, parameters, handles)
+function [ITPC, ITLC, ITLCN, ERSP, avWT, WTav, avWTi, WTavi] = analyze_wavelet_derivedParametersAccum(WT, ITPC, ITLC, ITLCN, ERSP, avWT, WTav, avWTi, WTavi, parameters, handles)
 
     % Inter-Trial Phase Coherence (ITPC)
     ITPC = ITPC + WT./abs(WT);
