@@ -264,6 +264,14 @@ function parameters = init_DefaultParameters(handles)
             warning('Low cutoff for HRV analysis can''t be zero, use the freqResolution for example! Script will work but PSD will be full of NaNs')
         end
         
+        % Outlier detection (from HRVAS)        
+        parameters.heart.ectopicOutlierMethod = 'median'; % 'percent', 'median', 'sd'
+        parameters.heart.ectopicPercentParam = 20; % def 20, from HRVAS
+        parameters.heart.ectopicSdParam = 3; % def 3, from HRVAS
+        parameters.heart.ectopicMedianParam = 4; % def 4, from HRVAS        
+
+        parameters.heart.outlierReplaceMethod = 'remove'; % 'mean' / 'median' / 'cubic' / 'remove'
+        
             
     %% Time-Frequency Analysis
     

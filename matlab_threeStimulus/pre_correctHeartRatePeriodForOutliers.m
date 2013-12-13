@@ -20,24 +20,18 @@ function [hpOut, thpOut] = pre_correctHeartRatePeriodForOutliers(rPeakTimes, t, 
     end
 
     % transpose inputs
-    t = t;
-    y = y;
+    %t = t';
+    %y = y';
     
     debugPlotOn = 0;
 
-    handles.parameters.heart.ectopicOutlierMethod = 'median'; % 'percent', 'median', 'sd'
-        handles.parameters.heart.ectopicPercentParam = 20; % def 20, from HRVAS
-        handles.parameters.heart.ectopicSdParam = 3; % def 3, from HRVAS
-        handles.parameters.heart.ectopicMedianParam = 4; % def 4, from HRVAS        
-
-    handles.parameters.heart.outlierReplaceMethod = 'remove'; % 'mean' / 'median' / 'cubic' / 'remove'
-        if strcmp(handles.parameters.heart.outlierReplaceMethod, 'mean')
-            handles.parameters.heart.outlierReplaceInput = 9; % 9 is default value for median from HRVAS
-        elseif strcmp(handles.parameters.heart.outlierReplaceMethod, 'median')
-            handles.parameters.heart.outlierReplaceInput = 5; % 5 is default value for median from HRVAS
-        else
-            handles.parameters.heart.outlierReplaceInput = NaN;
-        end
+    if strcmp(handles.parameters.heart.outlierReplaceMethod, 'mean')
+        handles.parameters.heart.outlierReplaceInput = 9; % 9 is default value for median from HRVAS
+    elseif strcmp(handles.parameters.heart.outlierReplaceMethod, 'median')
+        handles.parameters.heart.outlierReplaceInput = 5; % 5 is default value for median from HRVAS
+    else
+        handles.parameters.heart.outlierReplaceInput = NaN;
+    end
     
         
     %% Locate ectopic
