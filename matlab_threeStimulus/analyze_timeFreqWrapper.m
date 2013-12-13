@@ -81,7 +81,7 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN, 
                 cols = noOfChannels;
                 
                 scrsz = get(0,'ScreenSize'); % get screen size for plotting
-                fig = figure('Color', 'w');
+                fig = figure('Color', 'w', 'Name', ['TF: ', erpType]);
                     set(fig, 'Position', [0.05*scrsz(3) 0.20*scrsz(4) 0.92*scrsz(3) 0.62*scrsz(4)])
                 
                 for ch = 1 : noOfChannels
@@ -194,6 +194,21 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN, 
                 if noOfEpochs ~= 0
                     
                     for ep = 1 : noOfEpochs
+                        
+                        % The wavelet transform is now computed on a
+                        % single-trial basis for each epoch and the
+                        % individual TF epochs are then averaged (or
+                        % manipulated as wished)
+                        
+                        % Visual representation of why is this so, one can
+                        % check out the Figure 4 of Herrmann et al. (2013)
+                        % "Time–Frequency Analysis of Event-Related Potentials: A Brief Tutorial"
+                        % http://dx.doi.org/10.1007/s10548-013-0327-5
+                        
+                        % In other words, we would not necessarily make a
+                        % huge error with the time-frequency spectrum of
+                        % the evoked potential, but we might lose a lot of
+                        % information on the induced potential
 
                         %% WAVELET WRAPPER
                         [powerRaw, WT, freq, scale, Cdelta, n, dj, dt, variance, coiRaw] = analyze_waveletWrapper(perChannelEpochs(:,ep), parameters.EEG.srate, parameters.timeFreq.timeResolutionDivider);                                         

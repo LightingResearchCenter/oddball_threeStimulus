@@ -314,7 +314,7 @@ function [epochs, analyzed, TF, dataMatrix_filtGeneral, alpha, powers, handles] 
                                                 alpha.amplit_gravity, handles.parameters, handles);
     
     %% PHASIC CARDIAC ANALYSIS (PCR) for the EPOCHS
-    disp('    Phasic Cardiac Analysis (PCR, Kardia)  (placeholder)')
+    disp(' '); disp('    Phasic Cardiac Analysis (PCR, Kardia)  (placeholder)')
     
         % Use KARDIA
         % http://sourceforge.net/projects/mykardia/
@@ -327,7 +327,7 @@ function [epochs, analyzed, TF, dataMatrix_filtGeneral, alpha, powers, handles] 
         end 
         
     %% EVENT-RELATED EOG
-    disp('    Event-related EOG (placeholder)')
+    disp(' '); disp('    Event-related EOG (placeholder)')
     
         % not probably anything relevant especially as only one EOG lead is
         % used, but you have the epochs here if you want to further analyze
@@ -340,11 +340,12 @@ function [epochs, analyzed, TF, dataMatrix_filtGeneral, alpha, powers, handles] 
         end  
 
     %% Package to structures and SAVE TO DISK
+    disp(' '); disp('    SAVE computed variables to disk')
         
         % you can discard some data, and make sure that you only the needed
         % data is saved to disk, or if you just want to optimize the use of
         % disk space or something    
-        process_assignOutputsFromPROCESS(epochs, ERP_components, alpha, SEM, heart, EOG, fractalAnalysis, timeFreqEpochs, timeFreq, TF_allEpochs, TF_derivedMeasures, handles.parameters, handles)    
+        process_assignOutputsFromPROCESS(epochs, ERP_components, alpha, powers, SEM, heart, EOG, fractalAnalysis, timeFreqEpochs, timeFreq, TF_allEpochs, TF_derivedMeasures, handles.parameters, handles)    
       
                           
     disp('+++++         Processing of the file complete')
