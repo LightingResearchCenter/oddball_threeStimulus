@@ -14,6 +14,8 @@ function [rPeakTimes, rPeakAmplitudes] = QRS_peakDetection(ecg_data, Fs, handles
             load('debugPath.mat')
             load(fullfile(path.debugMATs, debugMatFileName))
             close all
+            % for debugging, use shorter vector
+            ecg_data = ecg_data(1:4096*60);
         else
             if handles.flags.saveDebugMATs == 1
                 path = handles.path;
@@ -23,8 +25,7 @@ function [rPeakTimes, rPeakAmplitudes] = QRS_peakDetection(ecg_data, Fs, handles
         end 
     end
 
-    % for debugging, use shorter vector
-    %ecg_data = ecg_data(1:4096*60);
+    
     
     %ecg_data = load('ecg3.dat'); % load the ECG signal from the file
     %Fs = 200;              % Sampling rate
@@ -52,7 +53,7 @@ function [rPeakTimes, rPeakAmplitudes] = QRS_peakDetection(ecg_data, Fs, handles
 
     %% CANCELLATION DC DRIFT AND NORMALIZATION
 
-    ecg_data = ecg_data - mean (ecg_data );    % cancel DC conponents    
+    ecg_data = ecg_data - mean (ecg_data );    % cancel DC components    
     ecg_data = detrend(ecg_data); % PETTERI, added detrending
     ecg_data = ecg_data/ max( abs(ecg_data )); % normalize to one
 
@@ -110,8 +111,8 @@ function [rPeakTimes, rPeakAmplitudes] = QRS_peakDetection(ecg_data, Fs, handles
     % We could use the Smooth Differentiation by Jianwen Luo, not to
     % accentuate the noise too much
     % http://www.mathworks.com/matlabcentral/fileexchange/6170-smooth-differentiation 
-        diff_filterLength = 32*16;
-        h = smooth_diff(diff_filterLength);
+        %diff_filterLength = 32*16;
+        %h = smooth_diff(diff_filterLength);
         
     % Apply filter
     x4 = conv (x3 ,h);
@@ -149,8 +150,9 @@ function [rPeakTimes, rPeakAmplitudes] = QRS_peakDetection(ecg_data, Fs, handles
     %% MOVING WINDOW INTEGRATION   
 
     % Apply filter (original convolution)    
-    h = ones (1,16*31)/31; % Make impulse response
-    Delay = 2*(16*31)/2 - 1; % Delay in samples
+    filtLength = 31;
+    h = ones (1,filtLength)/31; % Make impulse response
+    Delay = floor(filtLength/2); % Delay in samples
     
     x6_init = conv (x5,h);    
     x6 = x6_init(Delay+[1: N]);         
@@ -161,15 +163,16 @@ function [rPeakTimes, rPeakAmplitudes] = QRS_peakDetection(ecg_data, Fs, handles
         sp(spIndex) = subplot(rows,cols,spIndex);
         hold on
         multip = 20;
-        plot(x5(1:Delay*multip)/max(x5(1:Delay*multip)), 'r')        
-        plot(x6_init(1:Delay*multip)/max(x6_init(1:Delay*multip)), 'g')
-        plot(x6(1:Delay*multip)/max(x6(1:Delay*multip)), 'k')
+        plot(x5 / max(x5), 'r')
+        plot(x6_init / max(x6_init), 'g')
+        plot(x6 / max(x6), 'k')
         hold off
         %leg = legend(['Sq., n=', num2str(length(x5))], ['x6init, n=', num2str(length(x6))], ['x6, n=', num2str(length(x6))]);
         leg = legend(['Sq.'], ['x6init'], ['x6']);
             set(leg, 'FontSize', 6, 'Location', 'Best');
             legend('boxoff'); title('Average')            
-                
+            xlim([Delay*multip*3 Delay*multip*8])    
+            
         spIndex = spIndex + 1;
         sp(spIndex) = subplot(rows,cols,spIndex);
         plot([0:length(x6)-1]/Fs,x6,'Color',[0 0.6 1])
@@ -201,7 +204,7 @@ function [rPeakTimes, rPeakAmplitudes] = QRS_peakDetection(ecg_data, Fs, handles
         title(['max_h = ', num2str(max_h), ', thresh = ', num2str(thresh)])
         box on
         xlim(zoomWindow)
-            leg = legend('Thresh*max_h', 'Integrated', 'Location', 'best'); 
+            leg = legend('Thresh*max_h', 'ECG', 'Location', 'best'); 
                 legend('boxoff'); set(leg, 'FontSize', 7)
         drawnow
     end
@@ -239,7 +242,7 @@ function [rPeakTimes, rPeakAmplitudes] = QRS_peakDetection(ecg_data, Fs, handles
         title('Search Window')
         box on
         xlim(zoomWindow)
-            leg = legend('Integrated', 'Left', 'Right', 'Location', 'best'); 
+            leg = legend('ECG', 'Left', 'Right', 'Location', 'best'); 
                 legend('boxoff'); set(leg, 'FontSize', 7)
         
     end
@@ -277,8 +280,7 @@ function [rPeakTimes, rPeakAmplitudes] = QRS_peakDetection(ecg_data, Fs, handles
     catch err
         % err
         rPeakTimes = NaN;
-        rPeakAmplitudes = NaN;
-        
+        rPeakAmplitudes = NaN;        
         return
     end
     S_loc=S_loc(S_loc~=0);
@@ -321,11 +323,46 @@ function [rPeakTimes, rPeakAmplitudes] = QRS_peakDetection(ecg_data, Fs, handles
         
     end
     
-    %% RETURN R peaks
-    rPeakTimes = t(R_loc);
-    rPeakAmplitudes = R_value;
+    %% DO FINAL OUTLIER EXCLUSION
     
+        % We can use the same algorithm used after this to reject outlier RR
+        % intervals, and it is actually more beneficial to do it here. In
+        % practice the algorithm may find R peaks that have too small
+        % amplitudes and we could check for deviating R peak amplitudes
+        rPeakTimes = t(R_loc);  
+        handles.parameters.heart.ectopicMedianParam = 12;
+        handles.parameters.heart.ectopicOutlierMethod = 'median'; % 'percent', 'median', 'sd'    
+        handles.parameters.heart.outlierReplaceMethod = 'remove'; % 'mean' / 'median' / 'cubic' / 'remove'
+        
+        disp(['           * Rejecting outliers from R peaks (only R, not Q or S)'])
+        [rPeakAmplitudes, rPeakTimes] = pre_correctHeartRatePeriodForOutliers([], rPeakTimes, R_value, handles);                   
+        noOfPeaksRejected = length(t(R_loc)) - length(rPeakTimes);
+        
+        if debugPlot == 1
+            
+            axes(sp(spIndex-1))
+                hold on
+                plot(rPeakTimes, rPeakAmplitudes, 'k^')
+                hold off
+                title(['QRS, ', num2str(noOfPeaksRejected), ' x R rejected'])
+            
+            axes(sp(spIndex))
+                hold on
+                plot(rPeakTimes, rPeakAmplitudes, 'k^')
+                hold off
+                title('QRS Zoom')
+            
+                leg = legend([{'ECG'}, {'R w outl'}, {'S'}, {'Q'}, {'R'}]);
+                    set(leg,'Position',[0.902867965367965 0.183559782608696 0.0871212121212121 0.0944293478260869], 'FontSize', 7);
+                    legend('boxoff')
+                    drawnow
+            
+            
+        end
+            
+        
         % not really a good implementation with high sample rates (e.g. 4,096 Hz).. returns the actual R peaks but
         % they come with additional peaks :S (Petteri Teikari)
+           
         
         
