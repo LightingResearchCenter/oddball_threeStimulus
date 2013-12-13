@@ -23,7 +23,7 @@
 function [alpha, intervals, flucts] = fastdfa(x, varargin)
 
     try
-        [xpts, ypts] = fastdfa_core(x, varargin{:});
+        [xpts, ypts] = fastdfa_core(x', varargin{:});
     catch err
         err
         err.identifier

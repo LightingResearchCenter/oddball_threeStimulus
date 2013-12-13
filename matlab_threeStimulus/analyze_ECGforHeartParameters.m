@@ -69,7 +69,7 @@ function heart = analyze_ECGforHeartParameters(ECG, ECG_raw, handles)
             % http://dx.doi.org/10.1109/TBME.2007.912658.
     
         % the algorithm fails at 4,096 (too many peaks), so we need to downsample the signal       
-        parameters.heart.downsampleFactor = 1; %parameters.heart.downsampleFactor;
+        parameters.heart.downsampleFactor = 4; %parameters.heart.downsampleFactor;
         x_new = (linspace(1, length(ECG), length(ECG) / parameters.heart.downsampleFactor))';
         ECG_downsampled = pre_nyquistInterpolation(ECG, length(x_new),1,0); % Nyquist interpolation  
         heartrateSampleRate = parameters.EEG.srate/parameters.heart.downsampleFactor;
@@ -174,7 +174,7 @@ function heart = analyze_ECGforHeartParameters(ECG, ECG_raw, handles)
 
     %% Calculate DFA (Kardia Toolbox)    
         disp(['            .. DFA for R-R timeseries'])
-        heart = analyze_heart_DFA_Wrapper(heart, hp, thp, rrTimes, rrPeakInterval, rrPeakAmplitude, heartrateSampleRate, parameters, handles);
+        heart = analyze_heart_DFA_Wrapper(heart, hpFilt', thp, rrTimes, rrPeakInterval, rrPeakAmplitude, heartrateSampleRate, parameters, handles);
         
     
     function heart = analyze_ECG_fillTheFieldWithNan()
