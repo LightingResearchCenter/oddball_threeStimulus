@@ -1,4 +1,4 @@
-function [realCoefs, imagCoefs, derivedMeasures, TFStat] = analyze_timeFreqAnalysisForCondition(epochsIn, artifactIndices, erpType, IAF_peak, parameters, handles)
+function [realCoefs, imagCoefs, allEpochs, derivedMeasures, TFStat] = analyze_timeFreqAnalysisForCondition(epochsIn, artifactIndices, erpType, IAF_peak, parameters, handles)
 
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction        
     if handles.flags.saveDebugMATs == 1
@@ -67,7 +67,7 @@ function [realCoefs, imagCoefs, derivedMeasures, TFStat] = analyze_timeFreqAnaly
                 % whos            
         end 
         
-        [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN] = ...
+        [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN, allEpochs, derivedMeasures] = ...
                 analyze_timeFreqWrapper(EEG_AllTheEpochs, parameters, epoch, scales, points, timeVectorIn, erpType, IAF_peak, handles);
         
         % Assign to output structure

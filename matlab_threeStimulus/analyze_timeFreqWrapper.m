@@ -1,4 +1,4 @@
-function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN] = analyze_timeFreqWrapper(matrixIn, parameters, epochIndex, scales, points, timeVectorIn, erpType, IAF_peak, handles)
+function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN, allEpochs, derivedMeasures] = analyze_timeFreqWrapper(matrixIn, parameters, epochIndex, scales, points, timeVectorIn, erpType, IAF_peak, handles)
         
     % For the time-frequency analysis we can use the fastwavelet.m
     % provided by the ERPWaveLab, other option would be to use "cwt"
@@ -59,7 +59,7 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN] 
 
             % window the signal epoch
             r = parameters.timeFreq.tukeyWindowR;
-            r = 50*r
+            r = 2*r;
             window = (tukeywin(noOfSamples,r)); % Tukey window with r=0.10 is 10% cosine window
             
             if parameters.timeFreq.windowEpochs == 1
@@ -228,7 +228,8 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN] 
                         % some values based on the COI                                                
                         power = interp2(timeVectorIn, freq2, power, timep, freq2);
                         WT_Downsampled = interp2(timeVectorIn, freq2, WTtrim, timep, freq2);                        
-                               
+                        
+                        
                         % noOfNaNs_afterInterpolation = sum(sum(isnan(WT_Downsampled)));                                                
                         % coi_downsampled = interp1(timeVectorIn, coiRaw', timep);% Cone-of-Influence
                         
@@ -256,8 +257,9 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN] 
                         powerOut{ch}(ep,:,:) = power;                        
 
                         % EXTRA OUTPUTS (PARAMETERS CALCULATED)
+                        %whos('WT*', 'IT*', 'ERSP', 'avWT', 'WTav', 'avWTi', 'WTavi', 'parameters', 'handles')
                         [ITPC, ITLC, ITLCN, ERSP, avWT, WTav, avWTi, WTavi] = ...
-                            analyze_wavelet_extraParametersAccum(WT_Downsampled, ITPC, ITLC, ITLCN, ERSP, avWT, WTav, avWTi, WTavi, parameters, handles);
+                            analyze_wavelet_derivedParametersAccum(WT_Downsampled, ITPC, ITLC, ITLCN, ERSP, avWT, WTav, avWTi, WTavi, parameters, handles);
                         
                         % write out the results for better human readability of the code                   
                         % [noOfEpochs2, noOfScales, noOfTimePoints] = size(power);
@@ -269,9 +271,8 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN] 
 
                     end
 
-                    
-                    [extraParam.ITPC{ch}, extraParam.ITLC{ch}, extraParam.ITLCN{ch}, extraParam.ERSP{ch}, extraParam.avWT{ch}, extraParam.WTav{ch}, extraParam.Induced{ch}] = ...
-                        analyze_wavelet_extraParameters(ITPC, ITLC, ITLCN, ERSP, avWT, WTav, avWTi, WTavi, noOfEpochs, parameters, handles);
+                    [derivedMeasures.ITPC{ch}, derivedMeasures.ITLC{ch}, derivedMeasures.ITLCN{ch}, derivedMeasures.ERSP{ch}, derivedMeasures.avWT{ch}, derivedMeasures.WTav{ch}, derivedMeasures.Induced{ch}] = ...
+                        analyze_wavelet_derivedParameters(ITPC, ITLC, ITLCN, ERSP, avWT, WTav, avWTi, WTavi, noOfEpochs, parameters, handles);
                     
                     % now the different channels might have different amount of
                     % epochs so we cannot put all the values to a single matrix, so
@@ -289,7 +290,7 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN] 
                     % if no valid epochs are found, something has to be done to
                     % avoid the script from crashing
                     rowsNaN = 1; colsNaN = 1;
-                    [WTout{ch}, powerOut{ch}, averageOfTheChannel{ch}, stdOfTheChannel{ch}, extraParam] = analyze_fillWaveletOutputWithNaNs(rowsNaN,colsNaN,ch,handles);                    
+                    [WTout{ch}, powerOut{ch}, averageOfTheChannel{ch}, stdOfTheChannel{ch}, derivedMeasures] = analyze_fillWaveletOutputWithNaNs(rowsNaN,colsNaN,ch,handles);                    
                     % disp(['                 .. no valid epochs found, NaN-filled'])
                     
                 end
@@ -297,6 +298,13 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN] 
             fprintf('\n')
             disp(['            - timeDiv: ', num2str(parameters.timeFreq.timeResolutionDivider), ' (timeRes = ', num2str(1000*(timep(2)-timep(1))), ' ms), min f: ', num2str(min(freq)), ', max f: ', num2str(max(freq)), ', freqRes: ', num2str(freq(2)-freq(1)), ' Hz'])       
 
+            
+    %% ASSIGN TO BE RETURNED    
+    allEpochs.WT = WTout;
+    allEpochs.power = powerOut;            
+            
+            
+            
     %% PLOT THE TIME-FREQUENCY 
     
         isNaN = logical(isNaN);        
@@ -337,6 +345,19 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN] 
 
                 % annotate the individual alpha range                    
                 alphaLimits = IAF_peak + parameters.powerAnalysis.eegBins.freqs{1}; % 1 is now hard-coded, see init_defaultParameters.m to make this more robust
+                
+                    % Now we are annotating the alpha based on the IAF of
+                    % each individual on each session thus "normalizing"
+                    % frequency variations across subjects, additionally
+                    % you could try to time-lock the epochs to the button
+                    % press as there is possibly some motor-contamination
+                    % of the epochs, and some of the jitter could be
+                    % explained by variations in reaction time.
+                    
+                    % See for example:
+                    % Makeig S, Onton J. 2009. ERP Features and EEG Dynamics: An ICA Perspective.
+                    % http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.160.4983
+
 
                 hold on
                 lineHandle(ch,1) = line([min(timep) max(timep)], [alphaLimits(1) alphaLimits(1)]);
@@ -364,13 +385,14 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN] 
         % STYLE
         set(lineHandle, 'Color', 'w', 'LineStyle', '-')
         set(sp, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase-2) 
+        set(sp, 'XLim', [min(timep) max(timep)]) 
         set(tit, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase-1, 'FontWeight', 'bold') 
         set(lab, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase-2, 'FontWeight', 'bold')            
         
             for ch = 1 : noOfChannels
-                caxis(sp(3,ch), [min(min(epochLimits(3,:,:))) max(max(epochLimits(3,:,:)))]);
-                %caxis(sp(3,ch), [-200 200]);
-                set(sp(3,ch), 'YScale', 'log')
+                %caxis(sp(3,ch), [min(min(epochLimits(3,:,:))) max(max(epochLimits(3,:,:)))]);
+                caxis(sp(3,ch), [0 600]);
+                %set(sp(3,ch), 'ZScale', 'log')
             end
             
         % AUTO-SAVE FIGURE
@@ -394,7 +416,7 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN] 
 % Fills the output with NaN values in case where no epochs are found for
 % the channel (e.g. when the electrode came off during session and all data
 % is garbage)
-function [WTout, powerOut, averageOfTheChannel, stdOfTheChannel, extraParam] = analyze_fillWaveletOutputWithNaNs(rows,cols,ch,handles)
+function [WTout, powerOut, averageOfTheChannel, stdOfTheChannel, derivedMeasures] = analyze_fillWaveletOutputWithNaNs(rows,cols,ch,handles)
 
     % one could fill out the values to have the same dimensions as the
     % channels with some epohcs, but maybe it is less memory-demanding just
@@ -407,11 +429,11 @@ function [WTout, powerOut, averageOfTheChannel, stdOfTheChannel, extraParam] = a
     averageOfTheChannel = zeros(rows,cols) * NaN;
     stdOfTheChannel = zeros(rows,cols) * NaN;
 
-    extraParam.ITPC{ch} = zeros(rows,cols) * NaN;
-    extraParam.ITLC{ch} = zeros(rows,cols) * NaN;
-    extraParam.ITLCN{ch} = zeros(rows,cols) * NaN;
-    extraParam.ERSP{ch} = zeros(rows,cols) * NaN;
-    extraParam.avWT{ch} = zeros(rows,cols) * NaN;
-    extraParam.WTav{ch} = zeros(rows,cols) * NaN;
-    extraParam.Induced{ch} = zeros(rows,cols) * NaN;
+    derivedMeasures.ITPC{ch} = zeros(rows,cols) * NaN;
+    derivedMeasures.ITLC{ch} = zeros(rows,cols) * NaN;
+    derivedMeasures.ITLCN{ch} = zeros(rows,cols) * NaN;
+    derivedMeasures.ERSP{ch} = zeros(rows,cols) * NaN;
+    derivedMeasures.avWT{ch} = zeros(rows,cols) * NaN;
+    derivedMeasures.WTav{ch} = zeros(rows,cols) * NaN;
+    derivedMeasures.Induced{ch} = zeros(rows,cols) * NaN;
     
