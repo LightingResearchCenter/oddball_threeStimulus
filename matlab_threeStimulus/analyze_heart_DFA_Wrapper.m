@@ -34,8 +34,8 @@ function heart = analyze_heart_DFA_Wrapper(heart, hp, thp, rrTimes, rrPeakInterv
         
         disp(['              - Monofractal DFA (fastdfa)'])
         % http://www.mathworks.com/matlabcentral/fileexchange/19795-detrended-fluctuation-analysis
-        % http://www.eng.ox.ac.uk/samp/dfa_soft.html 
-        [alpha, intervals, flucts] = fastdfa(hp');
+        % http://www.eng.ox.ac.uk/samp/dfa_soft.html         
+        [alpha, intervals, flucts] = fastdfa(hp);
         
             % Outputs:
             %    alpha      - Estimated scaling exponent
@@ -55,12 +55,11 @@ function heart = analyze_heart_DFA_Wrapper(heart, hp, thp, rrTimes, rrPeakInterv
         ressc = 100;
         qmin = -5;
         qmax = 5;
-        qres = abs(((qmin - qmax) / 0.2))+1;    
-        % eps = 1; % 1 millisecond with HRV
-        warning off 
+        qres = abs(((qmin - qmax) / 0.2))+1; % e.g. 51
+        % eps = 1; % 1 millisecond with HRV        
         try
             tic                      
-            [s,q,Hq,h,Dh,logFq] = MFDFA(hp,m,scmin,scmax,ressc,qmin,qmax,qres);            
+            [s,q,Hq,h,Dh,logFq] = MFDFA(hp,m,scmin,scmax,ressc,qmin,qmax,qres)
             timing = toc;
         catch err     
             
@@ -81,7 +80,17 @@ function heart = analyze_heart_DFA_Wrapper(heart, hp, thp, rrTimes, rrPeakInterv
             
             elseif strcmp(err.identifier, 'MATLAB:badsubscript')
                 
-                disp('                  -> bad susubscript ')
+                disp('                  -> bad subscript (no MFDFA returned for RR interval vector (why actually)')
+                
+                    % Only one value in variable "s", others are NaN, that
+                    % is why the polynomial fit fails as number of data
+                    % points is 1 which is the same as polynomial degree
+                    
+                    % Warning: Polynomial is not unique; degree >= number of data points. 
+                    % > In polyfit at 71
+                    % In MFDFA at 159
+                    % In analyze_heart_DFA_Wrapper at 61 
+                    
                 h = NaN;
                 Dh = NaN;
                 
@@ -108,32 +117,85 @@ function heart = analyze_heart_DFA_Wrapper(heart, hp, thp, rrTimes, rrPeakInterv
         
         if debugON == 1
         
-            fig = figure('Color', 'w');
-            
-            % as Figure 4 and Figure 5 of Zorick and Mandelkern (2013)
-                % Zorick T, Mandelkern MA. 2013. 
-                % Multifractal Detrended Fluctuation Analysis of Human EEG: Preliminary Investigation and Comparison with the Wavelet Transform Modulus Maxima Technique. 
-                % PLoS ONE 8:e68360. 
-                % http://dx.doi.org/10.1371/journal.pone.0068360
-                
-                p = plot(h, Dh , 'ko');
-                xlabel('h (Hölder/Hurst Exponent)')
-                ylabel('D(h) (FractalDimension/MultifractalSpectrum)')
-                set(p, 'markerFaceColor', 'b')
+            scrsz = handles.style.scrsz;
+            fig = figure('Color', 'w', 'Name', 'Fractal ECG');
+                set(fig, 'Position', [0.45*scrsz(3) 0.16*scrsz(4) 0.47*scrsz(3) 0.77*scrsz(4)])
+                rows = 3;
+                cols = 1;
 
-                hold on
-                l = line([heart.scalar.MFDFA_mean_h heart.scalar.MFDFA_mean_h], [0 1]);
-                hold off
+                ind = 1;
+                sp(ind) = subplot(rows,cols,ind);
                 
-                xlims = get(gca, 'XLim');
-                ylims = get(gca, 'YLim');
-                yOffset = 0.1;
+                    offset1 = 0;
+                    pDFA(1,:) = loglog(intervals, flucts, intervals, ((intervals .^ alpha) + offset1), 'o');
+                    tit(ind) = title('DFA');
+                    lab(ind,1) = xlabel('Time Scale n(data points)');
+                    lab(ind,2) = ylabel('Detrended fluctuation F(n)');
+                    leg(ind) = legend('flucts', '(intervals .^ alpha)', 'Location', 'Best');
+                        legend('boxoff')                    
+                    
+                    % annotate alpha
+                    tx(ind) = text(max(intervals)/100, max(flucts)/2, ['\alpha = ', num2str(alpha,2)]);
+
                 
-                tx(1) = text(0.95*xlims(2), ylims(2)*(1-yOffset*1), ['mean_h = ', num2str(heart.scalar.MFDFA_mean_h)]);
-                tx(2) = text(0.95*xlims(2), ylims(2)*(1-yOffset*2), ['mean_D(h) = ', num2str(heart.scalar.MFDFA_mean_Dh)]);
-                tx(3) = text(0.95*xlims(2), ylims(2)*(1-yOffset*3), ['width_h = ', num2str(heart.scalar.MFDFA_width_h)]);
-                tx(4) = text(0.95*xlims(2), ylims(2)*(1-yOffset*4), ['height_D(h) = ', num2str(heart.scalar.MFDFA_height_Dh)]);
-                set(tx, 'HorizontalAlignment', 'right')
+                ind = ind+1;
+                sp(ind) = subplot(rows,cols,ind);
+                
+                    alpha_2 = alpha - 1;
+                    fittingOffsetIndex = 4; % choose of what data point has to be crossed for linear regression
+                    offset_2 = (flucts(fittingOffsetIndex) ./ intervals(fittingOffsetIndex)) - (intervals(fittingOffsetIndex) .^ alpha_2);
+                
+                    pDFA(2,:) = loglog(intervals, (flucts ./ intervals), intervals, ((intervals .^ alpha_2) + offset_2), 'o');
+                    lab(ind,1) = xlabel('Time Scale n(data points)');
+                    lab(ind,2) = ylabel('F(n) / n');
+                    tit(ind) = title(' ');
+                    leg(ind) = legend('(flucts ./ intervals)', '((intervals .^ alpha_2) + offset_2)', 'Location', 'Best');
+                        legend('boxoff')
+                    
+                    % annotate alpha
+                    tx(ind) = text(max(intervals)/100, max(flucts ./ intervals)/2, ['\alpha" = ', num2str(alpha_2,1)]);
+                    
+                ind = ind+1;
+                sp(ind) = subplot(rows,cols,ind);
+                
+                    % as Figure 4 and Figure 5 of Zorick and Mandelkern (2013)
+                    % Zorick T, Mandelkern MA. 2013. 
+                    % Multifractal Detrended Fluctuation Analysis of Human EEG: Preliminary Investigation and Comparison with the Wavelet Transform Modulus Maxima Technique. 
+                    % PLoS ONE 8:e68360. 
+                    % http://dx.doi.org/10.1371/journal.pone.0068360
+
+                    p = plot(h, Dh , 'ko');
+                    lab(ind,1) = xlabel('h (Hölder/Hurst Exponent)');
+                    yStr = sprintf('%s\n%s', 'D(h) (FractalDimension', '/MultifractalSpectrum)');
+                    lab(ind,2) = ylabel(yStr);
+                    set(p, 'markerFaceColor', 'b')
+                    tit(ind) = title('MFDFA');
+
+                    hold on
+                    l = line([heart.scalar.MFDFA_mean_h heart.scalar.MFDFA_mean_h], [0 1]);
+                    hold off
+
+                    xlims = get(gca, 'XLim');
+                    ylims = get(gca, 'YLim');
+                    yOffset = 0.1;
+
+                    txMFDFA(1) = text(0.95*xlims(2), ylims(2)*(1-yOffset*1), ['mean_h = ', num2str(heart.scalar.MFDFA_mean_h)]);
+                    txMFDFA(2) = text(0.95*xlims(2), ylims(2)*(1-yOffset*2), ['mean_D(h) = ', num2str(heart.scalar.MFDFA_mean_Dh)]);
+                    txMFDFA(3) = text(0.95*xlims(2), ylims(2)*(1-yOffset*3), ['width_h = ', num2str(heart.scalar.MFDFA_width_h)]);
+                    txMFDFA(4) = text(0.95*xlims(2), ylims(2)*(1-yOffset*4), ['height_D(h) = ', num2str(heart.scalar.MFDFA_height_Dh)]);
+                    set(txMFDFA, 'HorizontalAlignment', 'right')
+                    
+                % STYLE
+                set(pDFA(:,1), 'Color', [0 0.533 0.831], 'LineWidth', 1.5);
+                set(pDFA(:,2), 'MarkerSize', 7, 'MarkerFaceColor', [1 0.4 0], 'MarkerEdgeColor', [0 0 0]);
+                
+                % STYLE                
+                set(sp, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase-1)                 
+                set(txMFDFA, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase-1, 'FontWeight', 'bold')       
+                set(tx, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase, 'FontWeight', 'bold')       
+                set(tit, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase, 'FontWeight', 'bold') 
+                set(leg, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase-1) 
+                set(lab, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase-1, 'FontWeight', 'bold')      
                 
         end        
        
