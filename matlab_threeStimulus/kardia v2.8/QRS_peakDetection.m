@@ -335,7 +335,7 @@ function [rPeakTimes, rPeakAmplitudes] = QRS_peakDetection(ecg_data, Fs, handles
         handles.parameters.heart.outlierReplaceMethod = 'remove'; % 'mean' / 'median' / 'cubic' / 'remove'
         
         disp(['           * Rejecting outliers from R peaks (only R, not Q or S)'])
-        [rPeakAmplitudes, rPeakTimes] = pre_correctHeartRatePeriodForOutliers([], rPeakTimes, R_value, handles);                   
+        [rPeakAmplitudes, rPeakTimes] = pre_correctHeartRatePeriodForOutliers([], rPeakTimes, R_value, 'rPeak', handles);                   
         noOfPeaksRejected = length(t(R_loc)) - length(rPeakTimes);
         
         if debugPlot == 1

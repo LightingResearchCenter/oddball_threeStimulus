@@ -77,11 +77,20 @@ function heart = analyze_ECGforHeartParameters(ECG, ECG_raw, handles)
         [rPeakTimes, rPeakAmplitudes] = QRS_peakDetection(ECG_downsampled, heartrateSampleRate, handles);
         
         % No peaks found
-        if logical(sum(isnan(rPeakTimes))) || length(rPeakTimes) < 20 % at least 20 peaks have to be found
-            disp('        garbage ECG !!! ')
+        try
+            if logical(sum(isnan(rPeakTimes))) || length(rPeakTimes) < 20 % at least 20 peaks have to be found
+                disp('        garbage ECG !!! ')
+                heart = analyze_ECG_fillTheFieldWithNan();
+                return
+            end        
+        catch
+            a = logical(sum(isnan(rPeakTimes)))
+            b = length(rPeakTimes) < 20
+            disp('        garbage ECG I guess still, or the algorithm failed, like rejected all the R peaks? !!! ')
             heart = analyze_ECG_fillTheFieldWithNan();
             return
-        end        
+        end
+            
         heart.vector.ECG_timeDownSampled = x_new / heartrateSampleRate;
         heart.vector.ECG_rawDownSampled = ECG_downsampled;
         
@@ -145,7 +154,7 @@ function heart = analyze_ECGforHeartParameters(ECG, ECG_raw, handles)
         
     %% Reject outliers
 
-        [hpOutlierRej, thpOutOutlierRej] = pre_correctHeartRatePeriodForOutliers(rPeakTimes, thp, hp, handles);
+        [hpOutlierRej, thpOutOutlierRej] = pre_correctHeartRatePeriodForOutliers(rPeakTimes, thp, hp, 'rInterval', handles);
 
         % save to structure
         heart.vector.RR_t = thp;
