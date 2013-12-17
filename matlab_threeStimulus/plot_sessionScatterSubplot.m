@@ -1,5 +1,5 @@
 function [p, styleHandles, yLims] = ...
-    plot_sessionScatterSubplot(normData, chToPlot, normalizationTypes, erpTypes, rows, cols, normType, stim, ch, index, fieldValue, erpComponent, erpDataType, noOfSessions, handles)
+    plot_sessionScatterSubplot(normData, chToPlot, normalizationTypes, erpTypes, rows, cols, normType, stim, ch, index, fieldValue, erpComponent, erpDataType, noOfSessions, subjects, handles)
 
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
     if 1 == 1
@@ -39,7 +39,12 @@ function [p, styleHandles, yLims] = ...
         err2(session,:) = normData.(erpTypes{stim}).dim.(chToPlot){session}.SD;
         err3(session,:) = normData.(erpTypes{stim}).bright.(chToPlot){session}.SD;    
     end
-
+    
+    % Customize the color scale, use the distinguishable_colors from Matlab
+    % FileExchange by Tim Holy, http://www.mathworks.com/matlabcentral/fileexchange/29702-generate-maximally-perceptually-distinct-colors
+    % See also: http://blogs.mathworks.com/pick/2008/08/15/colors-for-your-multi-line-plots/
+    ColorSet = distinguishable_colors(length(y1));
+    set(gca, 'ColorOrder', ColorSet);
 
     % PLOT
     hold on
@@ -50,16 +55,17 @@ function [p, styleHandles, yLims] = ...
     %}
     p(1,:) = plot(x1, y1, 'square');
     p(2,:) = plot(x2, y2, '*');
-    p(3,:) =plot(x3, y3, 'o');
+    p(3,:) = plot(x3, y3, 'o');
     hold off
 
     [noOfCond, noOfSubjects] = size(p);
     for c =  1 : noOfCond
         for s = 1 : noOfSubjects
             set(p(c,s), 'MarkerFaceColor', get(p(c,s), 'Color'));
+            legString{s} = subjects{s};
         end
     end
-
+    
     % Annotations
 
         % explanations
@@ -86,7 +92,8 @@ function [p, styleHandles, yLims] = ...
                 end
             else
                 yLabelString = '\Delta';
-            end                
+            end    
+            
         elseif (index - (floor(index/cols)*cols)) == 4
             normString = erpComponent;
             yLabelString = ' ';
@@ -134,7 +141,12 @@ function [p, styleHandles, yLims] = ...
             end
 
         else
-            if (index - (floor(index/cols)*cols)) == 0
+            
+            if index == cols
+                leg = legend(legString);
+                    set(leg, 'Position',[0.908895502645501 0.744701086956522 0.0439814814814815 0.152853260869565])
+                    
+            elseif (index - (floor(index/cols)*cols)) == 0
                 leg = legend('dark', '10lux', '40lux', 3);
                     %legend('boxoff')
                     set(leg, 'Location', 'NorthWest')
@@ -158,10 +170,7 @@ function [p, styleHandles, yLims] = ...
 
     % plots
     set(p, 'MarkerSize', handles.style.markerSize)
-
-
-
-
+    
     % get y limits
     yLims = [min(min(([y1 y2 y3]))) max(max(([y1 y2 y3])))];
 
