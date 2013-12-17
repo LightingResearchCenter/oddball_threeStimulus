@@ -172,11 +172,11 @@ function parameters = init_DefaultParameters(handles)
             parameters.artifacts.CRAP.step_windowWidth = 50;
             parameters.artifacts.CRAP.step_windowStep = 15;
 
-            parameters.artifacts.CRAP.movWindEOG_ampTh = [-65 65];
+            parameters.artifacts.CRAP.movWindEOG_ampTh = [-65 65]*2;
             parameters.artifacts.CRAP.movWindEOG_windowWidth = 20;
             parameters.artifacts.CRAP.movWindEOG_windowStep = 20;
 
-            parameters.artifacts.CRAP.movWind_ampTh = [-65 65];
+            parameters.artifacts.CRAP.movWind_ampTh = [-65 65]*2;
             parameters.artifacts.CRAP.movWind_windowWidth = 20;
             parameters.artifacts.CRAP.movWind_windowStep = 20;
     
@@ -376,9 +376,7 @@ function parameters = init_DefaultParameters(handles)
         parameters.ep_den.den_type = 'do_den'; %' do_den' or 'load_den_coeff' 
         parameters.ep_den.auto_den_type = 'NZT';  % 'Neigh' or 'NZT'
 
-        % Sigmoid fit parameters
-        parameters.sigmoid.sigmoidFunc = ''; % 'param4'
-
+        
     %% PLOTTING
     
         handles.parameters.plot.ComponentAveragedSamples = 10; % for component trend plot
