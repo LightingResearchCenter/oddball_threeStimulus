@@ -184,7 +184,7 @@ function heart = analyze_ECGforHeartParameters(ECG, ECG_raw, handles)
     %% Calculate DFA (Kardia Toolbox)    
         disp(['            .. DFA for R-R timeseries'])
         heart = analyze_heart_DFA_Wrapper(heart, hpFilt', thp, rrTimes, rrPeakInterval, rrPeakAmplitude, heartrateSampleRate, parameters, handles);
-        
+        drawnow
     
     function heart = analyze_ECG_fillTheFieldWithNan()
 
