@@ -255,6 +255,14 @@ function [moving_isNaN, movingEOG_isNaN, step_isNaN, vDiffOutMovWindow, vDiffOut
     EEG.xmin = 0;
     EEG.xmax = length(EEG.data) / parameters.EEG.srate;
     EEG.setname = 'dummy blank string';
+    
+    %{
+    plot(epochIn)
+    hold on
+    plot(EOG, 'm')
+    hold off
+    pause(1.0)
+    %}
 
     % See http://erpinfo.org/erplab/erplab-documentation/manual_4/Artifact_Detection.html
 

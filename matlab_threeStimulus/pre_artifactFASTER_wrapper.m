@@ -110,15 +110,23 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                 sp(sp_i) = subplot(rows,cols, [1 5 9]);
                     yOffset = 55; % [uV]
                     %plot(1,1)
-                    plot_allTheEpochsToSingleSubplot(sp(sp_i),t*1000, EEG.data(1:parameters.EEG.nrOfChannels+1,:,:), parameters, yOffset)
-                    leg(1) = legend('Base', 'Cz', 'Fz', 'Pz', 'Oz', 'EOG');
-                        set(leg(1), 'Position',[0.0567851959361391 0.469834826427773 0.0598693759071118 0.120380739081747])
-                        legend('boxoff')
-                        lab(1,1) = xlabel('Time [ms]');
-                        lab(1,2) = ylabel('Epochs');
-                        tit(1) = title(['Epochs IN (', erpType, ')']);
-                        xlim([min(t*1000) max(t*1000)])
-                        drawnow
+                    try
+                        plot_allTheEpochsToSingleSubplot(sp(sp_i),t*1000, EEG.data(1:parameters.EEG.nrOfChannels+1,:,:), parameters, yOffset)                    
+                        leg(1) = legend('Base', 'Cz', 'Fz', 'Pz', 'Oz', 'EOG');
+                            set(leg(1), 'Position',[0.0567851959361391 0.469834826427773 0.0598693759071118 0.120380739081747])
+                            legend('boxoff')
+                            lab(1,1) = xlabel('Time [ms]');
+                            lab(1,2) = ylabel('Epochs');
+                            tit(1) = title(['Epochs IN (', erpType, ')']);
+                            xlim([min(t*1000) max(t*1000)])
+                            drawnow
+                    catch err
+                        err
+                        % not robust enough if you are looking for example
+                        % the TARGET plot while Matlab is plotting for
+                        % standard, then you might get an invalid handle
+                        % error
+                    end
                        
                 sp_i = sp_i + 1;
                 sp(sp_i) = subplot(rows,cols, [13]);
