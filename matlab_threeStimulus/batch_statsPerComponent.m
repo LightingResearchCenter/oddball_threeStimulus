@@ -1,4 +1,5 @@
-function [statsOut, matricesSessionNorm] = batch_statsPerComponent(dataOut, statsPer, erpComponent, erpFilterType, fieldValue, fileNameFields, stimulusType, handles)
+function [statsOut, matricesSessionNorm, outlierOut] = ...
+    batch_statsPerComponent(dataOut, statsPer, erpComponent, erpFilterType, fieldValue, fileNameFields, fileNames, stimulusType, subjects, outlierFilenameList, handles)
 
     %% DEBUG
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
@@ -17,7 +18,7 @@ function [statsOut, matricesSessionNorm] = batch_statsPerComponent(dataOut, stat
         end
     end
     
-    
+    %{
     dataOut
     dataOut.bright
     dataOut.bright.session1
@@ -26,7 +27,7 @@ function [statsOut, matricesSessionNorm] = batch_statsPerComponent(dataOut, stat
     dataOut.bright.session1.target.component.bl
     dataOut.bright.session1.target.component.bl.(erpFilterType)
     dataOut.bright.session1.target.component.bl.(erpFilterType).Cz
-    
+    %}
 
     dataOutField = fieldnames(dataOut);   
 
@@ -47,7 +48,7 @@ function [statsOut, matricesSessionNorm] = batch_statsPerComponent(dataOut, stat
 
         % get only one mean value out from session
         disp('  .. . . average trials together (3D)')
-        matricesSessionAver = batch_averageSessionTrialsTogether(matricesIntensity, handles);     
+        [matricesSessionAver, outlierOut] = batch_averageSessionTrialsTogether(matricesIntensity, fileNames, subjects, outlierFilenameList, handles);     
 
         % Normalize using two methods
         matricesSessionNorm.absolute = matricesSessionAver;
@@ -60,6 +61,7 @@ function [statsOut, matricesSessionNorm] = batch_statsPerComponent(dataOut, stat
         for i = 1 : length(normFieldNames)
             statsOut.(normFieldNames{i}) = batch_calculateStatsFromStats(matricesSessionNorm.(normFieldNames{i}), handles);
         end
+        
 
     % Now a vector is created that has a length of (number of
     % trials per session * number of sessions, e.g. 40 x 4 =

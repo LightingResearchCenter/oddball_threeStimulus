@@ -1,4 +1,5 @@
-function [p, styleHandles, yLims] = plot_sessionMeanSubplot(statData, chToPlot, normalizationTypes, erpTypes, rows, cols, normType, stim, ch, index, fieldValue, erpComponent, erpDataType, handles)
+function [p, styleHandles, yLims] = ...
+    plot_sessionMeanSubplot(statData, chToPlot, normalizationTypes, erpTypes, rows, cols, normType, stim, ch, index, fieldValue, erpComponent, erpDataType, subjects, handles)
 
     i = 1;
 
@@ -42,7 +43,7 @@ function [p, styleHandles, yLims] = plot_sessionMeanSubplot(statData, chToPlot, 
         err2 = secondsToMilliseconds * statData.(erpTypes{stim}).dim.(chToPlot).SD;
         err3 = secondsToMilliseconds * statData.(erpTypes{stim}).bright.(chToPlot).SD;
     else
-        statData.(erpTypes{stim}).dark.(chToPlot)
+        % plotStatsDebug = statData.(erpTypes{stim}).dark.(chToPlot)
         y1 = statData.(erpTypes{stim}).dark.(chToPlot).mean;
         y2 = statData.(erpTypes{stim}).dim.(chToPlot).mean;
         y3 = statData.(erpTypes{stim}).bright.(chToPlot).mean;
@@ -152,9 +153,6 @@ function [p, styleHandles, yLims] = plot_sessionMeanSubplot(statData, chToPlot, 
         'Color',[0 0.20 0.80]);
     set(p(3),'MarkerFaceColor',[1 0 0],'Color',[1 0 0]);
     set(p, 'MarkerSize', handles.style.markerSize+1)
-
-
-
 
     % get y limits
     yLims = [min(min(([y1 y2 y3]))) max(max(([y1 y2 y3])))];

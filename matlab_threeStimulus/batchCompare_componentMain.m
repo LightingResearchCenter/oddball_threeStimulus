@@ -1,4 +1,4 @@
-function batchCompare_componentMain(fileNameFields, handles)
+function batchCompare_componentMain(fileNameFields, fileNames, outlierFilenameList, handles)
 
     %% DEBUG
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
@@ -31,7 +31,7 @@ function batchCompare_componentMain(fileNameFields, handles)
             for k = 1 : length(erpFilterType)
 
                 % Pull out the data, 'ERP Component'      
-                [dataOut, auxOut, auxOutPowers] = batch_pullOut_ERP(fileNameFields, erpComponent{j}, erpFilterType{k}, handles);
+                [dataOut, auxOut, auxOutPowers, subjects] = batch_pullOut_ERP(fileNameFields, outlierFilenameList, erpComponent{j}, erpFilterType{k}, handles);
 
                     % this pulling out actually have to be done only once,
                     % move at some point outside the loop
@@ -40,22 +40,26 @@ function batchCompare_componentMain(fileNameFields, handles)
                 % statsPer = 'trials';
                 statsPer = 'session'; % average one session        
                 stimulusType = {'target'; 'distracter'; 'standard'};                
-                [statsOut, matricesSessionNorm] = batch_statsPerComponent(dataOut, statsPer, erpComponent{j}, erpFilterType{k}, fieldValue{i}, fileNameFields, stimulusType, handles);        
+                [statsOut, matricesSessionNorm, outlierOut] = batch_statsPerComponent(dataOut, statsPer, erpComponent{j}, erpFilterType{k}, fieldValue{i}, fileNameFields, fileNames, stimulusType, subjects, outlierFilenameList, handles);        
 
                 % PLOT
                 chsToPlot = {'Cz'; 'Pz'};
-                batch_plotIntensityComparisonMAIN(statsOut, matricesSessionNorm, statsPer, erpComponent{j}, erpFilterType{k}, fieldValue{i}, fileNameFields, stimulusType, chsToPlot, handles)
+                batch_plotIntensityComparisonMAIN(statsOut, matricesSessionNorm, statsPer, erpComponent{j}, erpFilterType{k}, fieldValue{i}, fileNameFields, stimulusType, chsToPlot, subjects, outlierOut, handles)
+                
+                %{
                 chsToPlot = {'Fz'; 'Oz'};
-                batch_plotIntensityComparisonMAIN(statsOut, matricesSessionNorm, statsPer, erpComponent{j}, erpFilterType{k}, fieldValue{i}, fileNameFields, stimulusType, chsToPlot, handles)
+                batch_plotIntensityComparisonMAIN(statsOut, matricesSessionNorm, statsPer, erpComponent{j}, erpFilterType{k}, fieldValue{i}, fileNameFields, stimulusType, chsToPlot, subjects, handles)
+                %}
 
             end
         end
     end
     
     %% AUX
-    
+    %{
         % Preprocess and calculate stats
         [auxStat, auxStatPowers] = batch_preProcessAUX(auxOut, auxOutPowers, handles);
         
         % Plot
         batch_plotAuxScalars(auxStat, auxStatPowers, handles)
+    %}

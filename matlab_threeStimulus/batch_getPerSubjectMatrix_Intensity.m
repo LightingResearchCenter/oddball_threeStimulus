@@ -1,13 +1,13 @@
-function matricesIntensity = batch_getPerSubjectMatrix_Intensity(dataNorm, erpComponent, erpFilterType, fieldValue, noOfSubjects, noOfTrials, handles)
+function matricesIntensity = batch_getPerSubjectMatrix_Intensity(dataNorm, erpComponent, erpFilterType, fieldValue, noOfSubjects, noOfEpochs, handles)
        
     conditionFields = fieldnames(dataNorm);
     sessionFields = fieldnames(dataNorm.dark);
     noOfSessions = length(sessionFields);
 
     %{
-    matricesIntensity.dark = zeros(handles.parameters.EEG.nrOfChannels, noOfSessions, noOfTrials, noOfSubjects);
-    matricesIntensity.dim = zeros(handles.parameters.EEG.nrOfChannels, noOfSessions, noOfTrials, noOfSubjects);
-    matricesIntensity.bright = zeros(handles.parameters.EEG.nrOfChannels, noOfSessions, noOfTrials, noOfSubjects);
+    matricesIntensity.dark = zeros(handles.parameters.EEG.nrOfChannels, noOfSessions, noOfEpochs, noOfSubjects);
+    matricesIntensity.dim = zeros(handles.parameters.EEG.nrOfChannels, noOfSessions, noOfEpochs, noOfSubjects);
+    matricesIntensity.bright = zeros(handles.parameters.EEG.nrOfChannels, noOfSessions, noOfEpochs, noOfSubjects);
     %}
 
     dispNrOfCombinations = 0;
@@ -32,17 +32,17 @@ function matricesIntensity = batch_getPerSubjectMatrix_Intensity(dataNorm, erpCo
                     end
 
                     for l = 1 : length(chNames)
-                        noOfTrials = length(dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{j}).component.(subjectNames{k}).(erpFilterType).(chNames{l}));
+                        noOfEpochs = length(dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{j}).component.(subjectNames{k}).(erpFilterType).(chNames{l}));
 
-                        for lj = 1 : noOfTrials
+                        for lj = 1 : noOfEpochs
                             try
                                 compNames = fieldnames(dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{j}).component.(subjectNames{k}).(erpFilterType).(chNames{l}){lj});
                             catch err
                                 [ii i j k l lj]
                                 err
-                                a1 = dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{1}).component.(subjectNames{k})
-                                a2 = dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{1}).component.(subjectNames{k}).(erpFilterType)
-                                a3 = dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{1}).component.(subjectNames{k}).(erpFilterType).(chNames{l})
+                                filterTypes = dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{1}).component.(subjectNames{k})
+                                chNames = dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{1}).component.(subjectNames{k}).(erpFilterType)
+                                epochs = dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{1}).component.(subjectNames{k}).(erpFilterType).(chNames{l})
                             end
 
                             for m = 1 : 1 % length(compNames), we are only picking one
@@ -50,7 +50,7 @@ function matricesIntensity = batch_getPerSubjectMatrix_Intensity(dataNorm, erpCo
                                 for n = 1 : 1 % length(statFields) we are only picking one                                        
 
                                     if dispNrOfCombinations == 0
-                                        numberOfCombinations = length(conditionFields) * length(sessionFields) * length(ERPtypes) * length(subjectNames) * length(chNames) * noOfTrials * 1 * 1;
+                                        numberOfCombinations = length(conditionFields) * length(sessionFields) * length(ERPtypes) * length(subjectNames) * length(chNames) * noOfEpochs * 1 * 1;
                                         disp(['  .. .   Number of combinations: ', num2str(numberOfCombinations)])
                                         dispNrOfCombinations = 1;
                                     end                                        
@@ -62,6 +62,11 @@ function matricesIntensity = batch_getPerSubjectMatrix_Intensity(dataNorm, erpCo
                                             dataPoint = dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{j}).component.(subjectNames{k}).(erpFilterType).(chNames{l}){lj}.(erpComponent).(fieldValue);
                                         catch err
                                             err
+                                            erpComponent
+                                            subjectNames{k}
+                                            dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{j}).component.(subjectNames{k}).(erpFilterType)
+                                            dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{j}).component.(subjectNames{k}).(erpFilterType).(chNames{l}){lj}
+                                            ataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{j}).component.(subjectNames{k}).(erpFilterType).(chNames{l}){lj}.(erpComponent)
                                             error('Typo with what you wanted to get?')
                                         end
                                         if isstruct(dataPoint)

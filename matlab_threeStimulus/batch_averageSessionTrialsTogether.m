@@ -1,4 +1,4 @@
-function matricesSessionAver = batch_averageSessionTrialsTogether(matricesIntensity, handles)
+function [matricesSessionAver, outlierOut] = batch_averageSessionTrialsTogether(matricesIntensity, fileNames, subjects, outlierFilenameList, handles)
     
     ERPtypes = fieldnames(matricesIntensity);
     conditions = fieldnames(matricesIntensity.(ERPtypes{1}));
@@ -10,6 +10,8 @@ function matricesSessionAver = batch_averageSessionTrialsTogether(matricesIntens
 
     dim = 1; % the return should be a row vector, one value per subject
     flag = 0;
+    
+    outlierOut = [];
 
     dataMatrixInit = 0;
     for condition = 1 : noOfConditions
@@ -54,6 +56,7 @@ function matricesSessionAver = batch_averageSessionTrialsTogether(matricesIntens
                     % dataMatrix;
                     % av1 = batch_calculateStatsForMatrix(dataMatrix, dim, flag, handles);
                     % ERPtypes{j}
+                    dataMatrix = batch_excludeOutliersBeforeStats(dataMatrix, subjects, handles)
                     matricesSessionAver.(ERPtypes{j}).(conditions{condition}).(handles.parameters.BioSemi.chName{ch+handles.parameters.BioSemi.chOffset}){session} = batch_calculateStatsForMatrix(dataMatrix, dim, flag, handles);
 
                     % session

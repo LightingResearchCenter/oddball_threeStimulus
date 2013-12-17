@@ -1,4 +1,4 @@
-function [dataOut, auxOut, auxOutPowers] = batch_pullOut_ERP(fileNameFields, erpComponent, erpFilterType, handles)
+function [dataOut, auxOut, auxOutPowers, subjects] = batch_pullOut_ERP(fileNameFields, outlierFilenameList, erpComponent, erpFilterType, handles)
 
     %% DEBUG
     debugMatFileName = 'tempPullOutERPs.mat';
@@ -14,6 +14,8 @@ function [dataOut, auxOut, auxOutPowers] = batch_pullOut_ERP(fileNameFields, erp
         end
     end
 
+    warning on
+    
     numberOfFilesFound = length(fileNameFields);
     filesPerSubject = 12;
     numberOfSubjectsDone = numberOfFilesFound/filesPerSubject;
@@ -24,6 +26,7 @@ function [dataOut, auxOut, auxOutPowers] = batch_pullOut_ERP(fileNameFields, erp
     end
     
     % erpComponent
+    outlierFilesFoundFromInput = false(length(outlierFilenameList), 1);
     
     for i = 1 : numberOfFilesFound                       
         
@@ -101,20 +104,53 @@ function [dataOut, auxOut, auxOutPowers] = batch_pullOut_ERP(fileNameFields, erp
                         errorWithTheInput = 4;
                     end
                 end
-                            
+                
+            % check if the input has been manually marked to be an outlier
+            extraString = '_analyzed.mat';
+            outlierListTrue = strcmp(strrep(fileNameFields{i}.fileName, extraString, '.bdf'), outlierFilenameList);
+            thisFileMarkedAsOutlier = logical(sum(outlierListTrue));
+            if thisFileMarkedAsOutlier == 1
+                disp(['        - ', fileNameFields{i}.fileName, ' was marked to be an outlier'])
+            end
+            
+                % check also that all the files marked as outliers are
+                % found from the input files, i.e. if you have a typo in
+                % your outlier files, it will be never found and corrected,
+                % while you might think that it is been corrected
+                outlierFilesFoundFromInput(outlierListTrue) = 1;
+
             % use more intuitive variable names
-            if errorWithTheInput == 0
+            if errorWithTheInput == 0 && thisFileMarkedAsOutlier == 0
                 target = dataIn.ERP_components.(erpFilterType).ERP.target;
                 distracter = dataIn.ERP_components.(erpFilterType).ERP.distr;
-                standard = dataIn.ERP_components.(erpFilterType).ERP.std;
+                standard = dataIn.ERP_components.(erpFilterType).ERP.std;                
+
+                % Get structure of the input
+                chNames = fieldnames(target);                
+                componentNames = fieldnames(target.(chNames{1}){1});
+                componentStatFields = fieldnames(target.(chNames{1}){1}.(componentNames{1}));                                
+                
+                % get number of epochs
+                noOfEpochs.target = length(target.(chNames{1}));
+                noOfEpochs.distr = length(distracter.(chNames{1}));
+                noOfEpochs.std = length(standard.(chNames{1}));
+                
             else
-                target = [];
-                distracter = [];
-                standard = [];
+                try
+                    target = batch_fillComponentFieldWithNaNs(chNames, componentNames, componentStatFields, noOfEpochs.target);
+                    disp(['          - filling the target/distracter/standard ERPs with NaNs'])
+                catch err
+                    err
+                    disp(['fileIndex = ', num2str(i)])
+                    disp('does not work actually if your first file is faulty, fix later')
+                end
+                distracter = batch_fillComponentFieldWithNaNs(chNames, componentNames, componentStatFields, noOfEpochs.distr);
+                standard = batch_fillComponentFieldWithNaNs(chNames, componentNames, componentStatFields, noOfEpochs.std);
             end
                
             % subject
             subject = fileNameFields{i}.subject;
+            subjects{i} = subject;
 
             % assign to output, the desired component
             dataOut.(intensity).(session).target.component.(subject).(erpFilterType) = target;
@@ -193,6 +229,18 @@ function [dataOut, auxOut, auxOutPowers] = batch_pullOut_ERP(fileNameFields, erp
             
         end
      
-    end
+    end % end of files
     
+    %% check if all the outlier files have been found
     
+        notFoundLinearIndices = find(outlierFilesFoundFromInput == 0);
+        for i = 1 : length(notFoundLinearIndices)   
+            warning('Not all the outlier files were found!')
+            fprintf('     ')
+            for j = 1 : i
+               fprintf(' '); % add white space
+            end        
+            fprintf(['"', outlierFilenameList{notFoundLinearIndices(i)}, '" not found from the input files, is this correct?\n'])        
+        end
+
+
