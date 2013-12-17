@@ -62,6 +62,28 @@ function [p, styleHandles, yLims] = ...
 
     % Annotations
 
+        % number of non-NaN subjects per plot
+        %{
+        yOffset = 1.1;
+        yOffset2 = 0.01;
+        for ll = 1 : length(x1)
+            noOfNotNans = sum(~isnan(y1(ll,:)));
+            tx(1,ll) = text(x1(ll), max(y1(ll,:))*yOffset + yOffset2, num2str(noOfNotNans));
+        end
+           
+        for ll = 1 : length(x2)
+            noOfNotNans = sum(~isnan(y3(ll,:)));
+            tx(2,ll) = text(x2(ll), max(y2(ll,:))*yOffset + yOffset2, num2str(noOfNotNans));
+        end
+        
+        for ll = 1 : length(x3)
+            noOfNotNans = sum(~isnan(y2(ll,:)));
+            tx(3,ll) = text(x3(ll), max(y3(ll,:))*yOffset + yOffset2, num2str(noOfNotNans));
+            
+        end
+        set(tx, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'FontAngle', 'Italic')
+        %}
+    
         % title & ylabel
         if rem(index-1,cols) == 0 || index == 1 % for each row
             normString = normalizationTypes{normType};

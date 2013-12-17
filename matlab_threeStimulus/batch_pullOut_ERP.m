@@ -232,7 +232,7 @@ function [dataOut, auxOut, auxOutPowers, subjects] = batch_pullOut_ERP(fileNameF
     end % end of files
     
     %% check if all the outlier files have been found
-    
+            
         notFoundLinearIndices = find(outlierFilesFoundFromInput == 0);
         for i = 1 : length(notFoundLinearIndices)   
             warning('Not all the outlier files were found!')
@@ -242,5 +242,6 @@ function [dataOut, auxOut, auxOutPowers, subjects] = batch_pullOut_ERP(fileNameF
             end        
             fprintf(['"', outlierFilenameList{notFoundLinearIndices(i)}, '" not found from the input files, is this correct?\n'])        
         end
+        fprintf('\n')
 
 

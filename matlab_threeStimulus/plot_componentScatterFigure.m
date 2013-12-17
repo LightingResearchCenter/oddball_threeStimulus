@@ -21,9 +21,9 @@ function plot_componentScatterFigure(fig, statsOut, matricesSessionNorm, noOfSes
             for ch = 1 : length(chSelected)
                 index = ((normType-1) * cols) + ((stim-1) * length(chSelected) + ch);
                 sp(index) = subplot(rows,cols,index);
-                [p(index,:,:), styleHandles(index,:), yLims(index,:)] = plot_sessionScatterSubplot(matricesSessionNorm.(scatterTypes{normType}), ...
-                    chsToPlot{chSelected}, scatterTypes, erpTypes, rows, cols, normType, stim, ch, index, fieldValue, erpComponent, erpFilterType, noOfSessions, uniqueSubjects, handles);
-                drawnow
+                    [p(index,:,:), styleHandles(index,:), yLims(index,:)] = plot_sessionScatterSubplot(matricesSessionNorm.(scatterTypes{normType}), ...
+                        chsToPlot{chSelected}, scatterTypes, erpTypes, rows, cols, normType, stim, ch, index, fieldValue, erpComponent, erpFilterType, noOfSessions, uniqueSubjects, handles);
+                    drawnow
             end
         end
 
@@ -37,9 +37,9 @@ function plot_componentScatterFigure(fig, statsOut, matricesSessionNorm, noOfSes
                 index = ((j-1) * cols) + ((stim-1) * length(chSelected)) + ch;
                 sp(index) = subplot(rows,cols,index);
                 % stimulusTypes{stim}
-                [p2(normType,:), styleHandles(index,:), yLims(index,:)] = plot_sessionMeanSubplot(statsOut.(normalizationTypes{normType}), ...
-                    chsToPlot{chSelected}, normalizationTypes, erpTypes, rows, cols, normType, stim, ch, index, fieldValue, erpComponent, erpFilterType, uniqueSubjects, handles);
-                drawnow
+                    [p2(normType,:), styleHandles(index,:), yLims(index,:)] = plot_sessionMeanSubplot(statsOut.(normalizationTypes{normType}), ...
+                        chsToPlot{chSelected}, normalizationTypes, erpTypes, rows, cols, normType, stim, ch, index, fieldValue, erpComponent, erpFilterType, uniqueSubjects, handles);
+                    drawnow
             end
         end
 
@@ -48,7 +48,8 @@ function plot_componentScatterFigure(fig, statsOut, matricesSessionNorm, noOfSes
     if strcmp(fieldValue, 'peakMeanAmplit')
 
         if strcmp(erpComponent, 'P3') || strcmp(erpComponent, 'CNV')
-            set(sp(1:cols), 'YLim', [-10 30])
+            %set(sp(1:cols), 'YLim', [-10 30])
+            set(sp(1:cols), 'YLim', [min(min(yLims(1:cols,:))) max(max(yLims(1:cols,:)))])
             set(sp(cols+1:(2*cols)), 'YLim', [-1 1])
             set(sp((2*cols)+1:end), 'YLim', [-1 1])
         elseif strcmp(erpComponent, 'N2') || strcmp(erpComponent, 'N1')

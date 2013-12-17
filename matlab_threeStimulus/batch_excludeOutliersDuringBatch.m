@@ -18,8 +18,7 @@ function [dataMatrixOut, outlierIndices] = batch_excludeOutliersDuringBatch(data
             debugPlot = 0;
         end
     end
-        
-    whos
+            
     
     if strcmp(callFromWhere, 'normalize')
         
