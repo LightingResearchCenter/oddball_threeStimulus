@@ -463,15 +463,19 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                                    
                 sp_i = sp_i + 1;
                 sp(sp_i) = subplot(rows,cols, [4 8 12]);
-                    plot_allTheEpochsToSingleSubplot(sp(sp_i),t*1000, EEG_mat(1:parameters.EEG.nrOfChannels,:,:), parameters, yOffset)
-                    leg(2) = legend('Base', 'Cz', 'Fz', 'Pz', 'Oz');
-                        set(leg(2), 'Position',[0.911647314949202 0.575867861142218 0.0511611030478955 0.120380739081747])
-                        legend('boxoff')
-                        lab(3,1) = xlabel('Time [ms]');
-                        lab(3,2) = ylabel('Epochs');
-                        tit(3) = title(['Epochs OUT (', erpType, ')']);
-                        xlim([min(t*1000) max(t*1000)])
-                        drawnow
+                    try
+                        plot_allTheEpochsToSingleSubplot(sp(sp_i),t*1000, EEG_mat(1:parameters.EEG.nrOfChannels,:,:), parameters, yOffset)
+                        leg(2) = legend('Base', 'Cz', 'Fz', 'Pz', 'Oz');
+                            set(leg(2), 'Position',[0.911647314949202 0.575867861142218 0.0511611030478955 0.120380739081747])
+                            legend('boxoff')
+                            lab(3,1) = xlabel('Time [ms]');
+                            lab(3,2) = ylabel('Epochs');
+                            tit(3) = title(['Epochs OUT (', erpType, ')']);
+                            xlim([min(t*1000) max(t*1000)])
+                            drawnow
+                    catch err
+                        err
+                    end
                        
                 sp_i = sp_i + 1;
                 sp(sp_i) = subplot(rows,cols, [16]);                
