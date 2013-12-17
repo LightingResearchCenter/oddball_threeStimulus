@@ -109,7 +109,7 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN, 
                             set(get(cb,'title'),'String','\muV');
 
                         end
-                        ylim([1 noOfEpochs])
+                        ylim([0 noOfEpochs])
                         pos2D(1,ch,:) = get(gca, 'Position');
                         
                         %ans =
@@ -142,7 +142,9 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN, 
                         caxis(sp(1,ch), [min(min(epochLimits(1,:,:))) max(max(epochLimits(1,:,:)))])
                     catch err
                         err
-                        error('Probably no epochs plotted so you cannot fix the colorbar limits, handle earlier that the script "knows" that there are no artifact-free epochs')
+                        warning('Probably no epochs plotted so you cannot fix the colorbar limits, handle earlier that the script "knows" that there are no artifact-free epochs')
+                        [WTout, powerOut, averageOfTheChannel, stdOfTheChannel, derivedMeasures] = analyze_fillWaveletOutputWithNaNs(rows,cols,ch,handles)
+                        return
                     end
                 end
                 set(s, 'EdgeColor', 'none')         
@@ -234,6 +236,7 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN, 
                         % a vector of N points that contains the maximum period of useful information
                         % at that particular time. Periods greater than this are subject to edge effects.                        
                         % plot_debugCOI_onWaveletTransform(timeVectorIn, freq, 1./freq, powerRaw, coiRaw, handles)
+                        
                         [power, nanMask] = analyze_rejectWT_underCOI(timeVectorIn, freq2, power, coiRaw, parameters, handles);
                         [WTtrim, nanMask] = analyze_rejectWT_underCOI(timeVectorIn, freq2, WTtrim, coiRaw, parameters, handles);
                         
