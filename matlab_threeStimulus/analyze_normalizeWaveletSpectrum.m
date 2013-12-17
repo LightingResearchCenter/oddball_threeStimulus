@@ -24,6 +24,23 @@ function [WTout, nonNormFreqIndex] = analyze_normalizeWaveletSpectrum(WT, WT_w_C
     %baselineLimits    
     %}
     
+    %% FOR DISCUSSION
+    
+        % You could see the following papers about the normalization /
+        % baseline correction measures
+        
+        %{
+        Grandchamp R, Delorme A. 2011. 
+        Single-trial normalization for event-related spectral decomposition reduces sensitivity to noisy trials. 
+        Front. Psychology 2:236. 
+        http://dx.doi.org/10.3389/fpsyg.2011.00236.
+        
+        Hu L, Xiao P, Zhang ZG, Mouraux A, Iannetti GD. 2014. 
+        Single-trial time–frequency analysis of electrocortical signals: Baseline correction and beyond. 
+        NeuroImage 84:876–887. 
+        http://dx.doi.org/10.1016/j.neuroimage.2013.09.055.
+        %}
+
     
     %% COMPUTATION   
         
