@@ -52,7 +52,7 @@ function process_assignOutputsFromPROCESS(epochs, ERP_components, alpha, powers,
         save(fullfile(handles.path.matFilesOut, fileMatAnalyzedOut), 'ERP_components', 'analyzed_aux', 'powers', 'alpha', 'parameters', 'handles') % need powers and alpha?
 
     %% Time-Frequency derived
-        fileMatOutWavelet = strrep(handles.inputFile, '.bdf', '_waveletEpochs.mat');
+        fileMatOutWavelet = strrep(handles.inputFile, '.bdf', '_waveletDerived.mat');
         disp(['        .. Derived Time-Frequency measures [', fullfile(handles.path.matFilesOut, fileMatOutWavelet), ']'])
         save(fullfile(handles.path.matFilesOut, fileMatOutWavelet), 'timeFreqEpochs', 'timeFreq', 'TF_derivedMeasures', 'parameters', 'handles')
 
