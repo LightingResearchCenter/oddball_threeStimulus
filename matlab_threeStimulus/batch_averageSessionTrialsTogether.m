@@ -56,7 +56,7 @@ function [matricesSessionAver, outlierOut] = batch_averageSessionTrialsTogether(
                     % dataMatrix;
                     % av1 = batch_calculateStatsForMatrix(dataMatrix, dim, flag, handles);
                     % ERPtypes{j}
-                    dataMatrix = batch_excludeOutliersBeforeStats(dataMatrix, subjects, handles)
+                    % dataMatrix = batch_excludeOutliersDuringBatch(dataMatrix, subjects, 'average', handles);
                     matricesSessionAver.(ERPtypes{j}).(conditions{condition}).(handles.parameters.BioSemi.chName{ch+handles.parameters.BioSemi.chOffset}){session} = batch_calculateStatsForMatrix(dataMatrix, dim, flag, handles);
 
                     % session

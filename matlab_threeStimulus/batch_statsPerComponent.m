@@ -52,8 +52,8 @@ function [statsOut, matricesSessionNorm, outlierOut] = ...
 
         % Normalize using two methods
         matricesSessionNorm.absolute = matricesSessionAver;
-        matricesSessionNorm.darkCondition = batch_normalizeComponents(matricesSessionAver, 'darkCondition', handles);
-        matricesSessionNorm.firstSession = batch_normalizeComponents(matricesSessionAver, 'firstSession', handles);
+        matricesSessionNorm.darkCondition = batch_normalizeComponents(matricesSessionAver, 'darkCondition', subjects, handles);
+        matricesSessionNorm.firstSession = batch_normalizeComponents(matricesSessionAver, 'firstSession', subjects, handles);
         % matricesSessionNorm.firstSession = matricesSessionAver;
 
         disp('  .. . . . calculate stats of these')

@@ -1,4 +1,4 @@
-function matrixNorm = batch_normalizeComponents(matricesSessionAver, typeOfNorm, handles)
+function matrixNorm = batch_normalizeComponents(matricesSessionAver, typeOfNorm, subjects, handles)
     
     %% DEBUG
     debugMatFileName = 'tempAverFirstSession.mat';
@@ -15,17 +15,17 @@ function matrixNorm = batch_normalizeComponents(matricesSessionAver, typeOfNorm,
     end
         
     if strcmp(typeOfNorm, 'darkCondition')
-        normValues = batch_normalizeSubLoop(matricesSessionAver, [], typeOfNorm, [], 'dark', 'getNorm', handles);
-        matrixNorm = batch_normalizeSubLoop(matricesSessionAver, normValues, typeOfNorm, [], 'dark', 'normalize', handles);
+        normValues = batch_normalizeSubLoop(matricesSessionAver, [], typeOfNorm, [], 'dark', 'getNorm', subjects, handles);
+        matrixNorm = batch_normalizeSubLoop(matricesSessionAver, normValues, typeOfNorm, [], 'dark', 'normalize', subjects, handles);
     elseif strcmp(typeOfNorm, 'firstSession')
         % Go through the data
-        normValues = batch_normalizeSubLoop(matricesSessionAver, [], typeOfNorm, 1, [], 'getNorm', handles);
-        matrixNorm = batch_normalizeSubLoop(matricesSessionAver, normValues, typeOfNorm, 1, [], 'normalize', handles);
+        normValues = batch_normalizeSubLoop(matricesSessionAver, [], typeOfNorm, 1, [], 'getNorm', subjects, handles);
+        matrixNorm = batch_normalizeSubLoop(matricesSessionAver, normValues, typeOfNorm, 1, [], 'normalize', subjects, handles);
     end
 
     
     
-    function normOut = batch_normalizeSubLoop(matricesSessionAver, normValues, typeOfNorm, sessionToFix, conditionToFix, normPassType, handles)
+    function normOut = batch_normalizeSubLoop(matricesSessionAver, normValues, typeOfNorm, sessionToFix, conditionToFix, normPassType, subjects, handles)
         
         normOut = matricesSessionAver;
         
@@ -86,7 +86,19 @@ function matrixNorm = batch_normalizeComponents(matricesSessionAver, typeOfNorm,
                                     [dataPoints_mean_out, ~, ~] = batch_normalizeLowLevel(dataPoints_mean_in, 'mean', [], [], norm, handles);                                         
                                     [dataPoints_SD_out, LE, UE] = batch_normalizeLowLevel(dataPoints_SD_in, 'SD', dataPoints_mean_in, dataPoints_mean_out, norm, handles);                                    
                                                                         
+                                    % exclude outliers
+                                    [dataPoints_mean_out, outlierIndices] = batch_excludeOutliersDuringBatch(dataPoints_mean_out, subjects, 'normalize', handles);
+                                    
+                                    % assign out
                                     normOut.(ERPtypes{j}).(conditions{condition}).(handles.parameters.BioSemi.chName{ch+handles.parameters.BioSemi.chOffset}){sessionTrial}.mean = dataPoints_mean_out;
+                                    
+                                    % use the outlier indices for other
+                                    % variables
+                                    dataPoints_SD_out(outlierIndices) = NaN;
+                                    LE(outlierIndices) = NaN;
+                                    UE(outlierIndices) = NaN;
+                                                                        
+                                    % assign out
                                     normOut.(ERPtypes{j}).(conditions{condition}).(handles.parameters.BioSemi.chName{ch+handles.parameters.BioSemi.chOffset}){sessionTrial}.SD = dataPoints_SD_out;
                                     normOut.(ERPtypes{j}).(conditions{condition}).(handles.parameters.BioSemi.chName{ch+handles.parameters.BioSemi.chOffset}){sessionTrial}.LE = LE; % lower error bound
                                     normOut.(ERPtypes{j}).(conditions{condition}).(handles.parameters.BioSemi.chName{ch+handles.parameters.BioSemi.chOffset}){sessionTrial}.UE = UE; % upper error bound
