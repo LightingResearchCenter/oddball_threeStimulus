@@ -437,10 +437,14 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                     vDiffOutMovWindow = (squeeze(nanmax(permute(vDiffOutMovWindow, [3 2 1]))))';                    
                     vDiffOutMovWindowEOG = (squeeze(nanmax(permute(vDiffOutMovWindow, [3 2 1]))))';     
                     
-                    [sp_i, sp] = plot_CRAPandFIXED_steps(fig, sp, sp_i, leg, rows, cols, ...
-                        NaN_indices_moving, NaN_indices_movingEOG, NaN_indices_step, EEGfixedIndices, EOGfixedIndices, vDiffOutMovWindow, vDiffOutMovWindowEOG, vDiffOutStep, ...
-                        subplotIndices_CRAP, parameters, handles);                   
-
+                    try
+                        [sp_i, sp] = plot_CRAPandFIXED_steps(fig, sp, sp_i, leg, rows, cols, ...
+                            NaN_indices_moving, NaN_indices_movingEOG, NaN_indices_step, EEGfixedIndices, EOGfixedIndices, vDiffOutMovWindow, vDiffOutMovWindowEOG, vDiffOutStep, ...
+                            subplotIndices_CRAP, parameters, handles);                   
+                    catch err
+                        err
+                    end
+                        
                     % FASTER steps
                     subplotIndices_FASTER = [3 7 11 15];                    
                     [sp_i, sp] = plot_FASTER_steps(fig, sp, sp_i, leg, rows, cols, ...
