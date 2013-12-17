@@ -2,7 +2,6 @@
 function BATCH_MAIN()
 
     tic
-
     % Petteri Teikari, petteri.teikari@gmail.com, 2013
     % Lighting Research Center, Rensselaer Polytechnic Institute, Troy, NY
     close all
@@ -21,18 +20,36 @@ function BATCH_MAIN()
     
     %% Get directory listing of the processed files
     
-        % For 1D signals
+        % ERP Waveforms
+        handles.batch.dirOutput     = dir(fullfile(handles.path.matFilesOut, '*0_fullEpochs.mat')); % Specifies the type of files to be listed        
+        handles.batch.fileNames     = {handles.batch.dirOutput.name}'; % Prints the filenames from the input folder into a variable                
+        handles.batch.fileNameFields = batch_separateFileNamesToFields(handles.batch.fileNames); % separate into fields
+    
+        % Derived ERP Measures such as amplitude latency etc.
         handles.batch.dirOutput     = dir(fullfile(handles.path.matFilesOut, '*0_analyzed.mat')); % Specifies the type of files to be listed        
         handles.batch.fileNames     = {handles.batch.dirOutput.name}'; % Prints the filenames from the input folder into a variable                
         handles.batch.fileNameFields = batch_separateFileNamesToFields(handles.batch.fileNames); % separate into fields
         
-        % For 1D signals
-        handles.batch.dirOutput     = dir(fullfile(handles.path.matFilesOut, '*0_extraAnalysis.mat')); % Specifies the type of files to be listed        
+        % Time-Frequency derived (change the filenames when you run MAIN_ .. again)
+        handles.batch.dirOutput     = dir(fullfile(handles.path.matFilesOut, '*0_waveletEpochs.mat')); % Specifies the type of files to be listed        
+        %handles.batch.dirOutput     = dir(fullfile(handles.path.matFilesOut, '*0_waveletDerived.mat')); % Specifies the type of files to be listed     
         handles.batch.fileNames     = {handles.batch.dirOutput.name}'; % Prints the filenames from the input folder into a variable                
         handles.batch.fileNameFields_extra = batch_separateFileNamesToFields(handles.batch.fileNames); % separate into fields
         
-        % For Epochs
-        handles.batch.dirOutput     = dir(fullfile(handles.path.matFilesOut, '*0_fullEpochs.mat')); % Specifies the type of files to be listed        
+        % Time-Frequency, all epochs 
+        %{
+        handles.batch.dirOutput     = dir(fullfile(handles.path.matFilesOut, '*0_waveletEpochs.mat')); % Specifies the type of files to be listed        
+        handles.batch.fileNames     = {handles.batch.dirOutput.name}'; % Prints the filenames from the input folder into a variable                
+        handles.batch.fileNameFields_epochs = batch_separateFileNamesToFields(handles.batch.fileNames); % separate into fields
+        %}
+        
+        % EEG Fractal Analysis
+        handles.batch.dirOutput     = dir(fullfile(handles.path.matFilesOut, '*0_fractalEEG.mat')); % Specifies the type of files to be listed        
+        handles.batch.fileNames     = {handles.batch.dirOutput.name}'; % Prints the filenames from the input folder into a variable                
+        handles.batch.fileNameFields_epochs = batch_separateFileNamesToFields(handles.batch.fileNames); % separate into fields
+        
+        % "Extra measures", such as EOG and HEART data
+        handles.batch.dirOutput     = dir(fullfile(handles.path.matFilesOut, '*0_extraAnalysis.mat')); % Specifies the type of files to be listed        
         handles.batch.fileNames     = {handles.batch.dirOutput.name}'; % Prints the filenames from the input folder into a variable                
         handles.batch.fileNameFields_epochs = batch_separateFileNamesToFields(handles.batch.fileNames); % separate into fields
         
@@ -40,12 +57,11 @@ function BATCH_MAIN()
             
         % i.e. 1D signals such as the ERP components, Reaction time,
         % Band powers and IAF        
-        % batchCompare_componentMain(handles.batch.fileNameFields, handles)
+        batchCompare_componentMain(handles.batch.fileNameFields, handles)
         
     %% Compare extra sensors
     
-        batchCompare_extraSensors(handles.batch.fileNameFields_extra, handles)
-            
+        batchCompare_extraSensors(handles.batch.fileNameFields_extra, handles)            
         
     %% Compare conditions for 2D signals (time-frequency)
     

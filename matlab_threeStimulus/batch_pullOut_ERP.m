@@ -1,7 +1,7 @@
-function [dataOut, auxOut, auxOutPowers] = batch_pullOut_ERP(fileNameFields, erpComponent, erpDataType, handles)
+function [dataOut, auxOut, auxOutPowers] = batch_pullOut_ERP(fileNameFields, erpComponent, erpFilterType, handles)
 
     %% DEBUG
-    debugMatFileName = 'tempDataOut.mat';
+    debugMatFileName = 'tempPullOutERPs.mat';
     if nargin == 0
         load('debugPath.mat')
         load(fullfile(path.debugMATs, debugMatFileName))
@@ -57,49 +57,69 @@ function [dataOut, auxOut, auxOutPowers] = batch_pullOut_ERP(fileNameFields, erp
         % load the actual data
         disp(['    ... load the data from file: "', fileNameFields{i}.fileName, '"'])
         dataIn = load(fullfile(handles.path.matFilesOut, fileNameFields{i}.fileName));
-        %dataIn.ERPsOut
-        %dataIn.ERPsOut.target
+        %dataIn.ERP_components
+        %dataIn.ERP_components.(erpFilterType).target
                 
         %% ERPs
         
-            % use more intuitive varriable name
-            ERP_perChannels.target = dataIn.ERPsOut.target;
-            ERP_perChannels.distracter = dataIn.ERPsOut.distracter;
-            ERP_perChannels.standard = dataIn.ERPsOut.standard;
+            % check the contents of input                
+                errorWithTheInput = 0;
+                try
+                    dataIn;
+                catch err
+                    % err 
+                    disp(['      - ', fileNameFields{i}.fileName, ' contains no data, re-run the MAIN_ANALYSIS.m?'])
+                    errorWithTheInput = 1;
+                end
+                
+                if errorWithTheInput == 0
+                    try
+                        dataIn.ERP_components;
+                    catch err
+                        % err
+                        disp(['      - ', fileNameFields{i}.fileName, ' contains no ERP component field, re-run the MAIN_ANALYSIS.m?'])
+                        errorWithTheInput = 2;
+                    end
+                end
 
-                % correct later the switch        
+                if errorWithTheInput == 0
+                    try
+                        dataIn.ERP_components.(erpFilterType);
+                    catch err
+                        %err
+                        disp(['      - ', fileNameFields{i}.fileName, ' has no data for the chosen filtering (', erpFilterType, '), re-run the MAIN_ANALYSIS.m?'])
+                        errorWithTheInput = 3;
+                    end
+                end
 
-            % determine the desired data
-            if strcmp(erpDataType, 'EP')            
-                target = ERP_perChannels.target;
-                distracter = ERP_perChannels.distracter;
-                standard = ERP_perChannels.standard;
-
-            elseif strcmp(erpDataType, 'filt')
-                target = ERP_perChannels.target;
-                distracter = ERP_perChannels.distracter;
-                standard = ERP_perChannels.standard;
-
-            elseif strcmp(erpDataType, 'CNV')
-                warning('NOT IMPLEMENTED YET, and NOT SAVED from PROCESS_singleFile')
-
-            elseif strcmp(erpDataType, 'Alpha')
-                warning('NOT IMPLEMENTED YET, and NOT SAVED from PROCESS_singleFile')
-
-            elseif strcmp(erpDataType, 'General')
-                warning('NOT IMPLEMENTED YET, and NOT SAVED from PROCESS_singleFile')
-
+                if errorWithTheInput == 0
+                    try
+                        dataIn.ERP_components.(erpFilterType).ERP;  
+                    catch err
+                        % err
+                        disp(['      - ', fileNameFields{i}.fileName, ' has no ERP field for the chosen filtering (', erpFilterType, '), re-run the MAIN_ANALYSIS.m?'])
+                        errorWithTheInput = 4;
+                    end
+                end
+                            
+            % use more intuitive variable names
+            if errorWithTheInput == 0
+                target = dataIn.ERP_components.(erpFilterType).ERP.target;
+                distracter = dataIn.ERP_components.(erpFilterType).ERP.distr;
+                standard = dataIn.ERP_components.(erpFilterType).ERP.std;
             else
-                erpDataType
-                error(['erpDataType = ', erpDataType, 'What kind of ERP data type you actually wanted to process, maybe a typo?'])
+                target = [];
+                distracter = [];
+                standard = [];
             end
-
+               
+            % subject
             subject = fileNameFields{i}.subject;
 
             % assign to output, the desired component
-            dataOut.(intensity).(session).target.component.(subject) = target;
-            dataOut.(intensity).(session).distracter.component.(subject) = distracter;
-            dataOut.(intensity).(session).standard.component.(subject) = standard;
+            dataOut.(intensity).(session).target.component.(subject).(erpFilterType) = target;
+            dataOut.(intensity).(session).distracter.component.(subject).(erpFilterType) = distracter;
+            dataOut.(intensity).(session).standard.component.(subject).(erpFilterType) = standard;
         
         %% AUX variables
         analyzed_aux = dataIn.analyzed_aux;

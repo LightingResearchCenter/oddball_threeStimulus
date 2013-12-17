@@ -1,4 +1,4 @@
-function batch_plotIntensityComparisonMAIN(statsOut, matricesSessionNorm, statsPer, erpComponent, erpDataType, fieldValue, fileNameFields, stimulusType, chsToPlot, handles)
+function batch_plotIntensityComparisonMAIN(statsOut, matricesSessionNorm, statsPer, erpComponent, erpFilterType, fieldValue, fileNameFields, stimulusType, chsToPlot, handles)
 
     %% DEBUG
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
@@ -40,23 +40,23 @@ function batch_plotIntensityComparisonMAIN(statsOut, matricesSessionNorm, statsP
 
         
         fig1 = figure('Color', 'w');
-        plot_componentAbsoluteNormalizedFigure(fig1, statsOut, normalizationTypes, erpComponent, erpDataType, chsToPlot, erpTypes, fieldValue, handles)
+        plot_componentAbsoluteNormalizedFigure(fig1, statsOut, normalizationTypes, erpComponent, erpFilterType, chsToPlot, erpTypes, fieldValue, handles)
 
     
     %% PLOT 2:        
 
         fig2 = figure('Color', 'w');
         chSelected = 1; % too clogged if you plot 2 channels to same figure
-        plot_componentScatterFigure(fig2, statsOut, matricesSessionNorm, noOfSessions, normalizationTypes, erpComponent, erpDataType, chsToPlot, chSelected,  erpTypes, fieldValue, handles)
+        plot_componentScatterFigure(fig2, statsOut, matricesSessionNorm, noOfSessions, normalizationTypes, erpComponent, erpFilterType, chsToPlot, chSelected,  erpTypes, fieldValue, handles)
 
         fig3 = figure('Color', 'w');
         chSelected = 2; % too clogged if you plot 2 channels to same figure
-        plot_componentScatterFigure(fig3, statsOut, matricesSessionNorm, noOfSessions, normalizationTypes, erpComponent, erpDataType, chsToPlot, chSelected, erpTypes, fieldValue, handles)
+        plot_componentScatterFigure(fig3, statsOut, matricesSessionNorm, noOfSessions, normalizationTypes, erpComponent, erpFilterType, chsToPlot, chSelected, erpTypes, fieldValue, handles)
 
     
 %% SUBFUNCTIONS
 
-    function plot_componentScatterFigure(fig, statsOut, matricesSessionNorm, noOfSessions, normalizationTypes, erpComponent, erpDataType, chsToPlot, chSelected, erpTypes, fieldValue, handles)
+    function plot_componentScatterFigure(fig, statsOut, matricesSessionNorm, noOfSessions, normalizationTypes, erpComponent, erpFilterType, chsToPlot, chSelected, erpTypes, fieldValue, handles)
 
         scrsz = get(0,'ScreenSize'); % get screen size for plotting
         if chSelected == 1
@@ -78,7 +78,7 @@ function batch_plotIntensityComparisonMAIN(statsOut, matricesSessionNorm, statsP
                     index = ((normType-1) * cols) + ((stim-1) * length(chSelected) + ch);
                     sp(index) = subplot(rows,cols,index);
                     [p(index,:,:), styleHandles(index,:), yLims(index,:)] = plot_sessionScatterSubplot(matricesSessionNorm.(scatterTypes{normType}), ...
-                        chsToPlot{chSelected}, scatterTypes, erpTypes, rows, cols, normType, stim, ch, index, fieldValue, erpComponent, erpDataType, noOfSessions, handles);
+                        chsToPlot{chSelected}, scatterTypes, erpTypes, rows, cols, normType, stim, ch, index, fieldValue, erpComponent, erpFilterType, noOfSessions, handles);
                     drawnow
                 end
             end
@@ -94,7 +94,7 @@ function batch_plotIntensityComparisonMAIN(statsOut, matricesSessionNorm, statsP
                     sp(index) = subplot(rows,cols,index);
                     % stimulusTypes{stim}
                     [p2(normType,:), styleHandles(index,:), yLims(index,:)] = plot_sessionMeanSubplot(statsOut.(normalizationTypes{normType}), ...
-                        chsToPlot{chSelected}, normalizationTypes, erpTypes, rows, cols, normType, stim, ch, index, fieldValue, erpComponent, erpDataType, handles);
+                        chsToPlot{chSelected}, normalizationTypes, erpTypes, rows, cols, normType, stim, ch, index, fieldValue, erpComponent, erpFilterType, handles);
                     drawnow
                 end
             end
@@ -124,7 +124,7 @@ function batch_plotIntensityComparisonMAIN(statsOut, matricesSessionNorm, statsP
                 drawnow
                 dateStr = plot_getDateString(); % get current date as string
                 %cd(path.outputFigures)            
-                fileNameOut = ['plot_componentScatter_',  erpComponent, '_', erpDataType, '_', fieldValue, '_', chsToPlot{chSelected}, '_', dateStr];
+                fileNameOut = ['plot_componentScatter_',  erpComponent, '_', erpFilterType, '_', fieldValue, '_', chsToPlot{chSelected}, '_', dateStr];
                 export_fig(fullfile(handles.path.figuresOut, fileNameOut), handles.figureOut.resolution, handles.figureOut.antialiasLevel, fig)
                 %cd(path.code)
             end
@@ -141,7 +141,7 @@ function batch_plotIntensityComparisonMAIN(statsOut, matricesSessionNorm, statsP
 
     
     
-    function plot_componentAbsoluteNormalizedFigure(fig, statsOut, normalizationTypes, erpComponent, erpDataType, chsToPlot, erpTypes, fieldValue, handles)
+    function plot_componentAbsoluteNormalizedFigure(fig, statsOut, normalizationTypes, erpComponent, erpFilterType, chsToPlot, erpTypes, fieldValue, handles)
 
         scrsz = get(0,'ScreenSize'); % get screen size for plotting
         % normalizationTypes = {'rawWithNoNormalization'}
@@ -162,7 +162,7 @@ function batch_plotIntensityComparisonMAIN(statsOut, matricesSessionNorm, statsP
                 stim = 1; % target
                 sp(index) = subplot(rows,cols,index);
                 [p(index,:), styleHandles(index,:), yLims(index,:)] = plot_sessionMeanSubplot(statsOut.(normalizationTypes{normType}), ...
-                            'Cz', normalizationTypes, erpTypes, rows, cols, normType, stim, [], index, fieldValue, erpComponent, erpDataType, handles);
+                            'Cz', normalizationTypes, erpTypes, rows, cols, normType, stim, [], index, fieldValue, erpComponent, erpFilterType, handles);
                 drawnow
             else
                 for stim = 1 : length(erpTypes)   
@@ -171,7 +171,7 @@ function batch_plotIntensityComparisonMAIN(statsOut, matricesSessionNorm, statsP
                         sp(index) = subplot(rows,cols,index);
                         % stimulusTypes{stim}
                         [p(index,:), styleHandles(index,:), yLims(index,:)] = plot_sessionMeanSubplot(statsOut.(normalizationTypes{normType}), ...
-                            chsToPlot{ch}, normalizationTypes, erpTypes, rows, cols, normType, stim, ch, index, fieldValue, erpComponent, erpDataType, handles);
+                            chsToPlot{ch}, normalizationTypes, erpTypes, rows, cols, normType, stim, ch, index, fieldValue, erpComponent, erpFilterType, handles);
                         drawnow
                     end
                 end
@@ -206,7 +206,7 @@ function batch_plotIntensityComparisonMAIN(statsOut, matricesSessionNorm, statsP
                 drawnow
                 dateStr = plot_getDateString(); % get current date as string
                 %cd(path.outputFigures)            
-                fileNameOut = ['plot_componentComparison_',  erpComponent, '_', erpDataType, '_', fieldValue, '_', chsToPlot{1}, '-',  chsToPlot{2}, '_', dateStr];
+                fileNameOut = ['plot_componentComparison_',  erpComponent, '_', erpFilterType, '_', fieldValue, '_', chsToPlot{1}, '-',  chsToPlot{2}, '_', dateStr];
                 export_fig(fullfile(handles.path.figuresOut, fileNameOut), handles.figureOut.resolution, handles.figureOut.antialiasLevel, fig)
                 %cd(path.code)
             end

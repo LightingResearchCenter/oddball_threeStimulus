@@ -1,4 +1,4 @@
-function matricesIntensity = batch_getPerSubjectMatrix_Intensity(dataNorm, erpComponent, erpDataType, fieldValue, noOfSubjects, noOfTrials, handles)
+function matricesIntensity = batch_getPerSubjectMatrix_Intensity(dataNorm, erpComponent, erpFilterType, fieldValue, noOfSubjects, noOfTrials, handles)
        
     conditionFields = fieldnames(dataNorm);
     sessionFields = fieldnames(dataNorm.dark);
@@ -19,21 +19,30 @@ function matricesIntensity = batch_getPerSubjectMatrix_Intensity(dataNorm, erpCo
             for j = 1 : length(ERPtypes)
                 subjectNames = fieldnames(dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{j}).component);
 
-                for k = 1 : length(subjectNames)
-                    chNames = fieldnames(dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{j}).component.(subjectNames{k}).(erpDataType));
+                for k = 1 : length(subjectNames)                    
+                    try
+                        chNames = fieldnames(dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{j}).component.(subjectNames{k}).(erpFilterType));
+                    catch err
+                        subjectNames{k}
+                        fieldnames(dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{j}).component.(subjectNames{k}))
+                        dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{j}).component.(subjectNames{k}).(erpFilterType)
+                        fieldnames(dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{j}).component.(subjectNames{k}).(erpFilterType))
+                        err
+                        err.identifier                        
+                    end
 
                     for l = 1 : length(chNames)
-                        noOfTrials = length(dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{j}).component.(subjectNames{k}).(erpDataType).(chNames{l}));
+                        noOfTrials = length(dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{j}).component.(subjectNames{k}).(erpFilterType).(chNames{l}));
 
                         for lj = 1 : noOfTrials
                             try
-                                compNames = fieldnames(dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{j}).component.(subjectNames{k}).(erpDataType).(chNames{l}){lj});
+                                compNames = fieldnames(dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{j}).component.(subjectNames{k}).(erpFilterType).(chNames{l}){lj});
                             catch err
                                 [ii i j k l lj]
                                 err
                                 a1 = dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{1}).component.(subjectNames{k})
-                                a2 = dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{1}).component.(subjectNames{k}).(erpDataType)
-                                a3 = dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{1}).component.(subjectNames{k}).(erpDataType).(chNames{l})
+                                a2 = dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{1}).component.(subjectNames{k}).(erpFilterType)
+                                a3 = dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{1}).component.(subjectNames{k}).(erpFilterType).(chNames{l})
                             end
 
                             for m = 1 : 1 % length(compNames), we are only picking one
@@ -50,7 +59,7 @@ function matricesIntensity = batch_getPerSubjectMatrix_Intensity(dataNorm, erpCo
                                     if ~strcmp(erpComponent, 'RT')
                                         % disp([i lj k])
                                         try
-                                            dataPoint = dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{j}).component.(subjectNames{k}).(erpDataType).(chNames{l}){lj}.(erpComponent).(fieldValue);
+                                            dataPoint = dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{j}).component.(subjectNames{k}).(erpFilterType).(chNames{l}){lj}.(erpComponent).(fieldValue);
                                         catch err
                                             err
                                             error('Typo with what you wanted to get?')
@@ -61,13 +70,13 @@ function matricesIntensity = batch_getPerSubjectMatrix_Intensity(dataNorm, erpCo
                                         matricesIntensity.(ERPtypes{j}).(conditionFields{ii})(l,i,lj,k) = dataPoint;
                                     else      
                                         try 
-                                            dataPoint = dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{j}).component.(subjectNames{k}).(erpDataType).(chNames{l}){lj}.(erpComponent);
+                                            dataPoint = dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{j}).component.(subjectNames{k}).(erpFilterType).(chNames{l}){lj}.(erpComponent);
                                         catch err
                                             err
-                                            a1 = dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{j}).component.(subjectNames{k}).(erpDataType)
-                                            a2 = dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{j}).component.(subjectNames{k}).(erpDataType).(chNames{l})
+                                            a1 = dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{j}).component.(subjectNames{k}).(erpFilterType)
+                                            a2 = dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{j}).component.(subjectNames{k}).(erpFilterType).(chNames{l})
                                             whos
-                                            a3 = dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{j}).component.(subjectNames{k}).(erpDataType).(chNames{l}){lj}
+                                            a3 = dataNorm.(conditionFields{ii}).(sessionFields{i}).(ERPtypes{j}).component.(subjectNames{k}).(erpFilterType).(chNames{l}){lj}
                                             whos
                                         end
                                         if isstruct(dataPoint)
