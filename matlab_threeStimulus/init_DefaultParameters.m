@@ -80,7 +80,7 @@ function parameters = init_DefaultParameters(handles)
         parameters.filter.filterForAlpha = 1;
 
         % GENERAL
-        parameters.filter.bandPass_loFreq = 0.001;
+        parameters.filter.bandPass_loFreq = 0.01;
         parameters.filter.bandPass_hiFreq = 55;
         parameters.filterOrder = 6; % filter order   
         parameters.filterOrderSteep = 100; % additional pass of filtering with steeper cut
