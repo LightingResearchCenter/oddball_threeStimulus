@@ -24,6 +24,7 @@ function batchCompare_componentMain(fileNameFields, fileNames, outlierFilenameLi
     erpFilterType = {'bandpass'};
     chsToPlot = {'Cz'; 'Pz'};
 
+    
     for i = 1 : length(fieldValue)
 
         for j = 1 : length(erpComponent)
@@ -55,11 +56,12 @@ function batchCompare_componentMain(fileNameFields, fileNames, outlierFilenameLi
         end
     end
     
-    %% AUX
-    %{
+    
+    %% AUX (EEG Continuous powers, and IAF)
+    
         % Preprocess and calculate stats
-        [auxStat, auxStatPowers] = batch_preProcessAUX(auxOut, auxOutPowers, handles);
+        [auxStat, auxStatPowers] = batch_preProcessAUX(auxOut, auxOutPowers, subjects, handles);
         
         % Plot
-        batch_plotAuxScalars(auxStat, auxStatPowers, handles)
-    %}
+        batch_plotAuxScalars(auxStat, auxStatPowers, subjects, handles)
+    

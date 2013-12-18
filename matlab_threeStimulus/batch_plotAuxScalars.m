@@ -1,4 +1,4 @@
-function batch_plotAuxScalars(auxStat, auxStatPowers, handles)
+function batch_plotAuxScalars(auxStat, auxStatPowers, subjects, handles)
 
     %% DEBUG
     debugMatFileName = 'tempAuxScalars.mat';
@@ -17,10 +17,10 @@ function batch_plotAuxScalars(auxStat, auxStatPowers, handles)
     aux_fieldNames = fieldnames(auxStat);
     auxPowers_fieldNames = fieldnames(auxStatPowers);
     
-    batch_plotAuxSubLoop(auxStat, 'scalars', handles)
-    batch_plotAuxSubLoop(auxStatPowers, 'powers', handles)
+    batch_plotAuxSubLoop(auxStat, 'scalars', subjects, handles)
+    batch_plotAuxSubLoop(auxStatPowers, 'powers', subjects, handles)
     
-    function batch_plotAuxSubLoop(auxStat, plotType, handles)      
+    function batch_plotAuxSubLoop(auxStat, plotType, subjects, handles)      
         
         scrsz = get(0,'ScreenSize'); % get screen size for plotting
         
@@ -71,7 +71,7 @@ function batch_plotAuxScalars(auxStat, auxStatPowers, handles)
                         % plot
                         index = (i-1)*cols + param;
                         sp(index) = subplot(rows, cols, index);
-                        [p(index,:), styleHandles(index), yLims(index,:)] = plot_auxSubplot(meanValue, SD, n, index, rows, cols, handles, auxParam{param}, auxFields{field}, normFields{i});
+                        [p(index,:), styleHandles(index), yLims(index,:)] = plot_auxSubplot(meanValue, SD, n, index, rows, cols, handles, auxParam{param}, auxFields{field}, normFields{i}, subjects);
                         drawnow
 
                     end
@@ -105,7 +105,7 @@ function batch_plotAuxScalars(auxStat, auxStatPowers, handles)
 
         end
         
-    function [p, styleHandles, yLims] = plot_auxSubplot(meanValue, SD, n, index, rows, cols, handles, auxParam, auxField, normField)
+    function [p, styleHandles, yLims] = plot_auxSubplot(meanValue, SD, n, index, rows, cols, handles, auxParam, auxField, normField, subjects)
         
         x = 1:1:4;
       

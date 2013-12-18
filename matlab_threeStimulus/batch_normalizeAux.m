@@ -1,4 +1,4 @@
-function matrixNorm = batch_normalizeAux(matrixIn, typeOfNorm, handles)
+function matrixNorm = batch_normalizeAux(matrixIn, typeOfNorm, subjects, handles)
     
     %% DEBUG
     debugMatFileName = 'tempNormAux.mat';
@@ -15,17 +15,17 @@ function matrixNorm = batch_normalizeAux(matrixIn, typeOfNorm, handles)
     end
         
     if strcmp(typeOfNorm, 'darkCondition')
-        normValues = batch_normalizeSubLoop(matrixIn, [], typeOfNorm, [], 'dark', 'getNorm', handles);
-        matrixNorm = batch_normalizeSubLoop(matrixIn, normValues, typeOfNorm, [], 'dark', 'normalize', handles);
+        normValues = batch_normalizeSubLoop(matrixIn, [], typeOfNorm, [], 'dark', 'getNorm', subjects, handles);
+        matrixNorm = batch_normalizeSubLoop(matrixIn, normValues, typeOfNorm, [], 'dark', 'normalize', subjects, handles);
 
     elseif strcmp(typeOfNorm, 'firstSession')        
-        normValues = batch_normalizeSubLoop(matrixIn, [], typeOfNorm, 1, [], 'getNorm', handles);
-        matrixNorm = batch_normalizeSubLoop(matrixIn, normValues, typeOfNorm, 1, [], 'normalize', handles);
+        normValues = batch_normalizeSubLoop(matrixIn, [], typeOfNorm, 1, [], 'getNorm', subjects, handles);
+        matrixNorm = batch_normalizeSubLoop(matrixIn, normValues, typeOfNorm, 1, [], 'normalize', subjects, handles);
     end
 
     
     
-    function normOut = batch_normalizeSubLoop(matrixIn, normValues, typeOfNorm, sessionToFix, conditionToFix, normPassType, handles)
+    function normOut = batch_normalizeSubLoop(matrixIn, normValues, typeOfNorm, sessionToFix, conditionToFix, normPassType, subjects, handles)
         
         normOut = matrixIn;
         
@@ -95,11 +95,13 @@ function matrixNorm = batch_normalizeAux(matrixIn, typeOfNorm, handles)
                             
                             dataPoints_mean_in = matrixIn.(conditions{condition}).(auxFields{field}).(auxParam{param})(session,:);
                             % dataPoints_SD_in = ?;
-                            norm = normValues.(conditions{condition}).(auxFields{field}).(auxParam{param})(session,:);
-                                            
+                            norm = normValues.(conditions{condition}).(auxFields{field}).(auxParam{param})(session,:);                                            
 
                             [dataPoints_mean_out, ~, ~] = batch_normalizeLowLevel(dataPoints_mean_in, 'mean', [], [], norm, handles);                                         
                             % [dataPoints_SD_out, LE, UE] = batch_normalizeLowLevel(dataPoints_SD_in, 'SD', dataPoints_mean_in, dataPoints_mean_out, norm, handles);     
+                            
+                            % exclude outliers
+                            [dataPoints_mean_out, outlierIndices] = batch_excludeOutliersDuringBatch(dataPoints_mean_out, subjects, 'normalize', handles);
                             
                             if strcmp(typeOfNorm, 'firstSession') && condition == 1 && param == 1 && field == 1 && 1 == 2
                                 disp(conditions{condition})

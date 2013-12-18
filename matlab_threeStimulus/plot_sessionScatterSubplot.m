@@ -90,9 +90,9 @@ function [p, styleHandles, yLims] = ...
 
         % explanations
         if index == 1
-            tExpl = text(0.5,-17,'Colors correspond to subjects');
+            tExpl = text(0.5,0,'Colors correspond to subjects');
         elseif index == 2
-            tExpl = text(0.5,-17,'Symbols correspond to conditions');
+            tExpl = text(0.5,0,'Symbols correspond to conditions');
         else
             tExpl = text(0,0,'');
         end

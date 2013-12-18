@@ -21,7 +21,7 @@ function auxStat = batch_auxStatCalculation(auxMatrix, handles)
                     structOut = batch_calculateStatsForMatrix(matrixIn, dim, flag, handles);
                     auxStat.(normFields{i}).(conditions{cond}).(auxFields{field}).(auxParam{param}) = structOut;
 
-                    if 1 == 1 % debug
+                    if 1 == 52 % debug
 
                         disp('Stat, debug')
                         matrixIn

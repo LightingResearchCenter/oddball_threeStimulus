@@ -1,4 +1,4 @@
-function [auxStat, auxStatPowers] = batch_preProcessAUX(auxOut, auxOutPowers, handles)
+function [auxStat, auxStatPowers] = batch_preProcessAUX(auxOut, auxOutPowers, subjects, handles)
 
     %% DEBUG
     debugMatFileName = 'tempPreProcessAuxScalars.mat';
@@ -20,8 +20,8 @@ function [auxStat, auxStatPowers] = batch_preProcessAUX(auxOut, auxOutPowers, ha
         
         % normalize 
         auxMatrix.absolute = matOut_aux;
-        auxMatrix.darkCondition = batch_normalizeAux(matOut_aux, 'darkCondition', handles);
-        auxMatrix.firstSession = batch_normalizeAux(matOut_aux, 'firstSession', handles);
+        auxMatrix.darkCondition = batch_normalizeAux(matOut_aux, 'darkCondition', subjects, handles);
+        auxMatrix.firstSession = batch_normalizeAux(matOut_aux, 'firstSession', subjects, handles);
         
         % calculate the stats subjects
         auxStat = batch_auxStatCalculation(auxMatrix, handles);        
@@ -33,8 +33,8 @@ function [auxStat, auxStatPowers] = batch_preProcessAUX(auxOut, auxOutPowers, ha
         
         % normalize 
         auxMatPowers.absolute = matOut_auxPowers;
-        auxMatPowers.darkCondition = batch_normalizeAux(matOut_auxPowers, 'darkCondition', handles);
-        auxMatPowers.firstSession = batch_normalizeAux(matOut_auxPowers, 'firstSession', handles);
+        auxMatPowers.darkCondition = batch_normalizeAux(matOut_auxPowers, 'darkCondition', subjects, handles);
+        auxMatPowers.firstSession = batch_normalizeAux(matOut_auxPowers, 'firstSession', subjects, handles);
         
         % calculate the stats subjects
         auxStatPowers = batch_auxStatCalculation(auxMatPowers, handles);
@@ -50,18 +50,14 @@ function [auxStat, auxStatPowers] = batch_preProcessAUX(auxOut, auxOutPowers, ha
         for i = 1 : length(conditions)
             for f = 1 : length(auxFields)
                 auxParam = fieldnames(auxOut.(conditions{i}).(sessions{1}).(subject{1}).(auxFields{f}));
-                for p = 1 : length(auxParam)
-                    
+                for p = 1 : length(auxParam)                    
                     for session = 1 : length(sessions)
-                        for sub = 1 : length(subject)
-                            
+                        for sub = 1 : length(subject)                            
                             % disp([auxFields{f} ' ' auxParam{p}])
                             subjectDataPoint = auxOut.(conditions{i}).(sessions{session}).(subject{sub}).(auxFields{f}).(auxParam{p});
                             matOut_aux.(conditions{i}).(auxFields{f}).(auxParam{p})(session, sub) = subjectDataPoint;
-
                         end
-                    end
-                    
+                    end                    
                 end
             end
         end        
