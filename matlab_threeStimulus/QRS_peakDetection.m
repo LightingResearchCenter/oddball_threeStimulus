@@ -1,4 +1,4 @@
-function [rPeakTimes, rPeakAmplitudes] = QRS_peakDetection(ecg_data, Fs, handles)
+function [rPeakTimes, rPeakAmplitudes, forDebugPlot_QRS] = QRS_peakDetection(ecg_data, Fs, handles)
 
     % from: http://matlabz.blogspot.com/2011/04/contents-cancellation-dc-drift-and.html
     
@@ -15,7 +15,7 @@ function [rPeakTimes, rPeakAmplitudes] = QRS_peakDetection(ecg_data, Fs, handles
             load(fullfile(path.debugMATs, debugMatFileName))
             close all
             % for debugging, use shorter vector
-            ecg_data = ecg_data(1:4096*60);
+            %ecg_data = ecg_data(1:4096*60);
         else
             if handles.flags.saveDebugMATs == 1
                 path = handles.path;
@@ -33,6 +33,7 @@ function [rPeakTimes, rPeakAmplitudes] = QRS_peakDetection(ecg_data, Fs, handles
     t = [0:N-1]/Fs;        % time index
     debugPlot = 1;
     zoomWindow = [5 6.6];
+    whos
 
 
     %% DEBUG PLOT
@@ -359,10 +360,22 @@ function [rPeakTimes, rPeakAmplitudes] = QRS_peakDetection(ecg_data, Fs, handles
             
             
         end
-            
-        
         % not really a good implementation with high sample rates (e.g. 4,096 Hz).. returns the actual R peaks but
         % they come with additional peaks :S (Petteri Teikari)
            
+    %% RETURN DEBUG for plotting
+    
+        % So that you can plot all the heart parameters to a single plot
+        % easier visual inspection afterwards 
+        forDebugPlot_QRS.t = t;
+        forDebugPlot_QRS.ECG = ecg_data;
+        forDebugPlot_QRS.t_Rraw = t(R_loc);
+        forDebugPlot_QRS.Rraw = R_value;
+        forDebugPlot_QRS.t_Q = t(Q_loc);
+        forDebugPlot_QRS.Q = Q_value;
+        forDebugPlot_QRS.t_S = t(S_loc);
+        forDebugPlot_QRS.S = S_value;
+        forDebugPlot_QRS.t_R = rPeakTimes;
+        forDebugPlot_QRS.R = rPeakAmplitudes;
         
         
