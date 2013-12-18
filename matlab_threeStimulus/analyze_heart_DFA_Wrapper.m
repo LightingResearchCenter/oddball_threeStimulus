@@ -110,6 +110,8 @@ function heart = analyze_heart_DFA_Wrapper(heart, hp, thp, rrTimes, rrPeakInterv
         
         % see short description of how these were calculated from the 2nd
         % column of page 2 of the Zorick and Mandelkern
+        heart.vector.MFDFA_Dh = Dh;
+        heart.vector.MFDFA_h = h;
         heart.scalar.MFDFA_mean_h = mean(h);
         heart.scalar.MFDFA_mean_Dh = mean(Dh);
         heart.scalar.MFDFA_width_h = max(h) - min(h);

@@ -315,6 +315,7 @@ function [heart, hp4] = analyze_HRV_Wrapper(heart, hpRaw, thpRaw, hp, thp, rrTim
     heart.vector.RR_t = thp;
     heart.vector.RR_timeSeriesAfterOutlier = hp;    
     heart.vector.RR_timeSeriesFilt = hp4;
+    heart.vector.PSD_In = PSD_In;
     heart.vector.PSD = PSD;
     heart.vector.F = F;
 

@@ -35,10 +35,6 @@ function heart = analyze_ECGforHeartParameters(ECG, ECG_raw, handles)
         return
     end    
     
-    %% DEBUG PLOT    
-    if debugPlotsOn == 1  
-        debug_plot(ECG, ECG_raw, parameters, style, handles)     
-    end
 
     %% NOTCH FILTER
     
@@ -74,7 +70,8 @@ function heart = analyze_ECGforHeartParameters(ECG, ECG_raw, handles)
         ECG_downsampled = pre_nyquistInterpolation(ECG, length(x_new),1,0); % Nyquist interpolation  
         heartrateSampleRate = parameters.EEG.srate/parameters.heart.downsampleFactor;
         disp(['          .. QRS Detection with Pan-Tompkins'])
-        [rPeakTimes, rPeakAmplitudes] = QRS_peakDetection(ECG_downsampled, heartrateSampleRate, handles);
+        
+        [rPeakTimes, rPeakAmplitudes, forDebugPlot_QRS] = QRS_peakDetection(ECG_downsampled, heartrateSampleRate, handles);
         
         % No peaks found
         try
@@ -185,6 +182,11 @@ function heart = analyze_ECGforHeartParameters(ECG, ECG_raw, handles)
         disp(['            .. DFA for R-R timeseries'])
         heart = analyze_heart_DFA_Wrapper(heart, hpFilt', thp, rrTimes, rrPeakInterval, rrPeakAmplitude, heartrateSampleRate, parameters, handles);
         drawnow
+        
+            
+    %% DEBUG PLOT      
+    plot_heartParameters(forDebugPlot_QRS, heart, parameters, heartrateSampleRate, style, handles)     
+    
     
     function heart = analyze_ECG_fillTheFieldWithNan()
 
@@ -229,33 +231,5 @@ function heart = analyze_ECGforHeartParameters(ECG, ECG_raw, handles)
 
 
         
-    function debug_plot(ECG, ECG_raw, parameters, style, handles)
-                
-        scrsz = handles.style.scrsz;
-        fig = figure('Color', 'w');
-            set(fig, 'Position', [0.1*scrsz(3) 0.05*scrsz(4) 0.65*scrsz(3) 0.90*scrsz(4)])
-            rows = 2;
-            cols = 2;
-            zoomX = 0.4; % fraction of all x samples
-            xDuration = 2.5; % seconds
-            t = linspace(1, length(ECG), length(ECG)') / parameters.EEG.srate;
-            
-        i = 1;
-        sp(i) = subplot(rows, cols, i);
-            plot(t, ECG); title('Filtered')
         
-        i = 2;
-        sp(i) = subplot(rows, cols, i);
-            plot(t, ECG)
-            XStart = t(round(zoomX*length(t)));
-            xlim([XStart XStart+xDuration]) 
-            
-        i = 3;
-        sp(i) = subplot(rows, cols, i);
-            plot(t, ECG_raw); title('RAW')
-            
-        i = 4;
-        sp(i) = subplot(rows, cols, i);
-            plot(t, ECG_raw)
-            XStart = t(round(zoomX*length(t)));
-            xlim([XStart XStart+xDuration]) 
+   
