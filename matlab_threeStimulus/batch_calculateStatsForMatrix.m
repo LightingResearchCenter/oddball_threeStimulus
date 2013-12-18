@@ -12,6 +12,7 @@ function matrixStat = batch_calculateStatsForMatrix(matrixPerChannel, dim, flag,
 
     % average
     matrixStat.mean = nanmean(matrix2D, dim);
+    matrixStat.median = nanmean(matrix2D, dim);
     matrixStat.SD = nanstd(matrix2D, flag, dim);
     matrixStat.n = (sum(~isnan(matrix2D')))';
 
