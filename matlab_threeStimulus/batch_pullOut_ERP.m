@@ -223,6 +223,7 @@ function [dataOut, auxOut, auxOutPowers, subjects] = batch_pullOut_ERP(fileNameF
                 end
             
             else                
+                
                 auxOut.(intensity).(session).(subject).scalars.(aux_fieldNames{ind}) = analyzed_aux.(aux_fieldNames{ind});
                 
             end    

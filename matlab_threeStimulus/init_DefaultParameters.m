@@ -1,5 +1,14 @@
 function parameters = init_DefaultParameters(handles)
 
+    % Try to put all the parameters here, i.e. variables that have an
+    % effect of the outcome of the calculations. This way everything is
+    % centralized and with a "one glance" you can figure out all the
+    % parameters affecting the relatively large amount of code
+    
+    % in the init_DefaultSettings, you can define variables such as
+    % locations of the folders, etc., while one can argue that some
+    % variables could be placed to either subfunction
+
     %% BIOSEMI Channel Definitions
     
         parameters.BioSemi.chName{1} = 'Ref_RightEar'; 
@@ -178,8 +187,7 @@ function parameters = init_DefaultParameters(handles)
 
             parameters.artifacts.CRAP.movWind_ampTh = [-65 65]*1;
             parameters.artifacts.CRAP.movWind_windowWidth = 20;
-            parameters.artifacts.CRAP.movWind_windowStep = 20;
-    
+            parameters.artifacts.CRAP.movWind_windowStep = 20;    
                                                      
         % DETECT
         parameters.artifacts.useDETECT = 0;

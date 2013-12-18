@@ -10,7 +10,7 @@ function process_assignOutputsFromPROCESS(epochs, ERP_components, alpha, powers,
     % later as you don't have to load such big chunks of data at once
     % making processing faster (as well debugging and development
     
-    %{
+    
     %% DEBUG
     debugMatFileName = 'tempAssignOutput.mat';
     if nargin == 0
@@ -25,7 +25,7 @@ function process_assignOutputsFromPROCESS(epochs, ERP_components, alpha, powers,
         end
     end    
     whos
-    %}
+    
     
     % get rid of the "double existence" of the parameters structures
     parameters = handles.parameters;
@@ -35,7 +35,30 @@ function process_assignOutputsFromPROCESS(epochs, ERP_components, alpha, powers,
 
         fileMatOut = strrep(handles.inputFile, '.bdf', '_fullEpochs.mat');        
         disp(['      .. All ERP Epochs [', fullfile(handles.path.matFilesOut, fileMatOut), ']'])
-        save(fullfile(handles.path.matFilesOut, fileMatOut), 'epochs', 'parameters', 'handles')         
+        save(fullfile(handles.path.matFilesOut, fileMatOut), 'epochs', 'parameters', 'handles')        
+        
+    %% ERP Waveforms stat, instead of outputting all the epochs, calculate the mean/median/etc. here and save
+    
+        fileMatOut = strrep(handles.inputFile, '.bdf', '_statEpochs.mat');        
+        disp(['      .. Stats of ERP Epochs [', fullfile(handles.path.matFilesOut, fileMatOut), ']'])
+        
+        % quick'n'dirty fix
+        erpFilterType = {'bandpass'};
+        erpType = {'ERP'};
+        chsToPlot = {'Cz'; 'Pz'};
+        responseTypes = fieldnames(epochs.(erpFilterType).(erpType));
+        
+        for filt = 1 : length(erpFilterType)       
+            for erp = 1 : length(erpType)  
+                for resp = 1 : length(responseTypes)            
+                    % process using a subfunction
+                    [epochsStat, debug] = batch_timeDomEpochsAverage(epochs.(erpFilterType).(erpType).(responseTypes{resp}), thisFileMarkedAsOutlier, handles.parameters, handles);
+                end
+            end
+        end
+        
+        % save
+        save(fullfile(handles.path.matFilesOut, fileMatOut), 'epochsStat', 'parameters', 'handles')        
 
     %% Derived ERP Measures such as amplitude latency etc.
 
