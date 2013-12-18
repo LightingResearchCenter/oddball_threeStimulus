@@ -21,14 +21,15 @@ function [heart_Out, fractalEEG_Out, eye_Out] = batch_extraSensorStats(heart, fr
     %}
     
     % heart
-    heart_Out = batch_extraProcessEachSensor(heart, 'heart', handles)
+    heart_Out = batch_extraProcessEachSensor(heart, 'heart', handles);
     
     % fractal EEG
-    fractalEEG_Out = batch_extraProcessEachSensor(fractalEEG, 'fractalEEG', handles)
+    % fractalEEG_Out = batch_extraProcessEachSensor(fractalEEG, 'fractalEEG', handles)
+    fractalEEG_Out = [];
     
     % eye
     % eye_Out = batch_extraProcessEachSensor(eye, 'eye', handles)
-    eye_Out = []
+    eye_Out = [];
     
     
     function statOut = batch_extraProcessEachSensor(dataIn, sensorType, handles)

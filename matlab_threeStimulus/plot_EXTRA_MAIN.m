@@ -16,10 +16,10 @@ function plot_EXTRA_MAIN(heart_Out, fractalEEG_Out, eye_Out, handles)
     
     
     fieldsOfInterest = {'HR_Mean'; 'NHF'; 'avIBI'; 'RMSSD'; 'DFA_alphaScaling'; 'MFDFA_mean_h'};
-    %batch_plotAuxSubLoop(heart_Out, 'scalar', fieldsOfInterest, 'Heart', handles) 
+    batch_plotAuxSubLoop(heart_Out, 'scalar', fieldsOfInterest, 'Heart', handles) 
     
     fieldsOfInterest = {'MFDFA_mean_h'; 'MFDFA_mean_Dh'; 'MFDFA_width_h';  'MFDFA_height_Dh'};
-    batch_plotAuxSubLoop(fractalEEG_Out, 'scalar', fieldsOfInterest, 'fractalEEG', handles) 
+    %batch_plotAuxSubLoop(fractalEEG_Out, 'scalar', fieldsOfInterest, 'fractalEEG', handles) 
     
     
     function batch_plotAuxSubLoop(extraStat, plotType, fieldsOfInterest, sensorType, handles)      
@@ -29,7 +29,7 @@ function plot_EXTRA_MAIN(heart_Out, fractalEEG_Out, eye_Out, handles)
         % init
         normFields = fieldnames(extraStat);
         conditions = fieldnames(extraStat.(normFields{1}));        
-        dataTypes = fieldnames(extraStat.(normFields{1}).(conditions{1}).(plotType))
+        dataTypes = fieldnames(extraStat.(normFields{1}).(conditions{1}).(plotType));
         
         cols = length(fieldsOfInterest);
         

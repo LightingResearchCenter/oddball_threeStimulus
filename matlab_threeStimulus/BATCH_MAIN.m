@@ -68,7 +68,7 @@ function BATCH_MAIN()
             
         % i.e. 1D signals such as the ERP components, Reaction time,
         % Band powers and IAF        
-        batchCompare_componentMain(handles.batch.fileNameFields_analyzed, fileNames, outlierFilenameList, handles)
+        %batchCompare_componentMain(handles.batch.fileNameFields_analyzed, fileNames, outlierFilenameList, handles)
         
     %% Compare extra sensors
     

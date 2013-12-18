@@ -1,4 +1,4 @@
-function [heart, fractalEEG, eye] = batch_pullOut_extraSensors(fileNameFields, handles)
+function [heart, eye] = batch_pullOut_extraSensors(fileNameFields, handles)
 
     %% DEBUG
     debugMatFileName = 'tempDataOutExtra.mat';
@@ -80,7 +80,9 @@ function [heart, fractalEEG, eye] = batch_pullOut_extraSensors(fileNameFields, h
             end
             
         %% FRACTAL        
+        %{
         for ch = 1 : handles.parameters.EEG.nrOfChannels
+            
             
             scalarFields = fieldnames(dataIn.analyzed_fractal{ch}.scalar);
             % vectorFields = fieldnames(dataIn.analyzed_fractal{ch}.vector)
@@ -98,6 +100,7 @@ function [heart, fractalEEG, eye] = batch_pullOut_extraSensors(fileNameFields, h
             end
             
         end
+        %}
             
         %% EYE Movements
         
