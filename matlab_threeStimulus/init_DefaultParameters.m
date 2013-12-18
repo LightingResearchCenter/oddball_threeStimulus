@@ -172,11 +172,11 @@ function parameters = init_DefaultParameters(handles)
             parameters.artifacts.CRAP.step_windowWidth = 50;
             parameters.artifacts.CRAP.step_windowStep = 15;
 
-            parameters.artifacts.CRAP.movWindEOG_ampTh = [-65 65]*2;
+            parameters.artifacts.CRAP.movWindEOG_ampTh = [-65 65]*1;
             parameters.artifacts.CRAP.movWindEOG_windowWidth = 20;
             parameters.artifacts.CRAP.movWindEOG_windowStep = 20;
 
-            parameters.artifacts.CRAP.movWind_ampTh = [-65 65]*2;
+            parameters.artifacts.CRAP.movWind_ampTh = [-65 65]*1;
             parameters.artifacts.CRAP.movWind_windowWidth = 20;
             parameters.artifacts.CRAP.movWind_windowStep = 20;
     
@@ -275,7 +275,8 @@ function parameters = init_DefaultParameters(handles)
             
     %% Time-Frequency Analysis
     
-        parameters.timeFreq.logFrq = 0; % whether you use linear or log frequency scale
+        parameters.timeFreq.logFrq = 0; % whether you use linear or log frequency scale        
+        parameters.timeFreq.plotEpochs = 1;
                 
         % Scales is the parameter a
         % scale factor a is defined as the inverse of frequency (a=1/ƒ)
@@ -283,6 +284,7 @@ function parameters = init_DefaultParameters(handles)
         % frequencies that you want to analyze       
         parameters.timeFreq.scaleLimits = [1 30];
         parameters.timeFreq.numberOfFreqs = 2*(parameters.timeFreq.scaleLimits(2) - parameters.timeFreq.scaleLimits(1)) + 1;
+        parameters.timeFreq.windowEpochs = 1; % window with Tukey window (r = 0.10, 10% cosine window) 
         parameters.timeFreq.tukeyWindowR = 0.05;
                 
         parameters.timeFreq.bandwidthParameter = 2;
@@ -292,6 +294,8 @@ function parameters = init_DefaultParameters(handles)
             % e.g. with 16, freqRange: [1.9360 247.8114], freqResolution: 0.0211
             % e.g. with 32, freqRange: [0.9680 123.9057], freqResolution: 0.0105. timeRes: 7.8125 ms
         
+        % If you wanna reject values under the Cone-Of-Influcence (COI)
+        parameters.timeFreq.rejectUnderCOI = 1; 
 
             
     %% 3-Stimulus Oddball parameters

@@ -29,10 +29,7 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN, 
     % handles
     
     disp(['        .. analyzing epochs'])
-    [noOfSamples, noOfChannels, noOfEpochs] = size(matrixIn);
-    
-    parameters.timeFreq.windowEpochs = 1;
-    parameters.timeFreq.plotEpochs = 1;
+    [noOfSamples, noOfChannels, noOfEpochs] = size(matrixIn);       
     
     handles.style.lineGrey = [0.4 0.4 0.4];
     
@@ -60,7 +57,6 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN, 
 
             % window the signal epoch
             r = parameters.timeFreq.tukeyWindowR;
-            r = 2*r;
             window = (tukeywin(noOfSamples,r)); % Tukey window with r=0.10 is 10% cosine window
             
             if parameters.timeFreq.windowEpochs == 1
@@ -140,11 +136,17 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN, 
                     % fix the colorbar limits to be the same
                     try
                         caxis(sp(1,ch), [min(min(epochLimits(1,:,:))) max(max(epochLimits(1,:,:)))])
-                    catch err
-                        err
+                    catch err                        
+                        % err
+                        warning on
                         warning('Probably no epochs plotted so you cannot fix the colorbar limits, handle earlier that the script "knows" that there are no artifact-free epochs')
-                        [WTout, powerOut, averageOfTheChannel, stdOfTheChannel, derivedMeasures] = analyze_fillWaveletOutputWithNaNs(rows,cols,ch,handles)
+                        [realCoefs, realCoefs_SD, imagCoefs, imagCoefs_SD, WTout, powerOut, averageOfTheChannel, stdOfTheChannel, derivedMeasures] = analyze_fillWaveletOutputWithNaNs(rows,cols,ch,handles);
+                        timep = NaN;
+                        freq = NaN;
+                        isNaN = NaN;
+                        allEpochs = NaN;
                         return
+                        
                     end
                 end
                 set(s, 'EdgeColor', 'none')         
@@ -236,9 +238,10 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN, 
                         % a vector of N points that contains the maximum period of useful information
                         % at that particular time. Periods greater than this are subject to edge effects.                        
                         % plot_debugCOI_onWaveletTransform(timeVectorIn, freq, 1./freq, powerRaw, coiRaw, handles)
-                        
-                        [power, nanMask] = analyze_rejectWT_underCOI(timeVectorIn, freq2, power, coiRaw, parameters, handles);
-                        [WTtrim, nanMask] = analyze_rejectWT_underCOI(timeVectorIn, freq2, WTtrim, coiRaw, parameters, handles);
+                        if parameters.timeFreq.rejectUnderCOI == 1
+                            [power, nanMask] = analyze_rejectWT_underCOI(timeVectorIn, freq2, power, coiRaw, parameters, handles);
+                            [WTtrim, nanMask] = analyze_rejectWT_underCOI(timeVectorIn, freq2, WTtrim, coiRaw, parameters, handles);
+                        end
                         
                         % downsample the time resolution, keeping the frequency
                         % vector unchanged
@@ -310,7 +313,7 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN, 
                     % if no valid epochs are found, something has to be done to
                     % avoid the script from crashing
                     rowsNaN = 1; colsNaN = 1;
-                    [WTout{ch}, powerOut{ch}, averageOfTheChannel{ch}, stdOfTheChannel{ch}, derivedMeasures] = analyze_fillWaveletOutputWithNaNs(rowsNaN,colsNaN,ch,handles);                    
+                    [realCoefs{ch}, realCoefs_SD{ch}, imagCoefs{ch}, imagCoefs_SD{ch}, WTout{ch}, powerOut{ch}, averageOfTheChannel{ch}, stdOfTheChannel{ch}, derivedMeasures] = analyze_fillWaveletOutputWithNaNs(rowsNaN,colsNaN,ch,handles);                    
                     % disp(['                 .. no valid epochs found, NaN-filled'])
                     
                 end
@@ -446,7 +449,7 @@ function [realCoefs, imagCoefs, realCoefs_SD, imagCoefs_SD, timep, freq, isNaN, 
 % Fills the output with NaN values in case where no epochs are found for
 % the channel (e.g. when the electrode came off during session and all data
 % is garbage)
-function [WTout, powerOut, averageOfTheChannel, stdOfTheChannel, derivedMeasures] = analyze_fillWaveletOutputWithNaNs(rows,cols,ch,handles)
+function [realCoefs, realCoefs_SD, imagCoefs, imagCoefs_SD, WTout, powerOut, averageOfTheChannel, stdOfTheChannel, derivedMeasures] = analyze_fillWaveletOutputWithNaNs(rows,cols,ch,handles)
 
     % one could fill out the values to have the same dimensions as the
     % channels with some epohcs, but maybe it is less memory-demanding just
@@ -459,6 +462,11 @@ function [WTout, powerOut, averageOfTheChannel, stdOfTheChannel, derivedMeasures
     averageOfTheChannel = zeros(rows,cols) * NaN;
     stdOfTheChannel = zeros(rows,cols) * NaN;
 
+    realCoefs = zeros(rows,cols) * NaN;
+    realCoefs_SD = zeros(rows,cols) * NaN;
+    imagCoefs = zeros(rows,cols) * NaN;
+    imagCoefs_SD = zeros(rows,cols) * NaN;
+    
     derivedMeasures.ITPC{ch} = zeros(rows,cols) * NaN;
     derivedMeasures.ITLC{ch} = zeros(rows,cols) * NaN;
     derivedMeasures.ITLCN{ch} = zeros(rows,cols) * NaN;
