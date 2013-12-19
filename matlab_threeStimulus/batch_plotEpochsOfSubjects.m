@@ -15,6 +15,8 @@ function batch_plotEpochsOfSubjects(epochsMatrix, erpType, erpFilterType, epochT
     end
     
     whos
+    parameters = handles.parameters;
+
     
     % get fieldnames IN
     conditions = fieldnames(epochsMatrix)
@@ -27,28 +29,38 @@ function batch_plotEpochsOfSubjects(epochsMatrix, erpType, erpFilterType, epochT
     exIn = epochsMatrix.(conditions{1}).(sessions{1}).(erpResponses{1}).(erpTypes{1}).(filterTypes{1})
     
     [noOfDataSamplesPerERP, noOfChannels, noOfSubjects] = size(epochsMatrix.(conditions{1}).(sessions{1}).(erpResponses{1}).(erpTypes{1}).(filterTypes{1}).mean)
+    t = 1000*(linspace(-parameters.oddballTask.ERP_baseline, parameters.oddballTask.ERP_duration, noOfDataSamplesPerERP))';
+        
     
-    % Customize the color scale, use the distinguishable_colors from Matlab
-    % FileExchange by Tim Holy, http://www.mathworks.com/matlabcentral/fileexchange/29702-generate-maximally-perceptually-distinct-colors
-    % See also: http://blogs.mathworks.com/pick/2008/08/15/colors-for-your-multi-line-plots/
-    figure
     
-        ColorSet = distinguishable_colors(noOfSubjects);
-        set(gca, 'ColorOrder', ColorSet);
-
-        for ch = 1 : noOfChannels
-            subplot(4,1,ch)
-            plot(squeeze(exIn.(statParam)(:,ch,:)))
-            hold on
-        end
-
-    figure
+    %% SUBJECTS COMPARED with AVERAGES
+    %{
+    batch_plot_subjectERPs_withAverage(conditions, sessions, erpResponses, erpTypes, filterTypes, statFields, statParam, ...
+                                       noOfDataSamplesPerERP, noOfChannels, noOfSubjects, ...
+                                       t, epochsMatrix, parameters, handles)    
+    %}
+        
+        
+    %% CHANNELS COMPARED (AVERAGE)
+    rowParameter = conditions;
+    colParameter = 1 : parameters.EEG.nrOfChannels;
+    gcaParameter = erpResponses;
     
-        ColorSet = distinguishable_colors(noOfSubjects);
-        set(gca, 'ColorOrder', ColorSet);
-
-        for ch = 1 : noOfChannels
-            subplot(4,1,ch)
-            plot(nanmean(exIn.(statParam)(:,ch,:),3))
-            hold on
-        end
+    batch_plot_ERPs_perSomeParameter(rowParameter, colParameter, gcaParameter, ...
+                                     conditions, sessions, erpResponses, erpTypes, filterTypes, statFields, statParam, ...
+                                       noOfDataSamplesPerERP, noOfChannels, noOfSubjects, ...
+                                       t, epochsMatrix, parameters, handles)
+    
+    
+    
+        
+    %% COMPARE THE CONDITIONS
+    rowParameter = erpResponses;
+    colParameter = 1 : parameters.EEG.nrOfChannels;
+    gcaParameter = conditions;
+    
+    batch_plot_ERPs_perSomeParameter(rowParameter, colParameter, gcaParameter, ...
+                                     conditions, sessions, erpResponses, erpTypes, filterTypes, statFields, statParam, ...
+                                       noOfDataSamplesPerERP, noOfChannels, noOfSubjects, ...
+                                       t, epochsMatrix, parameters, handles)
+    
