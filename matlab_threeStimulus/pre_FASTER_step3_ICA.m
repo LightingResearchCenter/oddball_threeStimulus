@@ -1,5 +1,24 @@
-function [EEG, indelec_st3, zs_st3, num_pca, activData, blinkData] = pre_FASTER_step3_ICA(EEGmatrix, EEG, k_value, ica_chans, chans_to_interp, lpf_band, blinkCh, epochLength, parameters)
+function [EEG, indelec_st3, zs_st3, num_pca, activData, blinkData] = pre_FASTER_step3_ICA(EEGmatrix, EEG, k_value, ica_chans, chans_to_interp, lpf_band, blinkCh, epochLength, parameters, handles)
             
+    [~, handles.flags] = init_DefaultSettings(); % use a subfunction        
+    if handles.flags.saveDebugMATs == 1
+        debugMatFileName = 'tempFASTER_ICA.mat';
+        if nargin == 0
+            load('debugPath.mat')
+            load(fullfile(path.debugMATs, debugMatFileName))
+            
+        else
+            if handles.flags.saveDebugMATs == 1                
+                % do not save for standard tone as there are so many
+                % trials that debugging and developing of this function
+                % is so much slower compared to target and distracter
+                path = handles.path;
+                save('debugPath.mat', 'path')
+                save(fullfile(path.debugMATs, debugMatFileName))                            
+            end
+        end 
+    end
+
     % quick'n'dirty
     EEG.dataIN = EEG.data;
     EEG.data = EEGmatrix';
@@ -78,3 +97,104 @@ function [EEG, indelec_st3, zs_st3, num_pca, activData, blinkData] = pre_FASTER_
     % quick'n'dirty
     EEG.data = EEG.dataIN;
     
+    
+    %% EXAMPLE CODE FROM fieldTrip (ft_componentanalysis.m)
+    
+        % perform the component analysis
+        cfg.method = 'fastica'
+        if 1 == 2
+
+            switch cfg.method
+
+                case 'fastica'
+                % check whether the required low-level toolboxes are installed
+                ft_hastoolbox('fastica', 1);       % see http://www.cis.hut.fi/projects/ica/fastica
+
+                % set the number of components to be estimated
+                cfg.fastica.numOfIC = cfg.numcomponent;
+
+                try
+                  % construct key-value pairs for the optional arguments
+                  optarg = ft_cfg2keyval(cfg.fastica);
+                  [mixing, unmixing] = fastica(dat, optarg{:});
+                catch
+                  % the "catch me" syntax is broken on MATLAB74, this fixes it
+                  me = lasterror;
+                  % give a hopefully instructive error message
+                  fprintf(['If you get an out-of-memory in fastica here, and you use fastica 2.5, change fastica.m, line 482: \n' ...
+                    'from\n' ...
+                    '  if ~isempty(W)                  %% ORIGINAL VERSION\n' ...
+                    'to\n' ...
+                    '  if ~isempty(W) && nargout ~= 2  %% if nargout == 2, we return [A, W], and NOT ICASIG\n']);
+                 % forward original error
+                  rethrow(me);
+                end
+
+              case 'runica'
+                % check whether the required low-level toolboxes are installed
+                % see http://www.sccn.ucsd.edu/eeglab
+                ft_hastoolbox('eeglab', 1);
+
+                % construct key-value pairs for the optional arguments
+                optarg = ft_cfg2keyval(cfg.runica);
+                [weights, sphere] = runica(dat, optarg{:});
+
+                % scale the sphering matrix to unit norm
+                if strcmp(cfg.normalisesphere, 'yes'),
+                  sphere = sphere./norm(sphere);
+                end
+
+                unmixing = weights*sphere;
+                mixing = [];
+
+            end
+
+            % make sure we have both mixing and unmixing matrices
+            % if not, compute (pseudo-)inverse to go from one to the other
+            if isempty(unmixing) && ~isempty(mixing)
+              if (size(mixing,1)==size(mixing,2))
+                unmixing = inv(mixing);
+              else
+                unmixing = pinv(mixing);
+              end
+            elseif isempty(mixing) && ~isempty(unmixing)
+              if (size(unmixing,1)==size(unmixing,2)) && rank(unmixing)==size(unmixing,1)
+                mixing = inv(unmixing);
+              else
+                mixing = pinv(unmixing);
+              end
+            elseif isempty(mixing) && isempty(unmixing)
+              % this sanity check is needed to catch convergence problems in fastica
+              % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1519
+              error('the component unmixing failed');
+            end
+
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            % collect the results and construct data structure
+
+            comp = [];
+            if isfield(data, 'fsample'), comp.fsample = data.fsample; end
+            if isfield(data, 'time'),    comp.time    = data.time;    end
+
+            % make sure we don't return more components than were requested
+            % (some methods respect the maxcomponent parameters, others just always
+            % return a fixed (i.e., numchans) number of components)
+            if size(unmixing,1) > cfg.numcomponent
+              unmixing(cfg.numcomponent+1:end,:) = [];
+            end
+
+            if size(mixing,2) > cfg.numcomponent
+              mixing(:,cfg.numcomponent+1:end) = [];
+            end
+
+            % compute the activations in each trial
+            for trial=1:Ntrials
+              comp.trial{trial} = scale * unmixing * data.trial{trial};
+            end
+
+            % store mixing/unmixing matrices in structure
+            comp.topo = mixing;
+            comp.unmixing = unmixing;
+
+        end
+
