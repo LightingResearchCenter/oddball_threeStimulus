@@ -1,5 +1,5 @@
 function [NaN_indices_EEG, NaN_indices_EOG, indices_moving, indices_movingEOG, indices_step, vDiffOutMovWindow, vDiffOutMovWindowEOG, vDiffOutStep, isNaN] = ...
-    pre_artifactFASTER_fixedThresholds_ERPLAB(EEG, EOG, ECG, debugOn, parameters, handles)
+    pre_artifactFASTER_fixedThresholds_ERPLAB(EEG, EOG, ECG, debugOn, erpType, parameters, handles)
 
     debugMatFileName = 'tempFASTERfixedThresholds.mat';
     if nargin == 0
