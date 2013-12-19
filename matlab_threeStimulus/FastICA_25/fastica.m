@@ -3,7 +3,7 @@ function [Out1, Out2, Out3] = fastica(mixedsig, varargin)
 %
 % FastICA for Matlab 7.x and 6.x
 % Version 2.5, October 19 2005
-% Copyright (c) Hugo Gävert, Jarmo Hurri, Jaakko Särelä, and Aapo Hyvärinen.
+% Copyright (c) Hugo Gï¿½vert, Jarmo Hurri, Jaakko Sï¿½relï¿½, and Aapo Hyvï¿½rinen.
 %
 % FASTICA(mixedsig) estimates the independent components from given
 % multidimensional signals. Each row of matrix mixedsig is one
@@ -517,3 +517,5 @@ else      % ICA
     Out3 = W;
   end
 end
+
+whos

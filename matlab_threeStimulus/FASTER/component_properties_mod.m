@@ -56,111 +56,112 @@ end
 
 list_properties = zeros(size(EEG.icaact,1),5); % This 5 corresponds to number of measurements made.
 
-[noOfICA_PCA_channels, noOfSamples] = size(EEG.icaact);
+[noOfICA_PCA_channels, noOfSamples] = size(EEG.icaact)
 for u=1:noOfICA_PCA_channels
 
     measure = 1;
-    % TEMPORAL PROPERTIES
+    %% TEMPORAL PROPERTIES
 
-    % 1 Median gradient value, for high frequency stuff
-    list_properties(u,measure) = median(diff(EEG.icaact(u,:)));
-    measure = measure + 1;
+        % 1 Median gradient value, for high frequency stuff
+        list_properties(u,measure) = median(diff(EEG.icaact(u,:)));
+        measure = measure + 1;
 
-    % 2 Mean slope around the LPF band (spectral)
-    if ignore_lpf
-        list_properties(u,measure) = 0;
-    else
-        try
-            meanSlope = mean(diff(10*log10(spectra(u,find(freqs>=lpf_band(1),1):find(freqs<=lpf_band(2),1,'last')))));
-            list_properties(u,measure) = meanSlope;
-        catch err
-            %err
-            if isempty(meanSlope)
-                disp('      ... freqVector empty, no slope done, adjust low-pass band')
-                ignore_lpf = 1;
+        % 2 Mean slope around the LPF band (spectral)
+        if ignore_lpf
+            list_properties(u,measure) = 0;
+        else
+            try
+                meanSlope = mean(diff(10*log10(spectra(u,find(freqs>=lpf_band(1),1):find(freqs<=lpf_band(2),1,'last')))));
+                list_properties(u,measure) = meanSlope;
+            catch err
+                %err
+                if isempty(meanSlope)
+                    disp('      ... freqVector empty, no slope done, adjust low-pass band')
+                    ignore_lpf = 1;
+                end
             end
         end
-    end
-    measure = measure + 1;
+        measure = measure + 1;
 
-    % SPATIAL PROPERTIES
+    %% SPATIAL PROPERTIES
 
-    % 3 Kurtosis of spatial map (if v peaky, i.e. one or two points high
-    % and everywhere else low, then it's probably noise on a single
-    % channel)
-    list_properties(u,measure) = kurt(EEG.icawinv(:,u));
-    measure = measure + 1;
+        % 3 Kurtosis of spatial map (if v peaky, i.e. one or two points high
+        % and everywhere else low, then it's probably noise on a single
+        % channel)
+        list_properties(u,measure) = kurt(EEG.icawinv(:,u));
+        measure = measure + 1;
 
-    % OTHER PROPERTIES
+    %% OTHER PROPERTIES
 
-    % 4 Hurst exponent
-    list_properties(u,measure) = hurst_exponent(EEG.icaact(u,:));
-    measure = measure + 1;
+        % 4 Hurst exponent
+        list_properties(u,measure) = hurst_exponent(EEG.icaact(u,:));
+        measure = measure + 1;
 
-    % 10 Eyeblink correlations
+    %% 10 Eyeblink correlations
     memWarningFlag = 0;
     
-    if (exist('blink_chans','var') && ~isempty(blink_chans))
-        for v = 1:length(blink_chans)
-            if ~(max(EEG.data(blink_chans(v),:))==0 && min(EEG.data(blink_chans(v),:))==0);                
-                blinkData = EEG.data(blink_chans(v),:);
-                activData = EEG.icaact(u,:);                
-                try
-                    % plot(activData, blinkData, 'o')
-                    f = corrcoef(EEG.icaact(u,:), EEG.data(blink_chans(v),:));
-                catch err
-                    
-                    if strcmp(err.identifier, 'MATLAB:nomem')
+        if (exist('blink_chans','var') && ~isempty(blink_chans))
+            for v = 1:length(blink_chans)
+                if ~(max(EEG.data(blink_chans(v),:))==0 && min(EEG.data(blink_chans(v),:))==0);                
+                    blinkData = EEG.data(blink_chans(v),:);
+                    activData = EEG.icaact(u,:);                
+                    try
+                        % plot(activData, blinkData, 'o')
+                        f = corrcoef(EEG.icaact(u,:), EEG.data(blink_chans(v),:));
                         
-                       blinkLength = length(EEG.data(blink_chans(v),:));
-                       activLength = length(EEG.icaact(u,:));
-                       
-                       if memWarningFlag == 0
-                           
-                           mem_Mb_needed = (activLength * activLength * 4) / 1024 / 1024;
-                           warnStr = ['   .. Not enough MEMORY available: ', num2str(blinkLength), ' x ', num2str(activLength), ...
-                                    ' x 4 bytes (single) = ', num2str(mem_Mb_needed), ' MB needed'];
-                           disp(warnStr)
-                           memWarningFlag = 1;
-                           
-                           % for Windows, you could use the memory
-                           % memory
-                           % http://www.mathworks.com/help/matlab/matlab_prog/resolving-out-of-memory-errors.html
-                           
-                       end
+                    catch err
 
-                       memTarget = 2048; % MB
-                       downsamplingNeeded = mem_Mb_needed / memTarget;
-                       downsamplingNeeded = 2^nextpow2(downsamplingNeeded); % find the next power of 2
-                       x = linspace(1, blinkLength, blinkLength); 
-                       x_i = linspace(1, blinkLength, blinkLength/downsamplingNeeded);
-                           
-                       disp(['      ... downsampling (1/', num2str(downsamplingNeeded), ') the blink channel and the ICA activation'])
-                       blinkData = interp1(x, EEG.data(blink_chans(v),:), x_i);
-                       activData = interp1(x, EEG.icaact(u,:), x_i);       
-                       
-                       % try again to compute the correlation coefficient
-                       f = corrcoef(activData, blinkData);
-                    
-                    else % unidentified error
-                        %'MATLAB:samelen'                       
-                        whos
+                        if strcmp(err.identifier, 'MATLAB:nomem')
+
+                           blinkLength = length(EEG.data(blink_chans(v),:));
+                           activLength = length(EEG.icaact(u,:));
+
+                           if memWarningFlag == 0
+
+                               mem_Mb_needed = (activLength * activLength * 4) / 1024 / 1024;
+                               warnStr = ['   .. Not enough MEMORY available: ', num2str(blinkLength), ' x ', num2str(activLength), ...
+                                        ' x 4 bytes (single) = ', num2str(mem_Mb_needed), ' MB needed'];
+                               disp(warnStr)
+                               memWarningFlag = 1;
+
+                               % for Windows, you could use the memory
+                               % memory
+                               % http://www.mathworks.com/help/matlab/matlab_prog/resolving-out-of-memory-errors.html
+
+                           end
+
+                           memTarget = 2048; % MB
+                           downsamplingNeeded = mem_Mb_needed / memTarget;
+                           downsamplingNeeded = 2^nextpow2(downsamplingNeeded); % find the next power of 2
+                           x = linspace(1, blinkLength, blinkLength); 
+                           x_i = linspace(1, blinkLength, blinkLength/downsamplingNeeded);
+
+                           disp(['      ... downsampling (1/', num2str(downsamplingNeeded), ') the blink channel and the ICA activation'])
+                           blinkData = interp1(x, EEG.data(blink_chans(v),:), x_i);
+                           activData = interp1(x, EEG.icaact(u,:), x_i);       
+
+                           % try again to compute the correlation coefficient
+                           f = corrcoef(activData, blinkData);
+
+                        else % unidentified error
+                            %'MATLAB:samelen'                       
+                            whos
+                        end
                     end
+
+                    if sum(sum(isnan(f))) == length(f)*length(f)
+                        warning('You get werid behavior here if you have multiple corrcoef.m in your Matlab path!')
+                        which -all corrcoef % https://groups.google.com/forum/#!topic/comp.soft-sys.matlab/cC77XLgs7_4
+                        disp('    you will get a conflicting function annoyingly from BioSig package, so you have to remove the /NaN/inst/ from path')                
+                    end                
+                    x(v) = abs(f(1,2));
+                else
+                    x(v) = v;
                 end
-                
-                if sum(sum(isnan(f))) == length(f)*length(f)
-                    warning('You get werid behavior here if you have multiple corrcoef.m in your Matlab path!')
-                    which -all corrcoef % https://groups.google.com/forum/#!topic/comp.soft-sys.matlab/cC77XLgs7_4
-                    disp('    you will get a conflicting function annoyingly from BioSig package, so you have to remove the /NaN/inst/ from path')                
-                end                
-                x(v) = abs(f(1,2));
-            else
-                x(v) = v;
             end
+            list_properties(u,measure) = max(x);
+            measure = measure + 1;
         end
-        list_properties(u,measure) = max(x);
-        measure = measure + 1;
-    end
 end
 
 for u = 1:size(list_properties,2)
