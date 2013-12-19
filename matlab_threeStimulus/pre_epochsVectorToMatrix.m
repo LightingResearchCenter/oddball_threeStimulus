@@ -1,6 +1,10 @@
 function EEG_mat = pre_epochsVectorToMatrix(EEG,epochLength)
 
     [noOfChannels, noOfSamples] = size(EEG);
+    if noOfSamples < noOfChannels
+       EEG = EEG'; 
+       [noOfChannels, noOfSamples] = size(EEG);
+    end
     noOfEpochs = noOfSamples / epochLength;
 
     EEG_mat = zeros(noOfChannels, epochLength, noOfEpochs);
