@@ -191,6 +191,7 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
         %% STEP 3: ICA
                 
             % Skip re-referencing as we were referencing for ear electrodes            
+            parameters.artifacts.FASTER_skipICA = 0
             if parameters.artifacts.FASTER_skipICA == 0 || parameters.artifacts.useADJUST == 1
                 
                 % Do ICA (the runica of EEGLAB, infomax)
@@ -199,9 +200,8 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                 ica_chans = 1:4;           
                 lpf_band = [w_l-(t_l/2) w_l+(t_l/2)];
                 blinkCh = parameters.EEG.nrOfChannels + 1;
-
-                disp('          ... computing ICA (runica), might take some time (try to switch to fastICA for speed)')      
-                [EEG, indelec_st3, zs_st3, num_pca, activData, blinkData] = pre_FASTER_step3_ICA(EEGmatrix, EEG, k_value, ica_chans, chans_to_interp, lpf_band, blinkCh, epochLength, parameters);
+                     
+                [EEG, indelec_st3, zs_st3, num_pca, activData, blinkData] = pre_FASTER_step3_ICA(EEGmatrix, EEG, k_value, ica_chans, chans_to_interp, lpf_band, blinkCh, epochLength, parameters, handles);                             
                 
             else
             
@@ -519,6 +519,7 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
             end
             
         end
+        
         
         %% RETURN
         

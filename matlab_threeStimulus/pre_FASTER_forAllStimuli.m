@@ -26,8 +26,9 @@ function [rejectedEpochs_target, rejectedEpochs_distr, rejectedEpochs_std, artif
         end 
     end
     
-    handles.parameters.artifacts.FASTER_zThreshold = 1.5;
-    handles.parameters.artifacts.FASTER_zThreshold_step4 = 1.5;
+    handles.parameters.artifacts.FASTER_zThreshold_step2 = 1.49;
+    handles.parameters.artifacts.FASTER_zThreshold_step3 = 1.49;
+    handles.parameters.artifacts.FASTER_zThreshold_step4 = 1.49;
 
     debugOnlyTarget = 0; % faster development / debugging
     

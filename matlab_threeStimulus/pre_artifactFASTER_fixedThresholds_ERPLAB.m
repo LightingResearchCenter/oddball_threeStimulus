@@ -1,17 +1,25 @@
 function [NaN_indices_EEG, NaN_indices_EOG, indices_moving, indices_movingEOG, indices_step, vDiffOutMovWindow, vDiffOutMovWindowEOG, vDiffOutStep, isNaN] = ...
     pre_artifactFASTER_fixedThresholds_ERPLAB(EEG, EOG, ECG, debugOn, erpType, parameters, handles)
 
-    debugMatFileName = 'tempFASTERfixedThresholds.mat';
-    if nargin == 0
-        load('debugPath.mat')
-        load(fullfile(path.debugMATs, debugMatFileName))
-        close all
-    else
-        if handles.flags.saveDebugMATs == 1
-            path = handles.path;
-            save('debugPath.mat', 'path')
-            save(fullfile(path.debugMATs, debugMatFileName))            
-        end
+    [~, handles.flags] = init_DefaultSettings(); % use a subfunction        
+    if handles.flags.saveDebugMATs == 1
+        debugMatFileName = 'tempFASTERfixedThresholds.mat';
+        if nargin == 0
+            load('debugPath.mat')
+            load(fullfile(path.debugMATs, debugMatFileName))
+            close all
+        else
+            if handles.flags.saveDebugMATs == 1
+                if ~strcmp(erpType, 'fff') % 'standard')
+                    % do not save for standard tone as there are so many
+                    % trials that debugging and developing of this function
+                    % is so much slower compared to target and distracter
+                    path = handles.path;
+                    save('debugPath.mat', 'path')
+                    save(fullfile(path.debugMATs, debugMatFileName))            
+                end
+            end
+        end 
     end
         
     numberOfEpochs = length(EEG.ERP);
