@@ -1,6 +1,6 @@
 function EEGcorr = pre_artifactRegressionWrapper(EEG, artifactData, EEGchans, parameters)
 
-    %% EOG/ECG "trend correction"
+    %% EOG/ECG "trend correction"    
 
     % Requires BioSig
     % http://sourceforge.net/projects/biosig/
@@ -14,7 +14,8 @@ function EEGcorr = pre_artifactRegressionWrapper(EEG, artifactData, EEGchans, pa
 
     % find the artifacts
     EL = 1:EEGchans;
-    OL = EEGchans+1;
+    OL = EEGchans+1;    
+
     try
         R = regress_eog(S1, EL, OL);
     catch err
