@@ -78,9 +78,9 @@ function [dataMatrixOut, outlierIndices] = batch_excludeOutliersDuringBatch(data
                     
             elseif strcmp(callFromWhere, 'normalize')
                 
-                set(fig, 'Position', [0.06*scrsz(3) 0.64*scrsz(4) 0.9*scrsz(3) 0.3*scrsz(4)])  
+                set(fig, 'Position', [0.06*scrsz(3) 0.64*scrsz(4) 0.4*scrsz(3) 0.4*scrsz(4)])  
                 rows = 1;
-                cols = 3;
+                cols = 1;
                 
                     ind = 1;
                     sp(ind) = subplot(rows,cols,ind);
@@ -127,6 +127,15 @@ function [dataMatrixOut, outlierIndices] = batch_excludeOutliersDuringBatch(data
             set(sp, 'XLim', [1 max(xLims)]) 
             set(tit, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase-1, 'FontWeight', 'bold') 
             set(lab, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase-1, 'FontWeight', 'bold')  
+            
+            if handles.figureOut.ON == 1    
+            drawnow
+            dateStr = plot_getDateString(); % get current date as string
+            %cd(path.outputFigures)            
+            fileNameOut = ['batch_outlierExclusion_',  dateStr];
+            export_fig(fullfile(handles.path.figuresOut, fileNameOut), '-r400', handles.figureOut.antialiasLevel, fig)
+            %cd(path.code)
+        end
 
         % sdd
 
