@@ -64,7 +64,13 @@ function [epochsOut, debugInfoOut] = batch_pullOut_timeDomainEpochs(fileNameFiel
         dataIn = load(fullfile(handles.path.matFilesOut, fileNameFields{i}.fileName));
         
         % check if the input has been manually marked to be an outlier
-        extraString = '_fullEpochs.mat';
+        if strcmp(epochType, 'full')
+            extraString = '_fullEpochs.mat';
+        elseif strcmp(epochType, 'stat')
+            extraString = '_statEpochs.mat';
+        else
+            error(['What epochType?, ', epochType])
+        end
         outlierListTrue = strcmp(strrep(fileNameFields{i}.fileName, extraString, '.bdf'), outlierFilenameList);
         thisFileMarkedAsOutlier = logical(sum(outlierListTrue));
         if thisFileMarkedAsOutlier == 1
@@ -79,32 +85,63 @@ function [epochsOut, debugInfoOut] = batch_pullOut_timeDomainEpochs(fileNameFiel
         
         % subject
         subject = fileNameFields{i}.subject;
-        subjects{i} = subject;
-        
-        % should return target, distr, std
-        responseTypes = fieldnames(dataIn.epochs.(erpFilterType).(erpType));
-        
-        % go through the different response types, and average the trials
-        % together already here to speed up the followign processing
-        for resp = 1 : length(responseTypes)
+        subjects{i} = subject;        
             
-            % process using a subfunction
-            [epochsProcessed, debug] = batch_timeDomEpochsAverage(dataIn.epochs.(erpFilterType).(erpType).(responseTypes{resp}), thisFileMarkedAsOutlier, handles.parameters, handles);
-            
-            % assign to output
-            epochsOut.(intensity).(session).(responseTypes{resp}).(erpType).(subject).(erpFilterType) = epochsProcessed;
+            %% FULL EPOCHS (SLOW)
+            if strcmp(epochType, 'full')
+                
+                % should return target, distr, std
+                responseTypes = fieldnames(dataIn.epochs.(erpFilterType).(erpType));
+        
+                % go through the different response types, and average the trials
+                % together already here to speed up the followign processing
+                for resp = 1 : length(responseTypes)
+
+                    % process using a subfunction
+                    [epochsProcessed.(responseTypes{resp}), debug] = batch_timeDomEpochsAverage(dataIn.epochs.(erpFilterType).(erpType).(responseTypes{resp}), thisFileMarkedAsOutlier, handles.parameters, handles);
                     
-            % assign info on trigger variability
-            debugInfoOut.(subject).(intensity).(session) = debug;
+                    % assign to output
+                    epochsOut.(intensity).(session).(responseTypes{resp}).(erpType).(subject).(erpFilterType) = epochsProcessed.(responseTypes{resp});                    
+                    
+                end               
+                                
+                % assign info on trigger variability
+                debugInfoOut.(subject).(intensity).(session) = debug;
+                
+                parameters = handles.parameters;
+                fileMatOut = strrep(fileNameFields{i}.fileName, '_fullEpochs.mat', '_statEpochs.mat');        
+                disp(['      .. Stats of ERP Epochs [', fullfile(handles.path.matFilesOut, fileMatOut), ']'])
+                save(fullfile(handles.path.matFilesOut, fileMatOut), 'epochsProcessed', 'debug', 'parameters', 'handles')
+                
+            %% ALREADY STAT-COMPUTED EPOCHS (FAST)
+            elseif strcmp(epochType, 'stat')
+                
+                epochsProcessed = dataIn.epochsProcessed;
+                
+                % should return target, distr, std
+                responseTypes = fieldnames(epochsProcessed);
+        
+                % go through the different response types, and average the trials
+                % together already here to speed up the followign processing
+                for resp = 1 : length(responseTypes)
+                    epochsOut.(intensity).(session).(responseTypes{resp}).(erpType).(subject).(erpFilterType) = epochsProcessed.(responseTypes{resp});
+                end
+                
+                debugInfoOut.(subject).(intensity).(session) = dataIn.debug;
+                
+            else
+                error(['What epochType?, ', epochType])
+            end                
             
-        end
+            
+                    
+            
+            
+     
         
         % hh
         % dads
-        parameters = handles.parameters;
-        fileMatOut = strrep(fileNameFields{i}.fileName, '_fullEpochs.mat', '_statEpochs.mat');        
-        disp(['      .. Stats of ERP Epochs [', fullfile(handles.path.matFilesOut, fileMatOut), ']'])
-        save(fullfile(handles.path.matFilesOut, fileMatOut), 'epochsProcessed', 'debug', 'parameters', 'handles')
+        
         
         
     end
