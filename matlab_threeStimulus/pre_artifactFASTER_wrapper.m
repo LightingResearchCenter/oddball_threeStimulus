@@ -88,6 +88,7 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
         % now the epochs are concatenated to a single vector but the EEGLAB
         % version is to have 3D matrix where the 3rd dimension is the number of
         % epochs
+        whos
         EEG_mat = pre_epochsVectorToMatrix(EEGmatrix',epochLength);
         EEG.data = EEG_mat;
 
@@ -190,8 +191,7 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                 
         %% STEP 3: ICA
                 
-            % Skip re-referencing as we were referencing for ear electrodes            
-            parameters.artifacts.FASTER_skipICA = 0
+            % Skip re-referencing as we were referencing for ear electrodes                        
             if parameters.artifacts.FASTER_skipICA == 0 || parameters.artifacts.useADJUST == 1
                 
                 % Do ICA (the runica of EEGLAB, infomax)
@@ -210,10 +210,44 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                 zs_st3 = NaN;
                 num_pca = NaN;
                 activData = NaN;
-                blinkData = NaN;
-                
+                blinkData = NaN;                
                 
             end
+            
+        %% STEP 3 version Petteri : Instead of Subtracting ICA components
+            
+            parameters.artifacts.FASTER_regressEOG_asStep3 = 1;
+            if parameters.artifacts.FASTER_regressEOG_asStep3 == 1
+                % Do a EOG regression correction here 
+
+                % make a vector out from the step2-rejected 
+                EEGmat = pre_epochMatrixToVector(EEG.data, parameters, handles);
+
+                % EOG Regression
+                EEGmatTemp = EEGmat(:, 1:parameters.EEG.nrOfChannels);
+                EOGmatTemp = EEGmat(:, parameters.EEG.nrOfChannels+1);
+                EEGcorr = pre_artifactRegressionWrapper(EEGmatTemp, EOGmatTemp, parameters.EEG.nrOfChannels, parameters);
+
+                % now the EEGcorr is a dataPoints x channels, need to split to
+                % epochs            
+                noOfEpochs = length(EEGcorr') / epochLength;
+                EEG_mat = pre_epochsVectorToMatrix(EEGcorr', epochLength);
+                EEG.data = EEG_mat;
+
+                %{
+                figure
+                whos
+                for ch = 1 : parameters.EEG.nrOfChannels
+                    subplot(4,1,ch)
+                    hold on
+                    plot(EEGmatTemp(:,ch), 'r')
+                    plot(EEGcorr(:,ch), 'k')    
+                    hold off
+                end
+                %}
+            end
+            
+            
 
         %% STEP 4: CHANNELS IN EPOCHS
         
