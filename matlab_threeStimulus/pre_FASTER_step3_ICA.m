@@ -6,7 +6,7 @@ function [EEG, indelec_st3, zs_st3, num_pca, activData, blinkData] = pre_FASTER_
         if nargin == 0
             load('debugPath.mat')
             load(fullfile(path.debugMATs, debugMatFileName))
-            
+            close all
         else
             if handles.flags.saveDebugMATs == 1                
                 % do not save for standard tone as there are so many
@@ -30,7 +30,8 @@ function [EEG, indelec_st3, zs_st3, num_pca, activData, blinkData] = pre_FASTER_
        warning(['num_pca = ', num2str(num_pca)]) 
        num_pca = 1;
     end
-
+    
+    
     try
         
         parameters.artifacts.FASTER_icaMethod = 'runica';
@@ -39,45 +40,88 @@ function [EEG, indelec_st3, zs_st3, num_pca, activData, blinkData] = pre_FASTER_
 
             % Original infomax implementation (slow)              
             disp('          ... computing ICA (runica), might take some time (try to switch to fastICA for speed)') 
+            num_pca
             [EEG.icaweights, EEG.icasphere, compvars, bias, signs, lrates, EEG.icaact] = runica(EEGmatrix', 'extended', 1, 'pca', num_pca, 'verbose', 'off');
-            unmixing_matrix = EEG.icaweights*EEG.icasphere;
+            unmixing = EEG.icaweights*EEG.icasphere;
+            mixing = pinv(unmixing);
+            
+            size(EEG.icaweights) % 4 x 6
+            size(EEG.icasphere) % 6 x 6
+            size(EEG.icaact) %  4 x 229360
+            size(unmixing) %  4 x 6
+            size(mixing) %  6 x 4 
+            
+            whos
+            pause
             
         elseif strcmp(parameters.artifacts.FASTER_icaMethod, 'fastica')
             
             disp('          ... computing ICA (fastICA), faster than the default runica') 
 
             % We could use FastICA instead, suggested also in the discussion
-            % of FASTER, http://research.ics.aalto.fi/ica/fastica/
-            %{
-            [A, unmixing_matrix] = fastica(EEGmatrix', 'lastEig', num_pca, 'verbose', 'off', 'displayMode', 'off'); % gives only the estimated mixing matrix A and the separating matrix W.
+            % of FASTER, http://research.ics.aalto.fi/ica/fastica/            
+            [ICAcomp, EEG.icaweights, EEG.icasphere] = fastica(EEGmatrix(:,ica_chans)', 'lastEig', num_pca, 'only', 'white', 'verbose', 'on', 'displayMode', 'on'); % gives only the estimated mixing matrix A and the separating matrix W.
+                
+                
+                unmixing = EEG.icaweights*EEG.icasphere;
+                mixing = pinv(unmixing);
 
                 %size(EEG.icaweights), % number of PCAs x number of channels
                 %size(EEG.icasphere), % number of PCAs x number of ch
-                %size(unmixing_matrix)
+                size(EEG.icaweights) % 4 x 6
+                size(EEG.icasphere) % 6 x 6
+                % size(EEG.icaact) %  4 x 229360
+                size(unmixing)
+                size(ICAcomp)
+                size(mixing)
+                whos
+                a = 2
 
-                EEG.icaweights = A'; % is this correct?
-                %EEG.icasphere ?
+                %EEG.icaweights = []; % is this correct?
+                %EEG.icasphere = [];
 
                 % how to define the number of PCAs, and EXTENDED?
                 % check that 'lastEig' is the same as above for runica
 
-
             % compute ICA activation waveforms = weights*sphere*(data-meandata)
             % Usage: >> [activations] = icaact(data,weights,datamean);
-            %}
+            
+            
         
+        end
+        
+        % make sure we have both mixing and unmixing matrices
+        % if not, compute (pseudo-)inverse to go from one to the other
+        if isempty(unmixing) && ~isempty(mixing)
+          if (size(mixing,1)==size(mixing,2))
+            unmixing = inv(mixing);
+          else
+            unmixing = pinv(mixing);
+          end
+        elseif isempty(mixing) && ~isempty(unmixing)
+          if (size(unmixing,1)==size(unmixing,2)) && rank(unmixing)==size(unmixing,1)
+            mixing = inv(unmixing);
+          else
+            mixing = pinv(unmixing);
+          end
+        elseif isempty(mixing) && isempty(unmixing)
+          % this sanity check is needed to catch convergence problems in fastica
+          % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1519
+          error('the component unmixing failed');
         end
 
         % EEGLAB variables, see e.g. http://sccn.ucsd.edu/wiki/A05:_Data_Structures                
-            EEG.icachansind = ica_chans;
-            EEG.trials = length(EEGmatrix) / epochLength;
-            EEG.pnts = epochLength;                
+        %{
+        EEG.icachansind = ica_chans;
+        EEG.trials = length(EEGmatrix) / epochLength;
+        EEG.pnts = epochLength;                
 
         EEG.srate = parameters.EEG.srate;
-        EEG.icaact = icaact(EEGmatrix', unmixing_matrix);
-        EEG.icawinv = pinv(EEG.icaweights*EEG.icasphere); % http://sccn.ucsd.edu/pipermail/eeglablist/2009/002907.html                
+        EEG.icaact = icaact(EEGmatrix', unmixing);
+        EEG.icawinv = mixing;
 
         % size(EEG.icaact) % number of PCAs x dataSamples
+        %}
 
 
     catch err
@@ -88,11 +132,32 @@ function [EEG, indelec_st3, zs_st3, num_pca, activData, blinkData] = pre_FASTER_
     % after the ICA routine we have the EEG data as 2-dimensional
     % matrix, and we need to to separate the epochs to the third
     % dimension
-    [list_properties, activData, blinkData] = component_properties_mod(EEG, blinkCh,lpf_band);
+    size(EEG.data)
+    [list_properties, activData, blinkData] = component_properties_mod(EEG, blinkCh, lpf_band);
     rejection_options.measure=ones(1,size(list_properties,2)); % values of the statistical parameters (see flow chart)
     rejection_options.z = parameters.artifacts.FASTER_zThreshold * ones(1,size(list_properties,2)); % Z-score threshold
     [indelec_st3, zs_st3] = min_z_mod(list_properties,rejection_options); % rejected components
 
+    zs_st3
+    indelec_st3
+    
+    
+    whos
+    figure
+    ind = 1;
+    subplot(4,1,ind)
+    plot(ICAcomp(ind,:))
+    ind = 2;
+    subplot(4,1,ind)
+    plot(ICAcomp(ind,:))
+    ind = 3;
+    subplot(4,1,ind)
+    plot(ICAcomp(ind,:))
+    ind = 4;
+    subplot(4,1,ind)
+    plot(ICAcomp(ind,:))
+ 
+    
     step3_linearIndices = find(indelec_st3);
     if ~isempty(step3_linearIndices)
         disp(['          - subtracting ICA artifacts, found ', num2str(length(step3_linearIndices)), ' artifacted ICA activation channels']) 
@@ -108,6 +173,32 @@ function [EEG, indelec_st3, zs_st3, num_pca, activData, blinkData] = pre_FASTER_
     % quick'n'dirty
     EEG.data = EEG.dataIN;
     
+    
+    %% EXAMPLE PORTION from EEGLAB (pop_runica.m)
+        
+    if 1 == 222
+        switch variable
+            case 'fastica'
+            if exist('fastica') ~= 2
+                error('Pop_runica: to use fastica, you must first download the toolbox (see >> help pop_runica)');
+            end;     
+            if length(options) < 2
+                eval([ '[ ICAcomp, EEG.icaweights,EEG.icasphere] = fastica( tmpdata, ''displayMode'', ''off'' );' ]);
+            else    
+                eval(sprintf('[ ICAcomp, EEG.icaweights,EEG.icasphere] = fastica( tmpdata, ''displayMode'', ''off'' %s );', options));
+            end;
+        end
+        
+        if ~isempty(fig), try close(fig); catch, end; end;
+            EEG.icawinv    = pinv(EEG.icaweights*EEG.icasphere); % a priori same result as inv
+
+            eeg_options; 
+            if option_computeica
+                EEG.icaact    = (EEG.icaweights*EEG.icasphere)*reshape(EEG.data, EEG.nbchan, EEG.trials*EEG.pnts);
+                EEG.icaact    = reshape( EEG.icaact, EEG.nbchan, EEG.pnts, EEG.trials);
+            end;
+        
+    end
     
     %% EXAMPLE CODE FROM fieldTrip (ft_componentanalysis.m)
     
