@@ -32,30 +32,41 @@ function [EEG, indelec_st3, zs_st3, num_pca, activData, blinkData] = pre_FASTER_
     end
 
     try
+        
+        parameters.artifacts.FASTER_icaMethod = 'runica';
+        
+        if strcmp(parameters.artifacts.FASTER_icaMethod, 'runica')
 
-        % Original infomax implementation (slow)                
-        [EEG.icaweights, EEG.icasphere, compvars, bias, signs, lrates, EEG.icaact] = runica(EEGmatrix', 'extended', 1, 'pca', num_pca, 'verbose', 'off');
-        unmixing_matrix = EEG.icaweights*EEG.icasphere;
+            % Original infomax implementation (slow)              
+            disp('          ... computing ICA (runica), might take some time (try to switch to fastICA for speed)') 
+            [EEG.icaweights, EEG.icasphere, compvars, bias, signs, lrates, EEG.icaact] = runica(EEGmatrix', 'extended', 1, 'pca', num_pca, 'verbose', 'off');
+            unmixing_matrix = EEG.icaweights*EEG.icasphere;
+            
+        elseif strcmp(parameters.artifacts.FASTER_icaMethod, 'fastica')
+            
+            disp('          ... computing ICA (fastICA), faster than the default runica') 
 
-        % We could use FastICA instead, suggested also in the discussion
-        % of FASTER, http://research.ics.aalto.fi/ica/fastica/
-        %{
-        [A, unmixing_matrix] = fastica(EEGmatrix', 'lastEig', num_pca, 'verbose', 'off', 'displayMode', 'off'); % gives only the estimated mixing matrix A and the separating matrix W.
+            % We could use FastICA instead, suggested also in the discussion
+            % of FASTER, http://research.ics.aalto.fi/ica/fastica/
+            %{
+            [A, unmixing_matrix] = fastica(EEGmatrix', 'lastEig', num_pca, 'verbose', 'off', 'displayMode', 'off'); % gives only the estimated mixing matrix A and the separating matrix W.
 
-            %size(EEG.icaweights), % number of PCAs x number of channels
-            %size(EEG.icasphere), % number of PCAs x number of ch
-            %size(unmixing_matrix)
+                %size(EEG.icaweights), % number of PCAs x number of channels
+                %size(EEG.icasphere), % number of PCAs x number of ch
+                %size(unmixing_matrix)
 
-            EEG.icaweights = A'; % is this correct?
-            %EEG.icasphere ?
+                EEG.icaweights = A'; % is this correct?
+                %EEG.icasphere ?
 
-            % how to define the number of PCAs, and EXTENDED?
-            % check that 'lastEig' is the same as above for runica
+                % how to define the number of PCAs, and EXTENDED?
+                % check that 'lastEig' is the same as above for runica
 
 
-        % compute ICA activation waveforms = weights*sphere*(data-meandata)
-        % Usage: >> [activations] = icaact(data,weights,datamean);
-        %}
+            % compute ICA activation waveforms = weights*sphere*(data-meandata)
+            % Usage: >> [activations] = icaact(data,weights,datamean);
+            %}
+        
+        end
 
         % EEGLAB variables, see e.g. http://sccn.ucsd.edu/wiki/A05:_Data_Structures                
             EEG.icachansind = ica_chans;

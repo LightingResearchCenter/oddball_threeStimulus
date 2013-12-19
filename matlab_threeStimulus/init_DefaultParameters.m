@@ -152,11 +152,14 @@ function parameters = init_DefaultParameters(handles)
         % FASTER
         parameters.artifacts.useFASTER = 1;
             parameters.artifacts.FASTER_lpf_wFreq = 95;
-            parameters.artifacts.FASTER_lpf_bandwidth = 2.5;
-            parameters.artifacts.FASTER_zThreshold = 1.95; % default is 3 (for high-density EEG), the default value does
+            parameters.artifacts.FASTER_lpf_bandwidth = 2.5;            
+            parameters.artifacts.FASTER_zThreshold_step2 = 1.49; % default is 3 (for high-density EEG), the default value does
                                                            % not reject much of artifacts so the smaller value is empirically
                                                            % set for "better" performance
-            parameters.artifacts.FASTER_zThreshold_step4 = parameters.artifacts.FASTER_zThreshold;
+            parameters.artifacts.FASTER_zThreshold_step3 = parameters.artifacts.FASTER_zThreshold_step2;
+            parameters.artifacts.FASTER_zThreshold_step4 = parameters.artifacts.FASTER_zThreshold_step2;
+            
+            parameters.artifacts.FASTER_icaMethod = 'runica'; % 'runica' or 'fastica'
             parameters.artifacts.FASTER_skipICA = 1; % with our four EEG channels, there is typically no artifact channels, 
                                                      % and this part just
                                                      % is computationally
