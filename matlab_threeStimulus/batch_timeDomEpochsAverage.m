@@ -35,6 +35,8 @@ function [epochsProcessed, debug] = batch_timeDomEpochsAverage(epochsIn, thisFil
                            alphaIAF: [1x40 double]
     %}
     
+    
+    
     % output debug info
     debug.meanDelay = epochsIn.meanDelay;
     debug.meanDelayStd = epochsIn.meanDelayStd;

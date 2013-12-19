@@ -54,7 +54,7 @@ function batch_plotEpochsOfSubjects(epochsMatrix, erpType, erpFilterType, epochT
     
     
         
-    %% COMPARE THE CONDITIONS
+    %% COMPARE THE CONDITIONS (fix this?)
     rowParameter = erpResponses;
     colParameter = 1 : parameters.EEG.nrOfChannels;
     gcaParameter = conditions;
