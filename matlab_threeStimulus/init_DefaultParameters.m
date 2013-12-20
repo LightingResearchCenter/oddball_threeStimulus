@@ -118,9 +118,9 @@ function parameters = init_DefaultParameters(handles)
     %% Artifact rejection parameters    
     
         % Fixed thresholds
-        parameters.artifacts.fixedThr = 150; % fixed threshold (uV) of artifacts    
+        parameters.artifacts.fixedThr = 170; % fixed threshold (uV) of artifacts    
                                              % 100 uV in Molnar et al. (2008), http://dx.doi.org/10.1111/j.1469-8986.2008.00648.x
-        parameters.artifacts.fixedThrEOG = 100; % fixed threshold (uV) of EOG artifacts
+        parameters.artifacts.fixedThrEOG = 120; % fixed threshold (uV) of EOG artifacts
                                                % 70 uV in e.g. Acunzo et al. (2012), http://dx.doi.org/10.1016/j.jneumeth.2012.06.011
         parameters.artifacts.applyFixedThrRemoval = 1; % convert values above threshold to NaN
         parameters.artifacts.applyFixedThrEOGRemoval = 1; % convert values above threshold to NaN
@@ -171,8 +171,8 @@ function parameters = init_DefaultParameters(handles)
             parameters.artifacts.FASTER_applyRegressionEOG = 0;
             parameters.artifacts.FASTER_applyRegressionECG = 0;
             
-            parameters.artifacts.continuousFASTER = 1;
-                parameters.artifacts.continuousEpochLength = 0.1; % seconds
+            parameters.artifacts.continuousFASTER = 0;
+                parameters.artifacts.continuousEpochLength = 0.05; % seconds
             
         
         % CRAP of ERPLAB
@@ -189,11 +189,11 @@ function parameters = init_DefaultParameters(handles)
             parameters.artifacts.CRAP.step_windowStep = 15;
 
             parameters.artifacts.CRAP.movWindEOG_ampTh = [-65 65]*1;
-            parameters.artifacts.CRAP.movWindEOG_windowWidth = 20;
+            parameters.artifacts.CRAP.movWindEOG_windowWidth = 25;
             parameters.artifacts.CRAP.movWindEOG_windowStep = 20;
 
             parameters.artifacts.CRAP.movWind_ampTh = [-65 65]*1;
-            parameters.artifacts.CRAP.movWind_windowWidth = 20;
+            parameters.artifacts.CRAP.movWind_windowWidth = 25;
             parameters.artifacts.CRAP.movWind_windowStep = 20;    
                                                      
         % DETECT

@@ -35,7 +35,7 @@ function MAIN_ANALYSIS()
     
     %% Define input
     
-        %{
+        
         filesIn = {'je_01_40.bdf'; 'je_02_40.bdf'; 'je_03_40.bdf'; 'je_04_40.bdf'; 'je_01_0.bdf'; 'je_02_0.bdf'; 'je_03_0.bdf'; 'je_04_0.bdf'; 'je_01_10.bdf'; 'je_02_10.bdf'; 'je_03_10.bdf'; 'je_04_10.bdf'; ...
                    'bl_01_10.bdf'; 'bl_02_10.bdf'; ...
                    'bl_03_10.bdf'; 'bl_04_10.bdf'; 'bl_01_40.bdf'; 'bl_02_40.bdf'; 'bl_03_40.bdf'; 'bl_04_40.bdf'; 'bl_01_0.bdf'; 'bl_02_0.bdf'; 'bl_03_0.bdf'; 'bl_04_0.bdf'; ...
@@ -47,15 +47,16 @@ function MAIN_ANALYSIS()
                    'cr_01_10.bdf'; 'cr_02_10.bdf'; 'cr_03_10.bdf'; 'cr_04_10.bdf'; 'cr_01_40.bdf'; 'cr_02_40.bdf'; 'cr_03_40.bdf'; 'cr_04_40.bdf'; 'cr_01_0.bdf'; 'cr_02_0.bdf'; 'cr_03_0.bdf'; 'cr_04_0.bdf'; ...
                     'hh_01_40.bdf'; 'hh_02_40.bdf'; 'hh_03_40.bdf'; 'hh_04_40.bdf'; 'hh_01_0.bdf'; 'hh_02_0.bdf'; 'hh_03_0.bdf'; 'hh_04_0.bdf'; 'hh_01_10.bdf'; 'hh_02_10.bdf'; 'hh_03_10.bdf'; 'hh_04_10.bdf'; ...
                    'ha_01_10.bdf'; 'ha_02_10.bdf'; 'ha_03_10.bdf'; 'ha_04_10.bdf'; 'ha_01_40.bdf'; 'ha_02_40.bdf'; 'ha_03_40.bdf'; 'ha_04_40.bdf'; 'ha_01_0.bdf'; 'ha_02_0.bdf'; 'ha_03_0.bdf'; 'ha_04_0.bdf'};
-        %}     
-     
-        filesIn = {'cr_03_0.bdf'; 'cr_04_0.bdf'; ...
-                    'hh_01_40.bdf'; 'hh_02_40.bdf'; 'hh_03_40.bdf'; 'hh_04_40.bdf'; 'hh_01_0.bdf'; 'hh_02_0.bdf'; 'hh_03_0.bdf'; 'hh_04_0.bdf'; 'hh_01_10.bdf'; 'hh_02_10.bdf'; 'hh_03_10.bdf'; 'hh_04_10.bdf'; ...
+        
+        %{    
+        filesIn = {'hh_01_40.bdf'; 'hh_02_40.bdf'; 'hh_03_40.bdf'; 'hh_04_40.bdf'; 'hh_01_0.bdf'; 'hh_02_0.bdf'; 'hh_03_0.bdf'; 'hh_04_0.bdf'; 'hh_01_10.bdf'; 'hh_02_10.bdf'; 'hh_03_10.bdf'; 'hh_04_10.bdf'; ...
                    'ha_01_10.bdf'; 'ha_02_10.bdf'; 'ha_03_10.bdf'; 'ha_04_10.bdf'; 'ha_01_40.bdf'; 'ha_02_40.bdf'; 'ha_03_40.bdf'; 'ha_04_40.bdf'; 'ha_01_0.bdf'; 'ha_02_0.bdf'; 'ha_03_0.bdf'; 'ha_04_0.bdf'};
+        
                
-       filesIn = {'ha_02_40.bdf'; 'ha_03_40.bdf'; 'ha_04_40.bdf'; 'ha_01_0.bdf'; 'ha_02_0.bdf'; 'ha_03_0.bdf'; 'ha_04_0.bdf'};
+       
 
-        % filesIn = {'bl_02_40.bdf'};     
+        filesIn = {'cr_01_10.bdf'};     
+        %}
         fileNameIn = filesIn;
         
         handles.inputFile = fileNameIn;
@@ -84,7 +85,7 @@ function MAIN_ANALYSIS()
         loFreq = [handles.parameters.filter.bandPass_ERP_loFreq];
         scales = [handles.parameters.ep_den.scales_postStim];
                 
-        numberOfCombinations = length(hiFreq) * length(loFreq) * length(scales)          
+        numberOfCombinations = length(hiFreq) * length(loFreq) * length(scales)       
                 
         for i = 1 : length(filesIn)
             

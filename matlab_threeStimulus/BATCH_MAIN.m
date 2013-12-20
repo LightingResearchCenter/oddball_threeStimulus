@@ -20,10 +20,15 @@ function BATCH_MAIN()
     
     %% Get directory listing of the processed files
     
-        % ERP Waveforms
+        % ERP Waveforms (~400 MB each)
         handles.batch.dirOutput     = dir(fullfile(handles.path.matFilesOut, '*0_fullEpochs.mat')); % Specifies the type of files to be listed        
         handles.batch.fileNames     = {handles.batch.dirOutput.name}'; % Prints the filenames from the input folder into a variable                
         handles.batch.fileNameFields_epochs = batch_separateFileNamesToFields(handles.batch.fileNames); % separate into fields
+        
+        % ERP Waveforms (Stat, ~550 kB each)
+        handles.batch.dirOutput     = dir(fullfile(handles.path.matFilesOut, '*0_statEpochs.mat')); % Specifies the type of files to be listed        
+        handles.batch.fileNames     = {handles.batch.dirOutput.name}'; % Prints the filenames from the input folder into a variable                
+        handles.batch.fileNameFields_statEpochs = batch_separateFileNamesToFields(handles.batch.fileNames); % separate into fields
     
         % Derived ERP Measures such as amplitude latency etc.
         handles.batch.dirOutput     = dir(fullfile(handles.path.matFilesOut, '*0_analyzed.mat')); % Specifies the type of files to be listed        
@@ -72,16 +77,18 @@ function BATCH_MAIN()
         
     %% Compare extra sensors
     
-        batchCompare_extraSensors(handles.batch.fileNameFields_extra, handles)            
+        % batchCompare_extraSensors(handles.batch.fileNameFields_extra, handles)            
         
     %% Compare conditions for 2D signals (time-frequency)
     
-        batchCompare_timeFreq(handles.batch.fileNameFields_waveletDerived, handles)
+        % batchCompare_timeFreq(handles.batch.fileNameFields_waveletDerived, handles)
         
     %% EPOCH COMPARISON
     
         % implement later
-        batchCompare_epochWaveforms(handles.batch.fileNameFields_epochs, handles)
+        % batchCompare_epochWaveforms(handles.batch.fileNameFields_epochs, outlierFilenameList, 'full', handles)
+        
+        batchCompare_epochWaveforms(handles.batch.fileNameFields_statEpochs, outlierFilenameList, 'stat', handles)
         
         
         
