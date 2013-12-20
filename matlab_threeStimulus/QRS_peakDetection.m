@@ -1,4 +1,4 @@
-function [rPeakTimes, rPeakAmplitudes, forDebugPlot_QRS] = QRS_peakDetection(ecg_data, Fs, handles)
+ function [rPeakTimes, rPeakAmplitudes, forDebugPlot_QRS] = QRS_peakDetection(ecg_data, Fs, handles)
 
     % from: http://matlabz.blogspot.com/2011/04/contents-cancellation-dc-drift-and.html
     
@@ -33,7 +33,6 @@ function [rPeakTimes, rPeakAmplitudes, forDebugPlot_QRS] = QRS_peakDetection(ecg
     t = [0:N-1]/Fs;        % time index
     debugPlot = 1;
     zoomWindow = [5 6.6];
-    whos
 
 
     %% DEBUG PLOT

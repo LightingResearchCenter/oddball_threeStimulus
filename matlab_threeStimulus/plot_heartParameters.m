@@ -183,7 +183,6 @@
             dateStr = plot_getDateString(); % get current date as string          
             fileNameOut = sprintf('%s%s', 'heartSummary_', strrep(handles.inputFile, '.bdf', ''), '.png');
             export_fig(fullfile(handles.path.figuresOut, fileNameOut), handles.figureOut.resolution, handles.figureOut.antialiasLevel, fig)
-            a = 1
             %cd(path.code)
         end
     catch err
