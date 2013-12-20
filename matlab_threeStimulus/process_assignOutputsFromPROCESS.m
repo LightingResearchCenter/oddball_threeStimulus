@@ -12,6 +12,7 @@ function process_assignOutputsFromPROCESS(epochs, ERP_components, alpha, powers,
     
     
     %% DEBUG
+    %{
     debugMatFileName = 'tempAssignOutput.mat';
     if nargin == 0
         load('debugPath.mat')
@@ -25,7 +26,7 @@ function process_assignOutputsFromPROCESS(epochs, ERP_components, alpha, powers,
         end
     end    
     whos
-    
+    %}
     
     % get rid of the "double existence" of the parameters structures
     parameters = handles.parameters;
@@ -39,6 +40,7 @@ function process_assignOutputsFromPROCESS(epochs, ERP_components, alpha, powers,
         
     %% ERP Waveforms stat, instead of outputting all the epochs, calculate the mean/median/etc. here and save
     
+        %{
         fileMatOut = strrep(handles.inputFile, '.bdf', '_statEpochs.mat');        
         disp(['      .. Stats of ERP Epochs [', fullfile(handles.path.matFilesOut, fileMatOut), ']'])
         
@@ -59,6 +61,7 @@ function process_assignOutputsFromPROCESS(epochs, ERP_components, alpha, powers,
         
         % save
         save(fullfile(handles.path.matFilesOut, fileMatOut), 'epochsStat', 'parameters', 'handles')        
+        %}
 
     %% Derived ERP Measures such as amplitude latency etc.
 

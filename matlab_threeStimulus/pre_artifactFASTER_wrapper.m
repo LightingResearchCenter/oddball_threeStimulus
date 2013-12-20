@@ -76,17 +76,25 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
             inputType = 'matrix';
         
             % downsample
-            t_orig = linspace(-parameters.oddballTask.ERP_baseline, parameters.oddballTask.ERP_duration, epochLength);
-            t = linspace(-parameters.oddballTask.ERP_baseline, parameters.oddballTask.ERP_duration, epochLength/parameters.EEG.downsampleFactor);
-            
-            x = linspace(1,length(EEGmatrix_orig), length(EEGmatrix_orig));
-            x_i = linspace(1,length(EEGmatrix_orig), length(EEGmatrix_orig) / parameters.EEG.downsampleFactor);
+            if strcmp(erpType, 'continuous')
+                t_orig = linspace(0, parameters.artifacts.continuousEpochLength, epochLength);
+                t = linspace(0, parameters.artifacts.continuousEpochLength, epochLength/parameters.EEG.downsampleFactor);
+
+                x = linspace(1,length(EEGmatrix_orig), length(EEGmatrix_orig));
+                x_i = linspace(1,length(EEGmatrix_orig), length(EEGmatrix_orig) / parameters.EEG.downsampleFactor);
+                
+            else
+                t_orig = linspace(-parameters.oddballTask.ERP_baseline, parameters.oddballTask.ERP_duration, epochLength);
+                t = linspace(-parameters.oddballTask.ERP_baseline, parameters.oddballTask.ERP_duration, epochLength/parameters.EEG.downsampleFactor);
+
+                x = linspace(1,length(EEGmatrix_orig), length(EEGmatrix_orig));
+                x_i = linspace(1,length(EEGmatrix_orig), length(EEGmatrix_orig) / parameters.EEG.downsampleFactor);
+            end
 
             epochLength = epochLength / parameters.EEG.downsampleFactor;
             epochsOut.samplesPerEpoch = epochLength; % to return structure
             
-            % Downsample            
-            whos
+            % Downsample  
             for ch = 1 : size(EEGmatrix_orig,2)
                 EEGmatrix(:,ch) = interp1(x, EEGmatrix_orig(:,ch), x_i);
             end
@@ -119,20 +127,23 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                     yOffset = 55; % [uV]
                     %plot(1,1)
                     try
-                        if ~strcmp(erpType, 'continuous')
+                        if strcmp(erpType, 'distracter') || strcmp(erpType, 'target')
                             plot_allTheEpochsToSingleSubplot(sp(sp_i),t*1000, EEG_mat(1:parameters.EEG.nrOfChannels,:,:), parameters, yOffset)
                             leg(1) = legend('Base', 'Fz', 'Cz', 'Pz', 'Oz', 'EOG');                                                                            
                             set(leg(1), 'Position',[0.0567851959361391 0.469834826427773 0.0598693759071118 0.120380739081747])
                             legend('boxoff')
-                        else                            
-                            % whos
-                            plot(EEGmatrix_orig, timeIn')                        
-                        end                   
                             lab(1,1) = xlabel('Time [ms]');
                             lab(1,2) = ylabel('Epochs');
+                        else                            
+                            % whos
+                            plot(EEGmatrix_orig(:,1:parameters.EEG.nrOfChannels+1), timeIn')                        
+                            lab(1,1) = xlabel('Amplitude [\muV]');
+                            lab(1,2) = ylabel('Time [s]');
+                        end                   
+                            
                             tit(1) = title(['Epochs IN (', erpType, ')']);
                             
-                        if ~strcmp(erpType, 'continuous')
+                        if ~strcmp(erpType, 'continuous') && ~strcmp(erpType, 'standard')
                             xlim([min(t*1000) max(t*1000)])
                         end
                         drawnow
@@ -151,11 +162,12 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                     % get the average waveform
                     averWaveForm = nanmean(EEG.data(1:parameters.EEG.nrOfChannels+1,:,:),3);       
                     hold on
-                    %line([min(t*1000) max(t*1000)], [0 0], 'Color', 'k')
-                    plot(t*1000, averWaveForm)
-                    hold off                    
-                    if strcmp(erpType, 'continuous')
-                        leg(1) = legend('Fz', 'Cz', 'Pz', 'Oz', 'EOG');   
+                    line([min(t*1000) max(t*1000)], [0 0], 'Color', 'k')
+                    pAv1 = plot(t*1000, averWaveForm);
+                    hold off      
+                    
+                    if strcmp(erpType, 'continuous') || strcmp(erpType, 'standard')
+                        leg(1) = legend(pAv1, 'Fz', 'Cz', 'Pz', 'Oz', 'EOG');   
                         set(leg(1), 'Position',[0.0471491228070175 0.138437849944009 0.0485588972431077 0.096444568868981])
                         legend('boxoff')
                     end
@@ -249,7 +261,24 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                 % EOG Regression
                 EEGmatTemp = EEGmat(:, 1:parameters.EEG.nrOfChannels);
                 EOGmatTemp = EEGmat(:, parameters.EEG.nrOfChannels+1);
-                EEGcorr = pre_artifactRegressionWrapper(EEGmatTemp, EOGmatTemp, parameters.EEG.nrOfChannels, parameters);
+                
+                % make sure that the EOG is filtered before this function
+                % to avoid bidirectional contamination (bandpass filter 0-7.5
+                % Hz for example)       
+                
+                if strcmp(erpType, 'continuous')                    
+                    
+                    if parameters.artifacts.contFaster_regressEOGbeforeFaster ~= 1
+                        disp(['          ... EOG REGRESSION'])
+                        EEGcorr = pre_artifactRegressionWrapper(EEGmatTemp, EOGmatTemp, parameters.EEG.nrOfChannels, parameters);
+                    else
+                        disp(['          ... EOG REGRESSION already done before FASTER routine'])
+                        EEGcorr = EEGmatTemp;
+                    end
+                else
+                    disp(['          ... EOG REGRESSION'])
+                    EEGcorr = pre_artifactRegressionWrapper(EEGmatTemp, EOGmatTemp, parameters.EEG.nrOfChannels, parameters);
+                end
 
                 % now the EEGcorr is a dataPoints x channels, need to split to
                 % epochs            
@@ -274,115 +303,133 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
 
         %% STEP 4: CHANNELS IN EPOCHS
         
-            noOfEpochs2 = size(EEG.data,3);
-            lengths_ep=cell(1,noOfEpochs2);
-            
-            EEGout = zeros(size(EEG.data,1), size(EEG.data,2), noOfEpochs1);
-            EEGout(:,:,:) = NaN;
-            %epochPerChannelIsArtifacted = zeros(noOfEpochs1,length(eeg_chans));
-            %epochPerChannelStep2Corrected = zeros(noOfEpochs1,length(eeg_chans));
-            
-            zs_st4_allCh = zeros(noOfEpochs2, length(eeg_chans), 4); % 4 is the number of different "artifact scores"
-            
-            for v = 1 : noOfEpochs2
+            % we can skip this step for continuous data, takes a long time
+            % this step, and not a lot of artifacts are actually found
+            if ~strcmp(erpType, 'continuous')   
                 
-                %{
-                subplot(2,1,1)                
-                plot(EEG.data(:,:,v)')
-                %}
-                
-                list_properties = single_epoch_channel_properties(EEG, v, eeg_chans);                
-                rejection_options.measure = ones(1,size(list_properties,2)); % values of the statistical parameters (see flow chart)
-                rejection_options.z = parameters.artifacts.FASTER_zThreshold_step4 * ones(1,size(list_properties,2)); % Z-score threshold
-                
-                [indelec_st4, zs_st4_raw] = min_z_mod(list_properties,rejection_options);
-                    % [noOfChannels, noOfMeasures] = size(zs_st4_raw)
-                    % noOfChannels = length(indelec_st4)
-                    
-                zs_st4_allCh(v,:,:) = zs_st4_raw;
-                indicesOut(v,:) = logical(min_z(list_properties, rejection_options));
-                lengths_ep{v} = eeg_chans(indicesOut(v,:));       
-                
-                % actually reject the epoch (convert the artifacted epochs
-                % to NaNs)
-                linearIndices = indicesOut(v,:) == 1;
-                EEG.data(linearIndices,:,v) = NaN;
-                
-                % re-correct for baseline (useful actually only if you had
-                % done ICA subtraction in STEP 3)
-                if ~strcmp(erpType, 'continuous')
-                    EEGrecorr = pre_removeBaseline_epochByEpoch(EEG.data(:,:,v)', v, parameters, handles);
-                    EEG.data(:,:,v) = EEGrecorr';          
+                disp(['           ... Step 4 - single-channel, single-epochs'])
+        
+                noOfEpochs2 = size(EEG.data,3);
+                lengths_ep=cell(1,noOfEpochs2);
+
+                EEGout = zeros(size(EEG.data,1), size(EEG.data,2), noOfEpochs1);
+                EEGout(:,:,:) = NaN;
+                %epochPerChannelIsArtifacted = zeros(noOfEpochs1,length(eeg_chans));
+                %epochPerChannelStep2Corrected = zeros(noOfEpochs1,length(eeg_chans));
+
+                zs_st4_allCh = zeros(noOfEpochs2, length(eeg_chans), 4); % 4 is the number of different "artifact scores"
+
+                for v = 1 : noOfEpochs2
+
+                    %{
+                    subplot(2,1,1)                
+                    plot(EEG.data(:,:,v)')
+                    %}
+
+                    list_properties = single_epoch_channel_properties(EEG, v, eeg_chans);                
+                    rejection_options.measure = ones(1,size(list_properties,2)); % values of the statistical parameters (see flow chart)
+                    rejection_options.z = parameters.artifacts.FASTER_zThreshold_step4 * ones(1,size(list_properties,2)); % Z-score threshold
+
+                    [indelec_st4, zs_st4_raw] = min_z_mod(list_properties,rejection_options);
+                        % [noOfChannels, noOfMeasures] = size(zs_st4_raw)
+                        % noOfChannels = length(indelec_st4)
+
+                    zs_st4_allCh(v,:,:) = zs_st4_raw;
+                    indicesOut(v,:) = logical(min_z(list_properties, rejection_options));
+                    lengths_ep{v} = eeg_chans(indicesOut(v,:));       
+
+                    % actually reject the epoch (convert the artifacted epochs
+                    % to NaNs)
+                    linearIndices = indicesOut(v,:) == 1;
+                    EEG.data(linearIndices,:,v) = NaN;
+
+                    % re-correct for baseline (useful actually only if you had
+                    % done ICA subtraction in STEP 3)
+                    if ~strcmp(erpType, 'continuous')
+                        EEGrecorr = pre_removeBaseline_epochByEpoch(EEG.data(:,:,v)', v, parameters, handles);
+                        EEG.data(:,:,v) = EEGrecorr';          
+                    end
+
+                    % combine the 4 different measures so that we have an absolute max
+                    % per channel, and if this exceeds the z-threshold, then
+                    % the epoch is artifacted
+                    [absMeasuresForChannelsPerEpoch,I] = max(abs(zs_st4_raw), [], 2);
+                    for ch = 1 : length(eeg_chans) % keep the sign, for loop maybe more easier to read by human later                                        
+                        measuresForChannelsPerEpoch(ch) = zs_st4_raw(ch,I(ch));
+                    end
+                    zs_st4(v,:) = measuresForChannelsPerEpoch;
+                    %{
+                    subplot(2,1,2)
+                    plot(EEG.data(:,:,v)')
+                    title(['indicesOut: ', num2str(indicesOut(v,:))]);
+                    legend('Fz', 'Cz', 'Pz', 'Oz', 'EOG', 'ECG')
+                    pause
+                    %}
+
                 end
+
+                % no we need to add the artifacted epochs back to the
+                % original matrix  (as Step 4 is not using the epochs rejected
+                % in Step 2)
+                EEGout(:,:,step2_linearIndices_nonArtifact) = EEG.data(:,:,:);                  
+                EEG.data = EEGout;
+
+                    % the same for zs_st4
+                    zs_st4temp = zeros(noOfEpochs1, length(eeg_chans));
+                    zs_st4temp(:,:) = NaN;
+                    zs_st4temp(step2_linearIndices_nonArtifact,:) = zs_st4;
+                    zs_st4 = zs_st4temp;
+
+
+                %artifactsRemoved_step4 = sum(sum(epochPerChannelIsArtifacted == 1));
+                epochPerChannelIsArtifacted_step4 = logical((squeeze(sum(isnan(EEG.data),2)))');
+                epochPerChannelIsArtifacted_step4 = epochPerChannelIsArtifacted_step4(:,1:length(eeg_chans));
+
+                    % now this step4 contains step 2 also, separate if you want
+
+                artifactsRemoved_step4 = sum(indicesOut == 1);
+                disp(['            ... ', num2str(artifactsRemoved_step4), ' epochs rejected (Step 4) from ', num2str(noOfEpochs2), ' epochs'])                       
+
+                artifactIndices = epochPerChannelIsArtifacted_step4 + repmat(indelec_st2,1,length(eeg_chans));
+
+
+                %% INTERPOLATION (skip)
+
+                    %a = EEG.srate
+                    %EEG
+
+                    % Interpolate if you want, also interpolates using channel
+                    % locations for not having discontinuities in the scalp
+                    % topography which we don't need, we could just convert the
+                    % epochs found to NaNs
+
+                    %{
+                    % Add EEGLAB fields to avoid crashing
+                    EEG.setname = erpType;
+                    EEG.nbchan = length(eeg_chans);
+                    EEG.xmax = parameters.oddballTask.ERP_duration;             
+                    EEG.xmin = -parameters.oddballTask.ERP_baseline;
+                    EEG.chanlocs = [];
+                    try 
+                        EEG = h_epoch_interp_spl_mod(EEG, lengths_ep, blinkCh, handles);
+                    catch err
+                        h = 1
+                        err                
+                    end
+                    %EEG
+                    %}
+            else
                 
-                % combine the 4 different measures so that we have an absolute max
-                % per channel, and if this exceeds the z-threshold, then
-                % the epoch is artifacted
-                [absMeasuresForChannelsPerEpoch,I] = max(abs(zs_st4_raw), [], 2);
-                for ch = 1 : length(eeg_chans) % keep the sign, for loop maybe more easier to read by human later                                        
-                    measuresForChannelsPerEpoch(ch) = zs_st4_raw(ch,I(ch));
-                end
-                zs_st4(v,:) = measuresForChannelsPerEpoch;
-                %{
-                subplot(2,1,2)
-                plot(EEG.data(:,:,v)')
-                title(['indicesOut: ', num2str(indicesOut(v,:))]);
-                legend('Fz', 'Cz', 'Pz', 'Oz', 'EOG', 'ECG')
-                pause
-                %}
-                              
+                disp(['           ... skip Step 4 for continuous data'])
+                artifactIndices = repmat(indelec_st2,1,length(eeg_chans));
+                zs_st4 = zeros(noOfEpochs1, length(eeg_chans));
+                epochPerChannelIsArtifacted_step4 = false(noOfEpochs1, length(eeg_chans));
+                
+                EEGout = zeros(size(EEG.data,1), size(EEG.data,2), noOfEpochs1);
+                EEGout(:,:,:) = NaN;
+                EEGout(:,:,step2_linearIndices_nonArtifact) = EEG.data(:,:,:);                  
+                EEG.data = EEGout;
             end
-            
-            % no we need to add the artifacted epochs back to the
-            % original matrix  (as Step 4 is not using the epochs rejected
-            % in Step 2)
-            EEGout(:,:,step2_linearIndices_nonArtifact) = EEG.data(:,:,:);                  
-            EEG.data = EEGout;
-            
-                % the same for zs_st4
-                zs_st4temp = zeros(noOfEpochs1, length(eeg_chans));
-                zs_st4temp(:,:) = NaN;
-                zs_st4temp(step2_linearIndices_nonArtifact,:) = zs_st4;
-                zs_st4 = zs_st4temp;
-                
-            
-            %artifactsRemoved_step4 = sum(sum(epochPerChannelIsArtifacted == 1));
-            epochPerChannelIsArtifacted_step4 = logical((squeeze(sum(isnan(EEG.data),2)))');
-            epochPerChannelIsArtifacted_step4 = epochPerChannelIsArtifacted_step4(:,1:length(eeg_chans));
-                  
-                % now this step4 contains step 2 also, separate if you want
-            
-            artifactsRemoved_step4 = sum(indicesOut == 1);
-            disp(['           ... ', num2str(artifactsRemoved_step4), ' epochs rejected (Step 4) from ', num2str(noOfEpochs2), ' epochs'])                       
-            
-            artifactIndices = epochPerChannelIsArtifacted_step4 + repmat(indelec_st2,1,length(eeg_chans));
-            
-            
-            %% INTERPOLATION (skip)
-            
-                %a = EEG.srate
-                %EEG
-
-                % Interpolate if you want, also interpolates using channel
-                % locations for not having discontinuities in the scalp
-                % topography which we don't need, we could just convert the
-                % epochs found to NaNs
-
-                %{
-                % Add EEGLAB fields to avoid crashing
-                EEG.setname = erpType;
-                EEG.nbchan = length(eeg_chans);
-                EEG.xmax = parameters.oddballTask.ERP_duration;             
-                EEG.xmin = -parameters.oddballTask.ERP_baseline;
-                EEG.chanlocs = [];
-                try 
-                    EEG = h_epoch_interp_spl_mod(EEG, lengths_ep, blinkCh, handles);
-                catch err
-                    h = 1
-                    err                
-                end
-                %EEG
-                %}
                 
 
         %% STEP 5: GRAND AVERAGE (skip)
@@ -455,6 +502,8 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
             disp(['             ... ', num2str(artifactsRemoved_CRAP), ' epochs rejected (CRAP) from ', num2str(noOfEpochs1), ' epochs'])
             disp(['              ... ', num2str(artifactsRemoved_fixedEEG), ' epochs rejected (Fixed EEG) from ', num2str(noOfEpochs1), ' epochs'])
             disp(['               ... ', num2str(artifactsRemoved_fixedEOG), ' epochs rejected (Fixed EOG) from ', num2str(noOfEpochs1), ' epochs'])
+            
+            % FOLLOWING SUM NOT CORRECT! check
             disp(['                ... ', num2str(artifactsRemoved_fixed), ' epochs rejected (Fixed: EEG+EOG+CRAP) from ', num2str(noOfEpochs1), ' epochs'])
           
             % update output
@@ -505,10 +554,15 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                     end
                         
                     % FASTER steps
-                    subplotIndices_FASTER = [3 7 11 15];                    
-                    [sp_i, sp] = plot_FASTER_steps(fig, sp, sp_i, leg, rows, cols, ...
-                        zs_st2, indelec_st3, zs_st3, num_pca, activData, blinkData, zs_st4, ...
-                        epochPerChannelIsArtifacted_step4, indelec_st2, artifacts_CRAP, subplotIndices_FASTER, parameters, handles);                    
+                    try
+                        subplotIndices_FASTER = [3 7 11 15];                    
+                        [sp_i, sp] = plot_FASTER_steps(fig, sp, sp_i, leg, rows, cols, ...
+                            zs_st2, indelec_st3, zs_st3, num_pca, activData, blinkData, zs_st4, ...
+                            epochPerChannelIsArtifacted_step4, indelec_st2, artifacts_CRAP, subplotIndices_FASTER, parameters, handles);                    
+                    catch err
+                        err
+                    end
+                        
                     
                 end
             end       
@@ -524,8 +578,14 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
             epochsOut.ERP = EEG_concat';
 
             nrOfEpochsOut = size(EEG.data, 3);
-            %epochsOut
-            %epochsIn
+            
+            % For the continuous data, now the artifactIndices refer to the
+            % epoched chunks of continuous data and this need to be
+            % converted to match the indices of the incoming continuous
+            % data
+            if strcmp(erpType, 'continuous')
+                artifactIndices = pre_FASTER_convertEpochIndicesToContinuous(artifactIndices, epochLength, parameters, handles);
+            end
             
         
         %% PLOT "ARTIFACT-FREE" EPOCHS and the AVERAGE WAVEFORM
@@ -540,21 +600,23 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                 sp(sp_i) = subplot(rows,cols, [4 8 12]);
                                     
                     try
-                        if ~strcmp(erpType, 'continuous')
+                        if strcmp(erpType, 'distracter') || strcmp(erpType, 'target')
                             plot_allTheEpochsToSingleSubplot(sp(sp_i),t*1000, EEG_mat(1:parameters.EEG.nrOfChannels,:,:), parameters, yOffset)
                             leg(2) = legend('Base', 'Fz', 'Cz', 'Pz', 'Oz');
                             set(leg(2), 'Position',[0.911647314949202 0.575867861142218 0.0511611030478955 0.120380739081747])
                             legend('boxoff')
-                        else
-                            size(EEG_concat)
-                            whos
-                            plot(EEG_concat, timeIn')
-                        end
-                        
                             lab(3,1) = xlabel('Time [ms]');
                             lab(3,2) = ylabel('Epochs');
+                        else   
+                            x = (linspace(1,length(EEG_concat), length(EEG_concat))') / parameters.EEG.srate;
+                            plot(EEG_concat, x)
+                            
+                            lab(3,1) = xlabel('Amplitude [\muV]');
+                            lab(3,2) = ylabel('Time [s]');
+                        end
+                                                   
                             tit(3) = title(['Epochs OUT (', erpType, ')']);
-                            if ~strcmp(erpType, 'continuous')
+                            if ~strcmp(erpType, 'continuous') && ~strcmp(erpType, 'standard')
                                 xlim([min(t*1000) max(t*1000)])
                             end
                             drawnow
@@ -571,11 +633,11 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                     % get the average waveform
                     averWaveForm = nanmean(EEG_mat(1:parameters.EEG.nrOfChannels,:,:),3);
                     hold on
-                    %line([min(t*1000) max(t*1000)], [0 0], 'Color', 'k')
-                    plot(t*1000, averWaveForm)
+                    line([min(t*1000) max(t*1000)], [0 0], 'Color', 'k')
+                    pAv2 = plot(t*1000, averWaveForm);
                     hold off
-                    if strcmp(erpType, 'continuous')
-                        leg(2) = legend('Fz', 'Cz', 'Pz', 'Oz');
+                    if strcmp(erpType, 'continuous') || strcmp(erpType, 'standard')
+                        leg(2) = legend(pAv2, 'Fz', 'Cz', 'Pz', 'Oz');
                         set(leg(2), 'Position',[[0.923088972431077 0.172312430011198 0.0416666666666667 0.0659294512877939]])
                         legend('boxoff')
                     end
@@ -583,9 +645,9 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                     lab(4,2) = ylabel('Amplitude [\muV]');
                     tit(4) = title(['Average Waveform, n = [', num2str(noOfValidTrials), ']']);
                     
-                    if ~strcmp(erpType, 'continuous')
+                    if ~strcmp(erpType, 'continuous') && ~strcmp(erpType, 'standard')
                         xlim([min(t*1000) max(t*1000)])
-                        ylim(yLimsIns) % use the same y-limits as for the input to make comparison easier
+                        ylim(yLimsIns) % use the same y-limits as for the input to make comparison easier 
                     end
                     
                 set(leg, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase-2) 
