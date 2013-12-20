@@ -151,6 +151,7 @@ function parameters = init_DefaultParameters(handles)
         
         % FASTER
         parameters.artifacts.useFASTER = 1;
+        
             parameters.artifacts.FASTER_lpf_wFreq = 95;
             parameters.artifacts.FASTER_lpf_bandwidth = 2.5;            
             parameters.artifacts.FASTER_zThreshold_step2 = 1.49; % default is 3 (for high-density EEG), the default value does
@@ -169,6 +170,9 @@ function parameters = init_DefaultParameters(handles)
             % not advised to correct epoch-by-epoch
             parameters.artifacts.FASTER_applyRegressionEOG = 0;
             parameters.artifacts.FASTER_applyRegressionECG = 0;
+            
+            parameters.artifacts.continuousFASTER = 1;
+                parameters.artifacts.continuousEpochLength = 0.1; % seconds
             
         
         % CRAP of ERPLAB

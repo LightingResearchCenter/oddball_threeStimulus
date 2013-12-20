@@ -307,9 +307,17 @@ for ch=1:nchan
       while q<=nibound-1  % segments among boundaries
             bp1   = latebound(q)+1;
             bp2   = latebound(q+1);
-            % fprintf('Exploring channel %g, segment %g to %g (in samples)...\n', chanArray(ch), bp1, bp2);
-            
-            datax = EEG.data(chanArray(ch), bp1:bp2);
+            % fprintf('Exploring channel %g, segment %g to %g (in samples)...\n', chanArray(ch), bp1, bp2);                        
+            try
+                datax = EEG.data(chanArray(ch), bp1:bp2);
+            catch err
+                bp1
+                bp2
+                siz = size(EEG.data)
+                chInd = chanArray(ch)                
+                err
+                error('need to transpose?')                
+            end
             
             % if you want to filter
             if ~isempty(fcutoff)

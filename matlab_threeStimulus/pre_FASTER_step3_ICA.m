@@ -135,7 +135,7 @@ function [EEG, indelec_st3, zs_st3, num_pca, activData, blinkData] = pre_FASTER_
     size(EEG.data)
     [list_properties, activData, blinkData] = component_properties_mod(EEG, blinkCh, lpf_band);
     rejection_options.measure=ones(1,size(list_properties,2)); % values of the statistical parameters (see flow chart)
-    rejection_options.z = parameters.artifacts.FASTER_zThreshold * ones(1,size(list_properties,2)); % Z-score threshold
+    rejection_options.z = parameters.artifacts.FASTER_zThreshold_step3 * ones(1,size(list_properties,2)); % Z-score threshold
     [indelec_st3, zs_st3] = min_z_mod(list_properties,rejection_options); % rejected components
 
     zs_st3

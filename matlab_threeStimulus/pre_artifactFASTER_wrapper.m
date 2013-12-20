@@ -1,7 +1,7 @@
 function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fixedIndices, EEGfixedIndices, EOGfixedIndices, ...
                                             NaN_indices_moving, NaN_indices_movingEOG, NaN_indices_step, ...
                                             referenceInput, vDiffOutMovWindow, vDiffOutMovWindowEOG, vDiffOutStep, ...
-                                            parameters, erpType, handles)
+                                            parameters, erpType, epochLength, handles)
 
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction        
     if handles.flags.saveDebugMATs == 1
@@ -58,7 +58,13 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
     %% Actual workflow
     
         % get the matrix of the epochs
-        EEGmatrix_orig = epochsIn.ERP(:, 1:parameters.EEG.nrOfChannels+2);
+        if strcmp(erpType, 'continuous')
+            EEGmatrix_orig = epochsIn;
+            
+        else
+            EEGmatrix_orig = epochsIn.ERP(:, 1:parameters.EEG.nrOfChannels+2);
+            epochLength = epochsIn.samplesPerEpoch;
+        end
         
             % epochsIn (e.g. for standard tone)
             %                RT: [1x240 double]
@@ -68,7 +74,6 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
             % whos            
         
             inputType = 'matrix';
-            epochLength = epochsIn.samplesPerEpoch;
         
             % downsample
             t_orig = linspace(-parameters.oddballTask.ERP_baseline, parameters.oddballTask.ERP_duration, epochLength);
@@ -81,6 +86,7 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
             epochsOut.samplesPerEpoch = epochLength; % to return structure
             
             % Downsample            
+            whos
             for ch = 1 : size(EEGmatrix_orig,2)
                 EEGmatrix(:,ch) = interp1(x, EEGmatrix_orig(:,ch), x_i);
             end
@@ -88,7 +94,6 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
         % now the epochs are concatenated to a single vector but the EEGLAB
         % version is to have 3D matrix where the 3rd dimension is the number of
         % epochs
-        whos
         EEG_mat = pre_epochsVectorToMatrix(EEGmatrix',epochLength);
         EEG.data = EEG_mat;
 
@@ -96,7 +101,7 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
         %% PLOT EPOCHS
         if debugFASTER == 1            
 
-            if strcmp(erpType, 'target') || strcmp(erpType, 'distracter')  || strcmp(erpType, 'standard')
+            if 1 == 1 % strcmp(erpType, 'target') || strcmp(erpType, 'distracter')  || strcmp(erpType, 'standard')
 
                 scrsz = [1 1 1680 1050];
                 fig = figure('Color','w','Name',[erpType, ': FASTER Debug']);
@@ -109,18 +114,28 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                     
                 sp_i = 1;
                 sp(sp_i) = subplot(rows,cols, [1 5 9]);
+                timeIn = (1:length(EEGmatrix_orig)) / parameters.EEG.srate;
+                
                     yOffset = 55; % [uV]
                     %plot(1,1)
                     try
-                        plot_allTheEpochsToSingleSubplot(sp(sp_i),t*1000, EEG.data(1:parameters.EEG.nrOfChannels+1,:,:), parameters, yOffset)                    
-                        leg(1) = legend('Base', 'Cz', 'Fz', 'Pz', 'Oz', 'EOG');
+                        if ~strcmp(erpType, 'continuous')
+                            plot_allTheEpochsToSingleSubplot(sp(sp_i),t*1000, EEG_mat(1:parameters.EEG.nrOfChannels,:,:), parameters, yOffset)
+                            leg(1) = legend('Base', 'Fz', 'Cz', 'Pz', 'Oz', 'EOG');                                                                            
                             set(leg(1), 'Position',[0.0567851959361391 0.469834826427773 0.0598693759071118 0.120380739081747])
                             legend('boxoff')
+                        else                            
+                            % whos
+                            plot(EEGmatrix_orig, timeIn')                        
+                        end                   
                             lab(1,1) = xlabel('Time [ms]');
                             lab(1,2) = ylabel('Epochs');
                             tit(1) = title(['Epochs IN (', erpType, ')']);
+                            
+                        if ~strcmp(erpType, 'continuous')
                             xlim([min(t*1000) max(t*1000)])
-                            drawnow
+                        end
+                        drawnow
                     catch err
                         err
                         % not robust enough if you are looking for example
@@ -128,20 +143,28 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                         % standard, then you might get an invalid handle
                         % error
                     end
-                       
+                    
+
                 sp_i = sp_i + 1;
                 sp(sp_i) = subplot(rows,cols, [13]);
                 
                     % get the average waveform
                     averWaveForm = nanmean(EEG.data(1:parameters.EEG.nrOfChannels+1,:,:),3);       
                     hold on
-                    line([min(t*1000) max(t*1000)], [0 0], 'Color', 'k')
+                    %line([min(t*1000) max(t*1000)], [0 0], 'Color', 'k')
                     plot(t*1000, averWaveForm)
                     hold off                    
+                    if strcmp(erpType, 'continuous')
+                        leg(1) = legend('Fz', 'Cz', 'Pz', 'Oz', 'EOG');   
+                        set(leg(1), 'Position',[0.0471491228070175 0.138437849944009 0.0485588972431077 0.096444568868981])
+                        legend('boxoff')
+                    end
                     lab(2,1) = xlabel('Time [ms]');
                     lab(2,2) = ylabel('Amplitude [\muV]');
                     tit(2) = title(['Average Waveform, n = [', num2str(noOfValidTrials), ']']);
-                    xlim([min(t*1000) max(t*1000)])
+                    if ~strcmp(erpType, 'continuous')
+                        xlim([min(t*1000) max(t*1000)])
+                    end
                     yLimsIns = get(gca, 'YLim');                    
                     drawnow
 
@@ -168,7 +191,7 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
             list_properties = epoch_properties_mod(EEG, EEGmatrix', eeg_chans, inputType, epochLength);
 
             rejection_options.measure = ones(1,size(list_properties,2)); % values of the statistical parameters (see flow chart)
-            rejection_options.z = parameters.artifacts.FASTER_zThreshold * ones(1,size(list_properties,2)); % Z-score threshold
+            rejection_options.z = parameters.artifacts.FASTER_zThreshold_step2 * ones(1,size(list_properties,2)); % Z-score threshold
 
             %a = rejection_options.measure
             %b = rejection_options.z
@@ -287,8 +310,10 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                 
                 % re-correct for baseline (useful actually only if you had
                 % done ICA subtraction in STEP 3)
-                EEGrecorr = pre_removeBaseline_epochByEpoch(EEG.data(:,:,v)', v, parameters, handles);
-                EEG.data(:,:,v) = EEGrecorr';          
+                if ~strcmp(erpType, 'continuous')
+                    EEGrecorr = pre_removeBaseline_epochByEpoch(EEG.data(:,:,v)', v, parameters, handles);
+                    EEG.data(:,:,v) = EEGrecorr';          
+                end
                 
                 % combine the 4 different measures so that we have an absolute max
                 % per channel, and if this exceeds the z-threshold, then
@@ -461,7 +486,7 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
         
             if debugFASTER == 1
                 
-                if strcmp(erpType, 'target') || strcmp(erpType, 'distracter')  || strcmp(erpType, 'standard')
+                if 1 == 1 % strcmp(erpType, 'target') || strcmp(erpType, 'distracter')  || strcmp(erpType, 'standard')
                 
                     % CRAP and FIXED step
                     subplotIndices_CRAP = [2 6 10 14];                             
@@ -488,24 +513,50 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                 end
             end       
         
+            
+         %% RETURN
+        
+            % now the EEG.data is in the format of:
+            % channels (without ECG) x samples per epoch x epoch, and we need to
+            % concatenate it back to -> channels x samples in all the
+            % epochs total
+            EEG_concat = reshape(EEG.data, size(EEG.data, 1), (size(EEG.data, 2) * size(EEG.data, 3)));
+            epochsOut.ERP = EEG_concat';
+
+            nrOfEpochsOut = size(EEG.data, 3);
+            %epochsOut
+            %epochsIn
+            
         
         %% PLOT "ARTIFACT-FREE" EPOCHS and the AVERAGE WAVEFORM
         EEG_mat = pre_epochsVectorToMatrix(EEG.data, epochLength);
         
+        
+        
         if debugFASTER == 1
-            if strcmp(erpType, 'target') || strcmp(erpType, 'distracter')  || strcmp(erpType, 'standard')
+            if 1 == 1 % strcmp(erpType, 'target') || strcmp(erpType, 'distracter')  || strcmp(erpType, 'standard')
                                    
                 sp_i = sp_i + 1;
                 sp(sp_i) = subplot(rows,cols, [4 8 12]);
+                                    
                     try
-                        plot_allTheEpochsToSingleSubplot(sp(sp_i),t*1000, EEG_mat(1:parameters.EEG.nrOfChannels,:,:), parameters, yOffset)
-                        leg(2) = legend('Base', 'Cz', 'Fz', 'Pz', 'Oz');
+                        if ~strcmp(erpType, 'continuous')
+                            plot_allTheEpochsToSingleSubplot(sp(sp_i),t*1000, EEG_mat(1:parameters.EEG.nrOfChannels,:,:), parameters, yOffset)
+                            leg(2) = legend('Base', 'Fz', 'Cz', 'Pz', 'Oz');
                             set(leg(2), 'Position',[0.911647314949202 0.575867861142218 0.0511611030478955 0.120380739081747])
                             legend('boxoff')
+                        else
+                            size(EEG_concat)
+                            whos
+                            plot(EEG_concat, timeIn')
+                        end
+                        
                             lab(3,1) = xlabel('Time [ms]');
                             lab(3,2) = ylabel('Epochs');
                             tit(3) = title(['Epochs OUT (', erpType, ')']);
-                            xlim([min(t*1000) max(t*1000)])
+                            if ~strcmp(erpType, 'continuous')
+                                xlim([min(t*1000) max(t*1000)])
+                            end
                             drawnow
                     catch err
                         err
@@ -520,19 +571,36 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                     % get the average waveform
                     averWaveForm = nanmean(EEG_mat(1:parameters.EEG.nrOfChannels,:,:),3);
                     hold on
-                    line([min(t*1000) max(t*1000)], [0 0], 'Color', 'k')
+                    %line([min(t*1000) max(t*1000)], [0 0], 'Color', 'k')
                     plot(t*1000, averWaveForm)
                     hold off
+                    if strcmp(erpType, 'continuous')
+                        leg(2) = legend('Fz', 'Cz', 'Pz', 'Oz');
+                        set(leg(2), 'Position',[[0.923088972431077 0.172312430011198 0.0416666666666667 0.0659294512877939]])
+                        legend('boxoff')
+                    end
                     lab(4,1) = xlabel('Time [ms]');
                     lab(4,2) = ylabel('Amplitude [\muV]');
                     tit(4) = title(['Average Waveform, n = [', num2str(noOfValidTrials), ']']);
-                    ylim(yLimsIns) % use the same y-limits as for the input to make comparison easier
-                    xlim([min(t*1000) max(t*1000)])
+                    
+                    if ~strcmp(erpType, 'continuous')
+                        xlim([min(t*1000) max(t*1000)])
+                        ylim(yLimsIns) % use the same y-limits as for the input to make comparison easier
+                    end
                     
                 set(leg, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase-2) 
                 set(sp, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase-1) 
-                set(tit, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase-1, 'FontWeight', 'bold') 
-                set(lab, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase-2, 'FontWeight', 'bold') 
+                try
+                    set(tit, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase-1, 'FontWeight', 'bold') 
+                catch err
+                    
+                end
+                try
+                    set(lab, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase-2, 'FontWeight', 'bold') 
+                catch err
+                    
+                end
+                    
                 
             end
             
@@ -555,16 +623,5 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
         end
         
         
-        %% RETURN
-        
-            % now the EEG.data is in the format of:
-            % channels (without ECG) x samples per epoch x epoch, and we need to
-            % concatenate it back to -> channels x samples in all the
-            % epochs total
-            EEG_concat = reshape(EEG.data, size(EEG.data, 1), (size(EEG.data, 2) * size(EEG.data, 3)));
-            epochsOut.ERP = EEG_concat';
-
-            nrOfEpochsOut = size(EEG.data, 3);
-            %epochsOut
-            %epochsIn
+       
 

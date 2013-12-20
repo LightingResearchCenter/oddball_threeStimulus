@@ -253,6 +253,7 @@ function [NaN_indices_EEG, NaN_indices_EOG, indices_moving, indices_movingEOG, i
 
 %% SUBFUNCTION WRAPPER FOR THE CRAP from ERPLAB
 function [moving_isNaN, movingEOG_isNaN, step_isNaN, vDiffOutMovWindow, vDiffOutMovWindowEOG, vDiffOutStep] = pre_artifact_ERPLAB(epochIn, EOG, ep, parameters)
+       
 
     % Use EEGLAB structure fields
     EEG.data = epochIn';
@@ -263,7 +264,7 @@ function [moving_isNaN, movingEOG_isNaN, step_isNaN, vDiffOutMovWindow, vDiffOut
     EEG.xmin = 0;
     EEG.xmax = length(EEG.data) / parameters.EEG.srate;
     EEG.setname = 'dummy blank string';
-    
+
     %{
     plot(epochIn)
     hold on
@@ -281,6 +282,7 @@ function [moving_isNaN, movingEOG_isNaN, step_isNaN, vDiffOutMovWindow, vDiffOut
         % Peak-to-peak amplitude is the difference between the most positive and 
         % most negative voltages within a window.  A moving window peak-to-peak amplitude 
         % function computes the peak-to-peak amplitude within a series of windows within each epoch. 
+        % size(EEG.data)
         [indices_moving, vDiffOutMovWindow] = crap_mod(EEG, parameters.artifacts.CRAP.movWind_ampTh, parameters.artifacts.CRAP.movWind_windowWidth, parameters.artifacts.CRAP.movWind_windowStep, ...
                                    1:parameters.EEG.nrOfChannels);
              
@@ -290,7 +292,8 @@ function [moving_isNaN, movingEOG_isNaN, step_isNaN, vDiffOutMovWindow, vDiffOut
     %% Moving window for EOG channel
 
         EEG.data = EOG';
-
+        % size(EEG.data)
+        
         % The step function was designed to find the step-like changes in voltage 
         % that are produced when subjects make saccadic eye movements, 
         % but it is useful for detecting other kinds of artifacts as well (e.g., blinks).  

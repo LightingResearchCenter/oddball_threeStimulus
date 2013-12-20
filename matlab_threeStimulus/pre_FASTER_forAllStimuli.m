@@ -26,9 +26,11 @@ function [rejectedEpochs_target, rejectedEpochs_distr, rejectedEpochs_std, artif
         end 
     end
     
+    %{
     handles.parameters.artifacts.FASTER_zThreshold_step2 = 1.49;
     handles.parameters.artifacts.FASTER_zThreshold_step3 = 1.49;
     handles.parameters.artifacts.FASTER_zThreshold_step4 = 1.49;
+    %}
 
     debugOnlyTarget = 0; % faster development / debugging
     
@@ -36,13 +38,15 @@ function [rejectedEpochs_target, rejectedEpochs_distr, rejectedEpochs_std, artif
         
         % TARGET
         fprintf('         .. TARGET / ')
+        
         %% NOTE! (19 Dec 2013)
         % Now we haven't done anything yet for the trials that do not have
         % response (i.e. the TARGET tones with NaN RT (reaction time), see e.g.
         % https://www.researchgate.net/post/Do_we_remove_trials_with_erroneous_RT_answers_in_ERP_analysis
+        
         [NaN_indices_EEG_target, NaN_indices_EOG_target, NaN_indices_moving_target, NaN_indices_movingEOG_target, NaN_indices_step_target, ...
             vDiffOutMovWindow_target, vDiffOutMovWindowEOG_target, vDiffOutStep_target, fixedIndices_target] = ...
-            pre_artifactFASTER_fixedThresholds_ERPLAB(rejectOn_target, EOG_target, ECG_target, debugOn, 'target', handles.parameters, handles);    
+            pre_artifactFASTER_fixedThresholds_ERPLAB(rejectOn_target, EOG_target, ECG_target, debugOn, 'target', rejectOn_target.samplesPerEpoch, handles.parameters, handles);    
         
         if debugOnlyTarget ~= 1 || localCall == 0
             
@@ -50,13 +54,13 @@ function [rejectedEpochs_target, rejectedEpochs_distr, rejectedEpochs_std, artif
             fprintf('DISTRACTER / ')
             [NaN_indices_EEG_distr, NaN_indices_EOG_distr, NaN_indices_moving_distr, NaN_indices_movingEOG_distr, NaN_indices_step_distr, ...
                 vDiffOutMovWindow_distr, vDiffOutMovWindowEOG_distr, vDiffOutStep_distr, fixedIndices_distr] = ...
-                pre_artifactFASTER_fixedThresholds_ERPLAB(rejectOn_distr, EOG_distr, ECG_distr, debugOn, 'distracter', handles.parameters, handles);
+                pre_artifactFASTER_fixedThresholds_ERPLAB(rejectOn_distr, EOG_distr, ECG_distr, debugOn, 'distracter', rejectOn_distr.samplesPerEpoch, handles.parameters, handles);
 
             % STANDARD
             fprintf('STANDARD'); fprintf('\n')
             [NaN_indices_EEG_std, NaN_indices_EOG_std, NaN_indices_moving_std, NaN_indices_movingEOG_std, NaN_indices_step_std, ...
                 vDiffOutMovWindow_std, vDiffOutMovWindowEOG_std, vDiffOutStep_std, fixedIndices_std] = ...
-                pre_artifactFASTER_fixedThresholds_ERPLAB(rejectOn_std, EOG_std, ECG_std, debugOn, 'standard', handles.parameters, handles);
+                pre_artifactFASTER_fixedThresholds_ERPLAB(rejectOn_std, EOG_std, ECG_std, debugOn, 'standard', rejectOn_std.samplesPerEpoch, handles.parameters, handles);
         end
 
     % concatenate

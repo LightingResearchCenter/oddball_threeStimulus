@@ -63,9 +63,9 @@ function [epochs, analyzed, TF, dataMatrix_filtGeneral, alpha, powers, handles] 
             ERP_baseline = handles.parameters.oddballTask.ERP_baseline;
             ERP_duration = handles.parameters.oddballTask.ERP_duration;
         
-            erpType = 'ERP'; disp(['     ', erpType])
+            erpType = 'ERP'; disp(['     ', erpType]) % use the regression corrected
             [epochs.(filteringType).(erpType).target, epochs.(filteringType).(erpType).distr, epochs.(filteringType).(erpType).std, epoch_indices] = ...
-                pre_epochToERPs(dataMatrix_filt(:,:), triggers, [], ERP_baseline, ERP_duration, alpha, handles.parameters, erpType, handles);    
+                pre_epochToERPs(dataMatrix_filtGeneralRegress(:,:), triggers, [], ERP_baseline, ERP_duration, alpha, handles.parameters, erpType, handles);    
 
             erpType = 'RAW'; disp(['     ', erpType])
             [epochs.(filteringType).(erpType).target, epochs.(filteringType).(erpType).distr, epochs.(filteringType).(erpType).std, epoch_indices] = ...

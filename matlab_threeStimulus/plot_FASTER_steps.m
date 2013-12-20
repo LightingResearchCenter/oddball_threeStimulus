@@ -9,12 +9,12 @@ function [sp_i, sp] = plot_FASTER_steps(fig, sp, sp_i, leg, rows, cols, zs_st2, 
         plot(zs_st2,'linewidth',1)
 
         % Thresholds
-        plot(1:length(epochPerChannelStep2Corrected),parameters.artifacts.FASTER_zThreshold*ones(1,length(epochPerChannelStep2Corrected)),'k-.','linewidth',2)
-        plot(1:length(epochPerChannelStep2Corrected),-parameters.artifacts.FASTER_zThreshold*ones(1,length(epochPerChannelStep2Corrected)),'k-.','linewidth',2)
+        plot(1:length(epochPerChannelStep2Corrected),parameters.artifacts.FASTER_zThreshold_step2*ones(1,length(epochPerChannelStep2Corrected)),'k-.','linewidth',2)
+        plot(1:length(epochPerChannelStep2Corrected),-parameters.artifacts.FASTER_zThreshold_step2*ones(1,length(epochPerChannelStep2Corrected)),'k-.','linewidth',2)
         leg(2) = legend('mean dev. from ch.', 'Ep Var', 'Max \DeltaAmplitude', 'Location', 'Best');
         legend('boxoff')
         lab(1,1) = xlabel('Epochs');
-        lab(1,2) = ylabel(['Z-score (thr = ', num2str(parameters.artifacts.FASTER_zThreshold), ')']);
+        lab(1,2) = ylabel(['Z-score (thr = ', num2str(parameters.artifacts.FASTER_zThreshold_step2), ')']);
         tit(1) = title('STEP 2: EPOCHS');
         grid off
         axis tight
@@ -50,12 +50,12 @@ function [sp_i, sp] = plot_FASTER_steps(fig, sp, sp_i, leg, rows, cols, zs_st2, 
             end
 
             % Thresholds
-            plot(1:length(indelec_st3),parameters.artifacts.FASTER_zThreshold*ones(1,length(indelec_st3)),'k-.','linewidth',2)
-            plot(1:length(indelec_st3),-parameters.artifacts.FASTER_zThreshold*ones(1,length(indelec_st3)),'k-.','linewidth',2)
+            plot(1:length(indelec_st3),parameters.artifacts.FASTER_zThreshold_step3*ones(1,length(indelec_st3)),'k-.','linewidth',2)
+            plot(1:length(indelec_st3),-parameters.artifacts.FASTER_zThreshold_step3*ones(1,length(indelec_st3)),'k-.','linewidth',2)
             leg(3) = legend('Median gradient', 'Mean slope', 'Kurtosis', 'Hurst', 'Blink', 'Location', 'Best');
             legend('boxoff')
             lab(2,1) = xlabel('ICA components');
-            lab(2,2) = ylabel(['Z-score (thr = ', num2str(parameters.artifacts.FASTER_zThreshold), ')']);
+            lab(2,2) = ylabel(['Z-score (thr = ', num2str(parameters.artifacts.FASTER_zThreshold_step3), ')']);
             tit(2) = title('STEP 3: ICA');
             grid off
             axis tight
