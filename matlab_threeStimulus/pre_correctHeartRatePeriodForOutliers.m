@@ -144,7 +144,7 @@ function [hpOut, thpOut] = pre_correctHeartRatePeriodForOutliers(rPeakTimes, t, 
                         %cd(path.outputFigures)            
                         fileNameOut = [callFrom, 'OutlierRemoval_',strrep(handles.inputFile, '.bdf', ''), '_', dateStr];
                         disp(['         ... saving figure to disk (', fileNameOut, '.png]'])
-                        export_fig(fullfile(handles.path.figuresOut, fileNameOut), handles.figureOut.resolution, handles.figureOut.antialiasLevel, fig(1))
+                        export_fig(fullfile(handles.path.debugHeartOut, fileNameOut), handles.figureOut.resolution, handles.figureOut.antialiasLevel, fig(1))
                         %cd(path.code)
                     end
                 catch err
