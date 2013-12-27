@@ -315,11 +315,18 @@
                 %cd(path.code)
             end
         catch err
-            err
-            str = sprintf('%s\n%s', 'Crashing probably because you have not installed export_fig from Matlab File Exchange!', ...
-                          'Download it from: http://www.mathworks.com/matlabcentral/fileexchange/23629-exportfig, and "File -> Set Path -> Add Folder"');
-            error(str)
-        end        
+                
+            if strcmp(err.identifier, 'MATLAB:imagesci:imwrite:fileOpen')
+                handles.path.figuresOut
+                error('Problem with the path?')
+
+            else                
+                err
+                str = sprintf('%s\n%s', 'Crashing probably because you have not installed export_fig from Matlab File Exchange!', ...
+                              'Download it from: http://www.mathworks.com/matlabcentral/fileexchange/23629-exportfig, and "File -> Set Path -> Add Folder"');
+                error(str)
+            end
+        end
         
     end
     
