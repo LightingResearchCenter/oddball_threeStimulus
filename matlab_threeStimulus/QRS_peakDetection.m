@@ -311,7 +311,7 @@
             if handles.figureOut.ON == 1                     
                 dateStr = plot_getDateString(); % get current date as string          
                 fileNameOut = sprintf('%s%s', 'debug_QRS_panTomp_', strrep(handles.inputFile, '.bdf', ''), '.png');
-                export_fig(fullfile(handles.path.debugHeartOut, fileNameOut), handles.figureOut.resolution, handles.figureOut.antialiasLevel, fig)
+                export_fig(fullfile(handles.path.figuresOut, fileNameOut), handles.figureOut.resolution, handles.figureOut.antialiasLevel, fig)
                 %cd(path.code)
             end
         catch err

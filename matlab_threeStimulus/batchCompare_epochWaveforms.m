@@ -19,7 +19,7 @@ function batchCompare_epochWaveforms(fileNameFields, outlierFilenameList, epochT
     
     % define what you want to be extracted
     erpFilterType = {'bandpass'};
-    erpType = {'ERP'};
+    erpType = {'CNV'};
     chsToPlot = {'Cz'; 'Pz'};
     
     for filt = 1 : length(erpFilterType)       

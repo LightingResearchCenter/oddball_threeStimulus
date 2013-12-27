@@ -33,12 +33,11 @@ function batch_plotEpochsOfSubjects(epochsMatrix, erpType, erpFilterType, epochT
         
     
     
-    %% SUBJECTS COMPARED with AVERAGES
-    %{
+    %% SUBJECTS COMPARED with AVERAGES    
     batch_plot_subjectERPs_withAverage(conditions, sessions, erpResponses, erpTypes, filterTypes, statFields, statParam, ...
-                                       noOfDataSamplesPerERP, noOfChannels, noOfSubjects, ...
+                                       noOfDataSamplesPerERP, noOfChannels, fileNameFields, noOfSubjects, ...
                                        t, epochsMatrix, parameters, handles)    
-    %}
+    
         
         
     %% CHANNELS COMPARED (AVERAGE)
@@ -55,6 +54,7 @@ function batch_plotEpochsOfSubjects(epochsMatrix, erpType, erpFilterType, epochT
     
         
     %% COMPARE THE CONDITIONS (fix this?)
+    %{
     rowParameter = erpResponses;
     colParameter = 1 : parameters.EEG.nrOfChannels;
     gcaParameter = conditions;
@@ -63,4 +63,4 @@ function batch_plotEpochsOfSubjects(epochsMatrix, erpType, erpFilterType, epochT
                                      conditions, sessions, erpResponses, erpTypes, filterTypes, statFields, statParam, ...
                                        noOfDataSamplesPerERP, noOfChannels, noOfSubjects, ...
                                        t, epochsMatrix, parameters, handles)
-    
+    %}

@@ -1,7 +1,12 @@
 function batch_plot_subjectERPs_withAverage(conditions, sessions, erpResponses, erpTypes, filterTypes, statFields, statParam, ...
-                                       noOfDataSamplesPerERP, noOfChannels, noOfSubjects, ...
+                                       noOfDataSamplesPerERP, noOfChannels, fileNameFields, noOfSubjects, ...
                                        t, epochsMatrix, parameters, handles)
 
+    for i = 1 : length(fileNameFields)
+        subjectNames{i} = fileNameFields{i}.subject;        
+    end
+    subjects = unique(subjectNames)
+    
     scrsz = get(0,'ScreenSize'); % get screen size for plotting
     
     fig = figure('Color', 'w', 'Name', ['ERP Waveforms, ', conditions{1}]);
@@ -40,6 +45,12 @@ function batch_plot_subjectERPs_withAverage(conditions, sessions, erpResponses, 
                 
                 if resp == length(erpResponses)
                     labX(ch) = xlabel('Time [ms]');
+                end
+                
+                if ch == 1 && resp == 1
+                   legSubj = legend(subjects);
+                   set(legSubj, 'Position',[0.048 0.71 0.043 0.216])
+                   legend('boxoff')
                 end
                 
                 % MEAN

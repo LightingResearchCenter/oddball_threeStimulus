@@ -1,4 +1,4 @@
-function [epochsProcessed, debugInfoOut] = batch_preProcessEpochs(epochsStat, debugInfoOut, fileNameFields, outlierFilenameList, erpType, erpFilterType, epochType, handles)
+function [epochsMatrix, debugInfoOut] = batch_preProcessEpochs(epochsStat, debugInfoOut, fileNameFields, outlierFilenameList, erpType, erpFilterType, epochType, handles)
 
     %% DEBUG
     debugMatFileName = 'tempPreprocessTimeDomainEpochs.mat';
@@ -15,7 +15,7 @@ function [epochsProcessed, debugInfoOut] = batch_preProcessEpochs(epochsStat, de
     end
     
     whos
-    exInput = epochsStat.dim.session1.target.ERP.ka.bandpass
+    exInput = epochsStat.dim.session1.target.(erpType).ka.bandpass
     
     %{
     % exInput = 
@@ -28,7 +28,7 @@ function [epochsProcessed, debugInfoOut] = batch_preProcessEpochs(epochsStat, de
             
     % create matrices from structure monsters (i.e. get rid of the subject
     % field name), e.g.    
-    epochsMatrix = batch_epochStructToMatrix(epochsStat)
+    epochsMatrix = batch_epochStructToMatrix(epochsStat);
     
         % plot subjects
         statParam = 'mean';
