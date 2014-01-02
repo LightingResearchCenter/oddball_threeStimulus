@@ -150,8 +150,8 @@
     %% MOVING WINDOW INTEGRATION   
 
     % Apply filter (original convolution)    
-    filtLength = 31;
-    h = ones (1,filtLength)/31; % Make impulse response
+    filtLength = 256;
+    h = ones (1,filtLength)/filtLength; % Make impulse response
     Delay = floor(filtLength/2); % Delay in samples
     
     x6_init = conv (x5,h);    
@@ -170,7 +170,9 @@
         %leg = legend(['Sq., n=', num2str(length(x5))], ['x6init, n=', num2str(length(x6))], ['x6, n=', num2str(length(x6))]);
         leg = legend(['Sq.'], ['x6init'], ['x6']);
             set(leg, 'FontSize', 6, 'Location', 'Best');
-            legend('boxoff'); title('Average')            
+            legend('boxoff'); 
+            titStr = sprintf('%s\n%s', 'Average', ['filtLength = ', num2str(filtLength)]);
+            title(titStr)
             xlim([Delay*multip*3 Delay*multip*8])    
             
         spIndex = spIndex + 1;
@@ -338,7 +340,7 @@
         % amplitudes and we could check for deviating R peak amplitudes
         rPeakTimes = t(R_loc);  
         handles.parameters.heart.ectopicMedianParam = 12;
-        handles.parameters.heart.ectopicOutlierMethod = 'median'; % 'percent', 'median', 'sd'    
+        handles.parameters.heart.ectopicOutlierMethod = 'sd'; % 'percent', 'median', 'sd'    
         handles.parameters.heart.outlierReplaceMethod = 'remove'; % 'mean' / 'median' / 'cubic' / 'remove'
         
         disp(['           * Rejecting outliers from R peaks (only R, not Q or S)'])
@@ -383,5 +385,5 @@
         forDebugPlot_QRS.S = S_value;
         forDebugPlot_QRS.t_R = rPeakTimes;
         forDebugPlot_QRS.R = rPeakAmplitudes;
-        
+
         
