@@ -154,7 +154,7 @@ function parameters = init_DefaultParameters(handles)
         
             parameters.artifacts.FASTER_lpf_wFreq = 95;
             parameters.artifacts.FASTER_lpf_bandwidth = 2.5;            
-            parameters.artifacts.FASTER_zThreshold_step2 = 1.49; % default is 3 (for high-density EEG), the default value does
+            parameters.artifacts.FASTER_zThreshold_step2 = 1.45; % default is 3 (for high-density EEG), the default value does
                                                            % not reject much of artifacts so the smaller value is empirically
                                                            % set for "better" performance
             parameters.artifacts.FASTER_zThreshold_step3 = parameters.artifacts.FASTER_zThreshold_step2;
@@ -188,11 +188,11 @@ function parameters = init_DefaultParameters(handles)
             parameters.artifacts.CRAP.step_windowWidth = 50;
             parameters.artifacts.CRAP.step_windowStep = 15;
 
-            parameters.artifacts.CRAP.movWindEOG_ampTh = [-65 65]*1;
+            parameters.artifacts.CRAP.movWindEOG_ampTh = [-60 60]*1;
             parameters.artifacts.CRAP.movWindEOG_windowWidth = 25;
             parameters.artifacts.CRAP.movWindEOG_windowStep = 20;
 
-            parameters.artifacts.CRAP.movWind_ampTh = [-65 65]*1;
+            parameters.artifacts.CRAP.movWind_ampTh = [-60 60]*1;
             parameters.artifacts.CRAP.movWind_windowWidth = 25;
             parameters.artifacts.CRAP.movWind_windowStep = 20;    
                                                      
