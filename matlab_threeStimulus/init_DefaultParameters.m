@@ -158,7 +158,7 @@ function parameters = init_DefaultParameters(handles)
                                                            % not reject much of artifacts so the smaller value is empirically
                                                            % set for "better" performance
             parameters.artifacts.FASTER_zThreshold_step3 = parameters.artifacts.FASTER_zThreshold_step2;
-            parameters.artifacts.FASTER_zThreshold_step4 = parameters.artifacts.FASTER_zThreshold_step2;
+            parameters.artifacts.FASTER_zThreshold_step4 = 1.2; % use tighter rejection, 1.2 set empirically 
             
             parameters.artifacts.FASTER_icaMethod = 'runica'; % 'runica' or 'fastica'
             parameters.artifacts.FASTER_skipICA = 1; % with our four EEG channels, there is typically no artifact channels, 
