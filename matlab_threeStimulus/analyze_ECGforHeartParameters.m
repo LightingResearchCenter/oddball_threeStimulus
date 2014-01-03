@@ -40,12 +40,15 @@ function heart = analyze_ECGforHeartParameters(ECG, ECG_raw, handles)
         % fix later for more elegant solution maybe defined in
         % MAIN_ANALYSIS the artifacted ECG recordings or read from a .txt
         % file
-    
+            
         if strcmp(handles.inputFile, 'bl_02_10.bdf') || ...
            strcmp(handles.inputFile, 'sh_01_10.bdf') || ...
            strcmp(handles.inputFile, 'sh_02_0.bdf')
             
             heart = analyze_ECG_fillTheFieldWithNan();
+            return
+            
+        else
             
         end
     
