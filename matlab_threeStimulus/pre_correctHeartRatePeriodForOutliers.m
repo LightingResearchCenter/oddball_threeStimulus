@@ -91,12 +91,12 @@ function [hpOut, thpOut] = pre_correctHeartRatePeriodForOutliers(rPeakTimes, t, 
              
              
      %% DEBUG    
-        
-        if debugPlotOn == 1
+     
+        if debugPlotOn == 1 && length(y) > 1
 
             fig = figure('Color', 'w', 'Name', 'R / RR Outlier Debug');
 
-                % do all the methods for comparison
+                % do all the methods for comparison                
                 artPer = locateOutliers(t,y,'percent',handles.parameters.heart.ectopicPercentParam);
                 artSD = locateOutliers(t,y,'sd',handles.parameters.heart.ectopicSdParam);
                 artMed = locateOutliers(t,y,'median',handles.parameters.heart.ectopicMedianParam);
