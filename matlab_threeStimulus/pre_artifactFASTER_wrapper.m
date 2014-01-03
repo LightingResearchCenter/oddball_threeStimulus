@@ -41,6 +41,11 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
     parameters.artifacts.FASTER_skipICA = 1;
     parameters.artifacts.useADJUST = 0;
     
+    %% tweak manually
+    % parameters.artifacts
+    % parameters.artifacts.FASTER_zThreshold_step4 = 1.4
+    
+    
     %% For a quick introduction to FASTER, see:
         
         % http://www.nbtwiki.net/doku.php?id=tutorial:automatic_and_semi-automatic_methods_for_eeg_pre-processing#.Uouqah8wnNA
@@ -111,14 +116,14 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
 
             if 1 == 1 % strcmp(erpType, 'target') || strcmp(erpType, 'distracter')  || strcmp(erpType, 'standard')
 
-                scrsz = [1 1 1680 1050];
+                scrsz = handles.style.scrsz;
                 fig = figure('Color','w','Name',[erpType, ': FASTER Debug']);
                     set(fig, 'Position', [0.02*scrsz(3) 0.075*scrsz(4) 0.95*scrsz(3) 0.85*scrsz(4)])
                     rows = 4;
                     cols = 4;
                     
-                noOfValidTrials = sum(~isnan(permute(EEG.data(1:parameters.EEG.nrOfChannels,:,:),[2 1 3])),3); % per channel
-                noOfValidTrials = noOfValidTrials(1,:);
+                noOfValidTrials_in = sum(~isnan(permute(EEG.data(1:parameters.EEG.nrOfChannels,:,:),[2 1 3])),3); % per channel
+                noOfValidTrials_in = noOfValidTrials_in(1,:);
                     
                 sp_i = 1;
                 sp(sp_i) = subplot(rows,cols, [1 5 9]);
@@ -160,10 +165,10 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                 sp(sp_i) = subplot(rows,cols, [13]);
                 
                     % get the average waveform
-                    averWaveForm = nanmean(EEG.data(1:parameters.EEG.nrOfChannels+1,:,:),3);       
+                    averWaveForm_in = nanmean(EEG.data(1:parameters.EEG.nrOfChannels+1,:,:),3);       
                     hold on
                     line([min(t*1000) max(t*1000)], [0 0], 'Color', 'k')
-                    pAv1 = plot(t*1000, averWaveForm);
+                    pAv1 = plot(t*1000, averWaveForm_in);
                     hold off      
                     
                     if strcmp(erpType, 'continuous') || strcmp(erpType, 'standard')
@@ -173,7 +178,7 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                     end
                     lab(2,1) = xlabel('Time [ms]');
                     lab(2,2) = ylabel('Amplitude [\muV]');
-                    tit(2) = title(['Average Waveform, n = [', num2str(noOfValidTrials), ']']);
+                    tit(2) = title(['Average Waveform, n = [', num2str(noOfValidTrials_in), ']']);
                     if ~strcmp(erpType, 'continuous')
                         xlim([min(t*1000) max(t*1000)])
                     end
@@ -250,8 +255,7 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
             end
             
         %% STEP 3 version Petteri : Instead of Subtracting ICA components
-            
-            parameters.artifacts.FASTER_regressEOG_asStep3 = 1;
+                        
             if parameters.artifacts.FASTER_regressEOG_asStep3 == 1
                 % Do a EOG regression correction here 
 
@@ -276,7 +280,7 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                         EEGcorr = EEGmatTemp;
                     end
                 else
-                    disp(['          ... EOG REGRESSION'])
+                    disp(['           + EOG REGRESSION'])
                     EEGcorr = pre_artifactRegressionWrapper(EEGmatTemp, EOGmatTemp, parameters.EEG.nrOfChannels, parameters);
                 end
 
@@ -297,8 +301,13 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                     hold off
                 end
                 %}
+            else
+                
+                % trim the EOG and ECG out
+                EEG.data = EEG.data(1:parameters.EEG.nrOfChannels, :, :);
+                
+                disp('           - skipping EOG_REGRESS for FASTER (this is okay if regression is done in pre_componentArtifactFiltering)')
             end
-            
             
 
         %% STEP 4: CHANNELS IN EPOCHS
@@ -647,7 +656,7 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                     
                     if ~strcmp(erpType, 'continuous') && ~strcmp(erpType, 'standard')
                         xlim([min(t*1000) max(t*1000)])
-                        ylim(yLimsIns) % use the same y-limits as for the input to make comparison easier 
+                        % ylim(yLimsIns) % use the same y-limits as for the input to make comparison easier 
                     end
                     
                 set(leg, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase-2) 
@@ -666,21 +675,31 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
                 
             end
             
-            %% Auto-SAVE
-            try
-                if handles.figureOut.ON == 1                     
-                    drawnow
-                    dateStr = plot_getDateString(); % get current date as string          
-                    fileNameOut = sprintf('%s%s%s%s', 'debug_FASTER', '_', strrep(handles.inputFile, '.bdf', ''), erpType,  '_', '.png');
-                    export_fig(fullfile(handles.path.figuresOut, fileNameOut), handles.figureOut.resolution, handles.figureOut.antialiasLevel, fig)
-                    %cd(path.code)
+                %% Auto-SAVE
+                try
+                    if handles.figureOut.ON == 1                     
+                        drawnow
+                        dateStr = plot_getDateString(); % get current date as string          
+                        fileNameOut = sprintf('%s%s%s%s', 'debug_FASTER', '_', strrep(handles.inputFile, '.bdf', ''), erpType,  '.png');
+                        export_fig(fullfile(handles.path.debugFASTER, fileNameOut), handles.figureOut.resolution, handles.figureOut.antialiasLevel, fig)
+                        %cd(path.code)
+                    end
+                catch err
+                    err
+                    str = sprintf('%s\n%s', 'Crashing probably because you have not installed export_fig from Matlab File Exchange!', ...
+                                  'Download it from: http://www.mathworks.com/matlabcentral/fileexchange/23629-exportfig, and "File -> Set Path -> Add Folder"');
+                    error(str)
                 end
-            catch err
-                err
-                str = sprintf('%s\n%s', 'Crashing probably because you have not installed export_fig from Matlab File Exchange!', ...
-                              'Download it from: http://www.mathworks.com/matlabcentral/fileexchange/23629-exportfig, and "File -> Set Path -> Add Folder"');
-                error(str)
+            
+            %% PLOT THE AVERAGE WAVEFORMS WITH SOME FILTERING AS WELL
+            
+            % the default plot is for the broad frequency range, and maybe
+            % the different filtering visualizes the ERP better
+            parameters.artifacts.faster_plotWaveformFiltering = 1;
+            if parameters.artifacts.faster_plotWaveformFiltering == 1
+                plot_fasterWaveformWithFiltering(t*1000, averWaveForm_in, averWaveForm, noOfValidTrials_in, noOfValidTrials, erpType, parameters, handles)
             end
+            
             
         end
         

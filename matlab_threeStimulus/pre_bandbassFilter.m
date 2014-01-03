@@ -18,7 +18,8 @@ function y = pre_bandbassFilter(data, Fs, cutOffs, filterOrder, filterOrderSteep
     end
     %}
    
-    
+    % whos    
+
     %% FieldTrip
         %{
         dataMatrix_filt(:,i) = ft_preproc_bandpassfilter(dataMatrix(:,i), srate, ...
