@@ -62,6 +62,8 @@ function [dataOut, ferror, b, a, v, frec3dB_final, xdB_at_fx, orderx] = basicfil
           error('ERPLAB says: error at basicfilter(). Please, enter all arguments!')
     end
     if length(dataIn) <= 3*filterorder
+        length(dataIn)
+        3*filterorder
           msgboxText{1} =  'The length of the data must be more than three times the filter order.';
           title = 'ERPLAB: basicfilter(), filtfilt constraint';
           errorfound(msgboxText, title);
@@ -85,6 +87,8 @@ function [dataOut, ferror, b, a, v, frec3dB_final, xdB_at_fx, orderx] = basicfil
     end
     if typef>0 && filterorder*3 > pnts  % filtfilt restriction
           fprintf('basicfilter: filter order too high');
+          3*filterorder
+          length(dataIn)
           error('ERPLAB says: error at basicfilter(). Number of samples must be, at least, 3 times the filter order.');
     end
 
@@ -118,7 +122,7 @@ function [dataOut, ferror, b, a, v, frec3dB_final, xdB_at_fx, orderx] = basicfil
                 
                 % Butterworth Notch (parallel)                
                 datalowpass   = filtfilt(b(1,:),a(1,:), dataIn(:,chanArray));
-                datahighpass  = filtfilt(b(2,:),a(2,:), dataOut(:,chanArray));                
+                datahighpass  = filtfilt(b(2,:),a(2,:), datalowpass(:,chanArray));                
                 dataOut(:,chanArray) = datalowpass + datahighpass;
             end
         else
