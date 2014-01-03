@@ -1,5 +1,7 @@
 function epochsOut = pre_rejectEpochsBasedOnFASTER(epochsIn, artifactIndices, stimType, erpType, parameters, handles)
     
+    debugAverageHere = 0;    
+
     %{
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction        
     if handles.flags.saveDebugMATs == 1
@@ -8,6 +10,7 @@ function epochsOut = pre_rejectEpochsBasedOnFASTER(epochsIn, artifactIndices, st
             load('debugPath.mat')
             load(fullfile(path.debugMATs, debugMatFileName))
             close all
+            debugAverageHere = 1;
         else
             if handles.flags.saveDebugMATs == 1
                 if 1 == 1 % ~strcmp(erpType, 'standard')
@@ -30,8 +33,30 @@ function epochsOut = pre_rejectEpochsBasedOnFASTER(epochsIn, artifactIndices, st
     noOfEpochsIn = length(epochsIn.ERP);
     
     for ep = 1 : noOfEpochsIn                
-        artifactYes = artifactIndices(ep,:);     
-        %subplot(2,1,1); plot(epochsOut.ERP{ep})
-        epochsOut.ERP{ep}(:, artifactYes == 1) = NaN;
-        %subplot(2,1,2);plot(epochsOut.ERP{ep});title(num2str(artifactYes)); pause(1.5)
+        
+        artifactYes = artifactIndices(ep,:);                     
+        % subplot(2,1,1); plot(epochsOut.ERP{ep}(:,1:4))
+        
+        epochsOut.ERP{ep}(:, artifactYes == 1) = NaN;        
+        % subplot(2,1,2);plot(epochsOut.ERP{ep}(:,1:4));title(num2str(artifactYes)); pause(1.5)
+                
+        
     end
+    
+    %{
+    if debugAverageHere == 1
+       
+        for ep = 1 : noOfEpochsIn
+            epochAverage(ep,:,:) = epochsOut.ERP{ep}(:, 1:4);
+        end
+        
+        meanDebug = squeeze(nanmean(epochAverage,1));
+        plot(meanDebug); 
+        notNans = sum(~artifactIndices)
+        title(['n = ', num2str(notNans)])
+        whos
+        
+    end
+    %}
+    
+    
