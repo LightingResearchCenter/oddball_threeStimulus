@@ -303,15 +303,27 @@ function [epochs, analyzed, TF, dataMatrix_filtGeneral, alpha, powers, handles] 
         end % end of filtering types (Bandpass, EP, etc.)       
 
     %% TIME-FREQUENCY ANALYSIS FOR THE EPOCHS    
-    disp(' '); disp('    Time-Frequency Analysis (Morlet, CWT)')  
+    handles.parameters.timeFreq.computeTF = 0;
+    disp(' ')
+    if handles.parameters.timeFreq.computeTF == 1
+        disp('    Time-Frequency Analysis (Morlet, CWT)')          
 
-        filteringType = 'bandpass';
-        erpType = 'GENERAL';
-        [timeFreqEpochs, timeFreq.target, timeFreq.distr, timeFreq.std, TF_allEpochs, TF_derivedMeasures] = ...
-                pre_waveletWrapperForAllStimuli(epochs.(filteringType).(erpType).target, artifactIndices_FASTER.target, ... % Target
-                                                epochs.(filteringType).(erpType).distr, artifactIndices_FASTER.distr, ... % Distracter
-                                                epochs.(filteringType).(erpType).std, artifactIndices_FASTER.std, ... % Standard
-                                                alpha.amplit_gravity, handles.parameters, handles);
+            filteringType = 'bandpass';
+            erpType = 'GENERAL';
+            [timeFreqEpochs, timeFreq.target, timeFreq.distr, timeFreq.std, TF_allEpochs, TF_derivedMeasures] = ...
+                    pre_waveletWrapperForAllStimuli(epochs.(filteringType).(erpType).target, artifactIndices_FASTER.target, ... % Target
+                                                    epochs.(filteringType).(erpType).distr, artifactIndices_FASTER.distr, ... % Distracter
+                                                    epochs.(filteringType).(erpType).std, artifactIndices_FASTER.std, ... % Standard
+                                                    alpha.amplit_gravity, handles.parameters, handles);
+    else
+        disp('    Skipping Time-Frequency Analysis (Morlet, CWT)')  
+        % assign something that the DISK SAVING function won't crash
+        timeFreqEpochs = [];
+        timeFreq = [];
+        TF_allEpochs = [];
+        TF_derivedMeasures = [];
+        
+    end
     
     %% PHASIC CARDIAC ANALYSIS (PCR) for the EPOCHS
     disp(' '); disp('    Phasic Cardiac Analysis (PCR, Kardia)  (placeholder)')
@@ -320,7 +332,7 @@ function [epochs, analyzed, TF, dataMatrix_filtGeneral, alpha, powers, handles] 
         % http://sourceforge.net/projects/mykardia/
         % http://dx.doi.org/10.1016/j.cmpb.2009.10.002
         filteringType = 'bandpass';
-        erpTypes = 'ECG';
+        erpType = 'ECG';
         stimTypes = {'target'; 'distr'; 'std'};
         for stim = 1 : length(stimTypes)
             heart.PCR.(stimTypes{stim}) = analyze_phasicCardiacResponse(epochs.(filteringType).(erpType).(stimTypes{stim}), handles.parameters, handles);
@@ -333,7 +345,7 @@ function [epochs, analyzed, TF, dataMatrix_filtGeneral, alpha, powers, handles] 
         % used, but you have the epochs here if you want to further analyze
         % them
         filteringType = 'bandpass';
-        erpTypes = 'EOG';
+        erpType = 'EOG';
         stimTypes = {'target'; 'distr'; 'std'};
         for stim = 1 : length(stimTypes)
             EOG.event.(stimTypes{stim}) = analyze_eventRelatedEOG(epochs.(filteringType).(erpType).(stimTypes{stim}), handles.parameters, handles);

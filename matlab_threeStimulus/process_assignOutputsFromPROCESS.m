@@ -80,7 +80,9 @@ function process_assignOutputsFromPROCESS(epochs, ERP_components, alpha, powers,
     %% Time-Frequency derived
         fileMatOutWavelet = strrep(handles.inputFile, '.bdf', '_waveletDerived.mat');
         disp(['        .. Derived Time-Frequency measures [', fullfile(handles.path.matFilesOut, fileMatOutWavelet), ']'])
-        save(fullfile(handles.path.matFilesOut, fileMatOutWavelet), 'timeFreqEpochs', 'timeFreq', 'TF_derivedMeasures', 'parameters', 'handles')
+        if parameters.timeFreq.computeTF == 1
+            save(fullfile(handles.path.matFilesOut, fileMatOutWavelet), 'timeFreqEpochs', 'timeFreq', 'TF_derivedMeasures', 'parameters', 'handles')
+        end
 
 
     %% Time-Frequency, all epochs 
@@ -94,7 +96,7 @@ function process_assignOutputsFromPROCESS(epochs, ERP_components, alpha, powers,
     %% EEG Fractal Analysis
         fileMatOutFractalEEG = strrep(handles.inputFile, '.bdf', '_fractalEEG.mat');
         disp(['         .. EEG Fractal Analysis [', fullfile(handles.path.matFilesOut, fileMatOutFractalEEG), ']'])
-        save(fullfile(handles.path.matFilesOut, fileMatOutFractalEEG), 'fractalAnalysis', 'parameters', 'handles')
+        % save(fullfile(handles.path.matFilesOut, fileMatOutFractalEEG), 'fractalAnalysis', 'parameters', 'handles')
 
     %% "Extra measures", such as EOG and HEART data
         analyzed_extraSensors.SEM = SEM;
