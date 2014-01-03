@@ -92,6 +92,8 @@ function plot_fasterWaveformWithFiltering(t, averWaveForm_in, averWaveForm, noOf
     
         % define global y-limits
         yLims = [1.1*min(min(averWaveForm)) max(max(averWaveForm))*1.1];
+               
+            
     
     %% ALPHA
     ind = ind+1;
@@ -170,6 +172,15 @@ function plot_fasterWaveformWithFiltering(t, averWaveForm_in, averWaveForm, noOf
             lab(ind,1) = xlabel('Time [ms]');
             lab(ind,2) = ylabel('Amplitude [\muV]');
     
+            
+        % annotate a note that the pre-baseline is not correct for the
+        % filtered ones, however this is not a problem as these waveforms
+        % here are not the final output filtered waveforms, these are just
+        % for illustration
+        axes(sp(cols+1))
+            txAnnot = text(min(t), min(yLims) * 1.4, ['Note that the filtered waveforms are for visualization only, and are not', ...            
+                        ' the final output waveforms, thus the pre-stimulus baselines are not correct as they are normalized based on the "GENERAL" ERP']);
+            
     %% General styling
     set(lin, 'Color', 'k')
     
@@ -178,6 +189,7 @@ function plot_fasterWaveformWithFiltering(t, averWaveForm_in, averWaveForm, noOf
     set(lab, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase-1) 
     set(tit, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase, 'FontWeight', 'bold') 
     
+    set(txAnnot, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase-1, 'HorizontalAlignment', 'left', 'FontAngle', 'Italic')
     
     %% Auto-SAVE
     try
