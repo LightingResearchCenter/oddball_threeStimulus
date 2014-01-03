@@ -1,4 +1,4 @@
-function [dataMatrix_filtGeneral, dataMatrix_filtGeneralRegress, onlyNotchBandpassFilteredMatrix, artifactNaN_indices, dataMatrix_filtAlpha, dataMatrix_filt, dataMatrix_filt_CNV] = ...
+function [dataMatrix_filtGeneral, dataMatrix_filtGeneralRegress, onlyNotchBandpassFilteredMatrix, artifactNaN_indices, dataMatrix_filtAlpha, dataMatrix_filt, dataMatrix_filt_CNV, dataMatrix_filt_P300] = ...
     process_preProcessFiltering(dataMatrixIn, handles)
 
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
@@ -68,18 +68,6 @@ function [dataMatrix_filtGeneral, dataMatrix_filtGeneralRegress, onlyNotchBandpa
             EEGtemp(artifactNaN_indices) = NaN;
             dataMatrix_filtAlpha(:,1:handles.parameters.EEG.nrOfChannels) = EEGtemp;
 
-    %% P300
-    
-        % You could test a P300 specific filtering either between 0-4 Hz or
-        % 0.001 - 4 Hz (to remove DC bias), this band is however mostly used in 
-        % BCI application and this filtering will deform the "typical shape" of P300
-        
-        % see short discussion in:        
-            % Ghaderi F, Kim SK, Kirchner EA. 2014. 
-            % Effects of eye artifact removal methods on single trial P300 detection, a comparative study. 
-            % Journal of Neuroscience Methods 221:41–47. 
-            % http://dx.doi.org/10.1016/j.jneumeth.2013.08.025   
-        
 
     %% ERP
 
@@ -120,6 +108,36 @@ function [dataMatrix_filtGeneral, dataMatrix_filtGeneralRegress, onlyNotchBandpa
             EEGtemp(artifactNaN_indices) = NaN;
             dataMatrix_filt_CNV(:,1:handles.parameters.EEG.nrOfChannels) = EEGtemp;
 
+    %% P300
+    
+        % You could test a P300 specific filtering either between 0-4 Hz or
+        % 0.001 - 4 Hz (to remove DC bias), this band is however mostly used in 
+        % BCI application and this filtering will deform the "typical shape" of P300
+        
+        % see short discussion in:        
+            % Ghaderi F, Kim SK, Kirchner EA. 2014. 
+            % Effects of eye artifact removal methods on single trial P300 detection, a comparative study. 
+            % Journal of Neuroscience Methods 221:41–47. 
+            % http://dx.doi.org/10.1016/j.jneumeth.2013.08.025   
+        
+
+        % For P300
+        dataType = 'P300';
+        matrixIn = dataMatrix_filtGeneralRegress;
+        [rowsIn, colsIn] = size(matrixIn);
+        rawMax = max(max(abs(matrixIn(:,1:handles.parameters.EEG.nrOfChannels))));
+
+        % use subfunction wrapper
+        [dataMatrix_filt_P300,~,~,~] = pre_componentArtifactFiltering(matrixIn, rawMax, rowsIn, colsIn, ... % EEG matrix parameters
+            handles.parameters.filter.bandPass_P300_loFreq, handles.parameters.filter.bandPass_P300_hiFreq, handles.parameters.filterOrder_P300, handles.parameters.filterOrderSteep, ... % filter parameters
+            dataType, handles.parameters, handles); % general settings
+        
+            % remove artifacts, that were found with the general filtering,
+            % cannot remove before bandpass filtering (NaN)
+            EEGtemp = dataMatrix_filt_P300(:,1:handles.parameters.EEG.nrOfChannels);
+            EEGtemp(artifactNaN_indices) = NaN;
+            dataMatrix_fil_P300(:,1:handles.parameters.EEG.nrOfChannels) = EEGtemp;
+            
 
         % Debug plot for bandpass characteristics
         if handles.flags.showDebugPlots == 1
@@ -130,6 +148,7 @@ function [dataMatrix_filtGeneral, dataMatrix_filtGeneralRegress, onlyNotchBandpa
                 
             % check that different filtering schemes work ok
             figure        
+            
                 subplot(3,1,1)
                 plot(dataMatrix_filtGeneral(:,1:5)); title('General')
                 drawnow
@@ -141,4 +160,5 @@ function [dataMatrix_filtGeneral, dataMatrix_filtGeneralRegress, onlyNotchBandpa
                 subplot(3,1,3) % this should have NaNs removed, and a lot smoother than the General
                 plot(dataMatrix_filt_CNV(:,1:5)); title('CNV Filt')
                 drawnow
+                
         end

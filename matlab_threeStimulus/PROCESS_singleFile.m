@@ -22,7 +22,9 @@ function [epochs, analyzed, TF, dataMatrix_filtGeneral, alpha, powers, handles] 
     TF = [];
 
     %% PRE-PROCESS THE DATA            
-    [dataMatrix_filtGeneral, dataMatrix_filtGeneralRegress, firstBandpassFilteredMatrix, artifactNaN_indices, dataMatrix_filtAlpha, dataMatrix_filt, dataMatrix_filt_CNV] = process_preProcessFiltering(dataMatrixIn, handles);
+    [dataMatrix_filtGeneral, dataMatrix_filtGeneralRegress, firstBandpassFilteredMatrix, artifactNaN_indices, ...
+        dataMatrix_filtAlpha, dataMatrix_filt, dataMatrix_filt_CNV, dataMatrix_filtP300] = ...
+        process_preProcessFiltering(dataMatrixIn, handles);
     
             
     %% GENERAL Time-Series Analysis
@@ -87,6 +89,10 @@ function [epochs, analyzed, TF, dataMatrix_filtGeneral, alpha, powers, handles] 
             [epochs.(filteringType).(erpType).target, epochs.(filteringType).(erpType).distr, epochs.(filteringType).(erpType).std, epoch_indices] = ...
                 pre_epochToERPs(dataMatrix_filtAlpha(:,:), triggers, epoch_indices, ERP_baseline, ERP_duration, alpha, handles.parameters, erpType, handles);
                         
+            erpType = 'P300'; disp(['     ', erpType])
+            [epochs.(filteringType).(erpType).target, epochs.(filteringType).(erpType).distr, epochs.(filteringType).(erpType).std, epoch_indices] = ...
+                pre_epochToERPs(dataMatrix_filtP300(:,:), triggers, epoch_indices, ERP_baseline, ERP_duration, alpha, handles.parameters, erpType, handles);
+            
             erpType = 'ECG'; disp(['     ', erpType])
             [epochs.(filteringType).(erpType).target, epochs.(filteringType).(erpType).distr, epochs.(filteringType).(erpType).std, epoch_indices] = ...
                 pre_epochToERPs(dataMatrixIn(:,handles.parameters.EEG.nrOfChannels+2:handles.parameters.EEG.nrOfChannels+2), triggers, epoch_indices, ERP_baseline, ERP_duration, alpha, handles.parameters, erpType, handles);
@@ -302,10 +308,11 @@ function [epochs, analyzed, TF, dataMatrix_filtGeneral, alpha, powers, handles] 
             
         end % end of filtering types (Bandpass, EP, etc.)       
 
-    %% TIME-FREQUENCY ANALYSIS FOR THE EPOCHS    
-    handles.parameters.timeFreq.computeTF = 0;
+    %% TIME-FREQUENCY ANALYSIS FOR THE EPOCHS
     disp(' ')
     if handles.parameters.timeFreq.computeTF == 1
+        
+        % ~ 805 sec with per file
         disp('    Time-Frequency Analysis (Morlet, CWT)')          
 
             filteringType = 'bandpass';
@@ -316,6 +323,8 @@ function [epochs, analyzed, TF, dataMatrix_filtGeneral, alpha, powers, handles] 
                                                     epochs.(filteringType).(erpType).std, artifactIndices_FASTER.std, ... % Standard
                                                     alpha.amplit_gravity, handles.parameters, handles);
     else
+        
+        % ~ 240 sec without per file
         disp('    Skipping Time-Frequency Analysis (Morlet, CWT)')  
         % assign something that the DISK SAVING function won't crash
         timeFreqEpochs = [];
