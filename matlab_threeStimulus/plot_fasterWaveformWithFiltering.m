@@ -75,7 +75,11 @@ function plot_fasterWaveformWithFiltering(t, averWaveForm_in, averWaveForm, noOf
         hiFreqCut = parameters.filter.bandPass_ERP_hiFreq;
         filterOrder = parameters.filterOrder_ERP;        
         for ch = 1 : parameters.EEG.nrOfChannels
-            averWaveForm_filt(:,ch) = pre_bandbassFilter(averWaveForm(ch,:)', parameters.EEG.srate, [hiFreqCut loFreqCut], filterOrder, [], handles);             
+            if sum(isnan(averWaveForm(ch,:)')) == 0
+                averWaveForm_filt(:,ch) = pre_bandbassFilter(averWaveForm(ch,:)', parameters.EEG.srate, [hiFreqCut loFreqCut], filterOrder, [], handles);             
+            else
+                averWaveForm_filt(:,ch) = averWaveForm(ch,:)';
+            end
         end
     
         hold on
@@ -105,7 +109,11 @@ function plot_fasterWaveformWithFiltering(t, averWaveForm_in, averWaveForm, noOf
         hiFreqCut = parameters.filter.bandPass_Alpha_hiFreq;
         filterOrder = parameters.filterOrder_Alpha;        
         for ch = 1 : parameters.EEG.nrOfChannels
-            averWaveForm_filt(:,ch) = pre_bandbassFilter(averWaveForm(ch,:)', parameters.EEG.srate, [hiFreqCut loFreqCut], filterOrder, [], handles); 
+            if sum(isnan(averWaveForm(ch,:)')) == 0
+                averWaveForm_filt(:,ch) = pre_bandbassFilter(averWaveForm(ch,:)', parameters.EEG.srate, [hiFreqCut loFreqCut], filterOrder, [], handles);             
+            else
+                averWaveForm_filt(:,ch) = averWaveForm(ch,:)';
+            end
         end
     
         hold on
@@ -117,7 +125,7 @@ function plot_fasterWaveformWithFiltering(t, averWaveForm_in, averWaveForm, noOf
             titStr = sprintf('%s\n%s', filtType, [num2str(loFreqCut), '-', num2str(hiFreqCut), ' Hz (order=', num2str(filterOrder), ')']);
             tit(ind) = title(titStr);
             
-            lab(ind,1) = xlabel('Time [ms]');
+            lab(ind,1) = xlabel(' ');
             lab(ind,2) = ylabel('Amplitude [\muV]');
     
     
@@ -131,7 +139,11 @@ function plot_fasterWaveformWithFiltering(t, averWaveForm_in, averWaveForm, noOf
         hiFreqCut = parameters.filter.bandPass_CNV_hiFreq;
         filterOrder = parameters.filterOrder_CNV;        
         for ch = 1 : parameters.EEG.nrOfChannels
-            averWaveForm_filt(:,ch) = pre_bandbassFilter(averWaveForm(ch,:)', parameters.EEG.srate, [hiFreqCut loFreqCut], filterOrder, [], handles); 
+            if sum(isnan(averWaveForm(ch,:)')) == 0
+                averWaveForm_filt(:,ch) = pre_bandbassFilter(averWaveForm(ch,:)', parameters.EEG.srate, [hiFreqCut loFreqCut], filterOrder, [], handles);             
+            else
+                averWaveForm_filt(:,ch) = averWaveForm(ch,:)';
+            end
         end
     
         hold on
@@ -143,7 +155,7 @@ function plot_fasterWaveformWithFiltering(t, averWaveForm_in, averWaveForm, noOf
             titStr = sprintf('%s\n%s', filtType, [num2str(loFreqCut), '-', num2str(hiFreqCut), ' Hz (order=', num2str(filterOrder), ')']);
             tit(ind) = title(titStr);
             
-            lab(ind,1) = xlabel('Time [ms]');
+            lab(ind,1) = xlabel(' ');
             lab(ind,2) = ylabel('Amplitude [\muV]');
     
     
@@ -157,7 +169,11 @@ function plot_fasterWaveformWithFiltering(t, averWaveForm_in, averWaveForm, noOf
         hiFreqCut = parameters.filter.bandPass_P300_hiFreq;
         filterOrder = parameters.filterOrder_ERP;        
         for ch = 1 : parameters.EEG.nrOfChannels
-            averWaveForm_filt(:,ch) = pre_bandbassFilter(averWaveForm(ch,:)', parameters.EEG.srate, [hiFreqCut loFreqCut], filterOrder, [], handles); 
+            if sum(isnan(averWaveForm(ch,:)')) == 0
+                averWaveForm_filt(:,ch) = pre_bandbassFilter(averWaveForm(ch,:)', parameters.EEG.srate, [hiFreqCut loFreqCut], filterOrder, [], handles);             
+            else
+                averWaveForm_filt(:,ch) = averWaveForm(ch,:)';
+            end
         end
     
         hold on
@@ -169,7 +185,7 @@ function plot_fasterWaveformWithFiltering(t, averWaveForm_in, averWaveForm, noOf
             titStr = sprintf('%s\n%s', filtType, [num2str(loFreqCut), '-', num2str(hiFreqCut), ' Hz (order=', num2str(filterOrder), ')']);
             tit(ind) = title(titStr);
             
-            lab(ind,1) = xlabel('Time [ms]');
+            lab(ind,1) = xlabel(' ');
             lab(ind,2) = ylabel('Amplitude [\muV]');
     
             
@@ -184,7 +200,11 @@ function plot_fasterWaveformWithFiltering(t, averWaveForm_in, averWaveForm, noOf
     %% General styling
     set(lin, 'Color', 'k')
     
-    set(sp, 'XLim', [min(t) max(t)], 'YLim', yLims)
+    try
+        set(sp, 'XLim', [min(t) max(t)], 'YLim', yLims)
+    catch err
+        
+    end
     set(sp, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase-1) 
     set(lab, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase-1) 
     set(tit, 'FontName', handles.style.fontName, 'FontSize', handles.style.fontSizeBase, 'FontWeight', 'bold') 

@@ -30,7 +30,7 @@ function [handles, flags] = init_DefaultSettings()
             
             handles.path.figuresOut = fullfile(handles.path.codeFolder, 'figuresOut');
             
-            handles.path.debugOut = fullfile(handles.path.figuresOut, 'debugOut');
+            handles.path.debugOut = fullfile(handles.path.figuresOut, 'debug');
             handles.path.debugHeartOut = fullfile(handles.path.debugOut, 'heart');
             handles.path.debugPreprocessing = fullfile(handles.path.debugOut, 'preProcessing');
             handles.path.debugFractal = fullfile(handles.path.debugOut, 'fractalEEG');

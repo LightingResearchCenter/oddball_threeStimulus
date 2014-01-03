@@ -105,14 +105,28 @@ function parameters = init_DefaultParameters(handles)
         parameters.filterOrder_Alpha = 10; % filter order   
     
         % ERP
-        parameters.filter.bandPass_ERP_loFreq = parameters.filter.bandPass_loFreq;
+        parameters.filter.bandPass_ERP_loFreq = 0.1;
         parameters.filter.bandPass_ERP_hiFreq = 20;
         parameters.filterOrder_ERP = parameters.filterOrder; % filter order   
     
         % parameters for re-bandbass filtering for extracting the CNV
-        parameters.filter.bandPass_CNV_loFreq = parameters.filter.bandPass_loFreq;
+        parameters.filter.bandPass_CNV_loFreq = 0.1;
         parameters.filter.bandPass_CNV_hiFreq = 6;
         parameters.filterOrder_CNV = parameters.filterOrder; % filter order   
+        
+        % You could test a P300 specific filtering either between 0-4 Hz or
+        % 0.001 - 4 Hz (to remove DC bias), this band is however mostly used in 
+        % BCI application and this filtering will deform the "typical shape" of P300
+        parameters.filter.bandPass_P300_loFreq = 0.1;
+        parameters.filter.bandPass_P300_hiFreq = 4;
+        parameters.filterOrder_P300 = parameters.filterOrder; % filter order   
+        
+            % see short discussion in:        
+            % Ghaderi F, Kim SK, Kirchner EA. 2014. 
+            % Effects of eye artifact removal methods on single trial P300 detection, a comparative study. 
+            % Journal of Neuroscience Methods 221:41–47. 
+            % http://dx.doi.org/10.1016/j.jneumeth.2013.08.025   
+        
         
     
     %% Artifact rejection parameters    
@@ -161,16 +175,23 @@ function parameters = init_DefaultParameters(handles)
             parameters.artifacts.FASTER_zThreshold_step4 = 1.2; % use tighter rejection, 1.2 set empirically 
             
             parameters.artifacts.FASTER_icaMethod = 'runica'; % 'runica' or 'fastica'
-            parameters.artifacts.FASTER_skipICA = 1; % with our four EEG channels, there is typically no artifact channels, 
+            parameters.artifacts.FASTER_skipICA = 0; % with our four EEG channels, there is typically no artifact channels, 
                                                      % and this part just
                                                      % is computationally
                                                      % heavy for nothing
                                                      
             % correct the artifacts using the regress_eog from BioSig
             % not advised to correct epoch-by-epoch
+            parameters.artifacts.FASTER_regressEOG_asStep3 = 0;
             parameters.artifacts.FASTER_applyRegressionEOG = 0;
             parameters.artifacts.FASTER_applyRegressionECG = 0;
             
+            % rejection threshold of whole channel as ratio. In other words
+            % if only 4 trials out of 40 are spared after the rejection
+            % routine, one might say that the channel is rather bad quality
+            parameters.artifacts.FASTER_chRejectionRatio = 0.15;
+            
+            % for continuous 
             parameters.artifacts.continuousFASTER = 0;
                 parameters.artifacts.continuousEpochLength = 0.05; % seconds
             
@@ -290,6 +311,7 @@ function parameters = init_DefaultParameters(handles)
             
     %% Time-Frequency Analysis
     
+        parameters.timeFreq.computeTF = 0;
         parameters.timeFreq.logFrq = 0; % whether you use linear or log frequency scale        
         parameters.timeFreq.plotEpochs = 1;
                 

@@ -37,15 +37,14 @@ function MAIN_ANALYSIS()
     
         
         filesIn = {'je_01_40.bdf'; 'je_02_40.bdf'; 'je_03_40.bdf'; 'je_04_40.bdf'; 'je_01_0.bdf'; 'je_02_0.bdf'; 'je_03_0.bdf'; 'je_04_0.bdf'; 'je_01_10.bdf'; 'je_02_10.bdf'; 'je_03_10.bdf'; 'je_04_10.bdf'; ...
-                   'bl_01_10.bdf'; 'bl_02_10.bdf'; ...
-                   'bl_03_10.bdf'; 'bl_04_10.bdf'; 'bl_01_40.bdf'; 'bl_02_40.bdf'; 'bl_03_40.bdf'; 'bl_04_40.bdf'; 'bl_01_0.bdf'; 'bl_02_0.bdf'; 'bl_03_0.bdf'; 'bl_04_0.bdf'; ...
+                   'bl_01_10.bdf'; 'bl_02_10.bdf'; 'bl_03_10.bdf'; 'bl_04_10.bdf'; 'bl_01_40.bdf'; 'bl_02_40.bdf'; 'bl_03_40.bdf'; 'bl_04_40.bdf'; 'bl_01_0.bdf'; 'bl_02_0.bdf'; 'bl_03_0.bdf'; 'bl_04_0.bdf'; ...
                    'ka_01_10.bdf'; 'ka_02_10.bdf'; 'ka_03_10.bdf'; 'ka_04_10.bdf'; 'ka_01_40.bdf'; 'ka_02_40.bdf'; 'ka_03_40.bdf'; 'ka_04_40.bdf'; 'ka_01_0.bdf'; 'ka_02_0.bdf'; 'ka_03_0.bdf'; 'ka_04_0.bdf'; ...
                    'da_01_10.bdf'; 'da_02_10.bdf'; 'da_03_10.bdf'; 'da_04_10.bdf'; 'da_01_40.bdf'; 'da_02_40.bdf'; 'da_03_40.bdf'; 'da_04_40.bdf'; 'da_01_0.bdf'; 'da_02_0.bdf'; 'da_03_0.bdf'; 'da_04_0.bdf'; ...
                    'sh_01_40.bdf'; 'sh_02_40.bdf'; 'sh_03_40.bdf'; 'sh_04_40.bdf'; 'sh_01_0.bdf'; 'sh_02_0.bdf'; 'sh_03_0.bdf'; 'sh_04_0.bdf'; 'sh_01_10.bdf'; 'sh_02_10.bdf'; 'sh_03_10.bdf'; 'sh_04_10.bdf'; ...
                    'dk_01_10.bdf'; 'dk_02_10.bdf'; 'dk_03_10.bdf'; 'dk_04_10.bdf'; 'dk_01_40.bdf'; 'dk_02_40.bdf'; 'dk_03_40.bdf'; 'dk_04_40.bdf'; 'dk_01_0.bdf'; 'dk_02_0.bdf'; 'dk_03_0.bdf'; 'dk_04_0.bdf'; ...        
                    'jo_01_40.bdf'; 'jo_02_40.bdf'; 'jo_03_40.bdf'; 'jo_04_40.bdf'; 'jo_01_0.bdf'; 'jo_02_0.bdf'; 'jo_03_0.bdf'; 'jo_04_0.bdf'; 'jo_01_10.bdf'; 'jo_02_10.bdf'; 'jo_03_10.bdf'; 'jo_04_10.bdf'; ...
                    'cr_01_10.bdf'; 'cr_02_10.bdf'; 'cr_03_10.bdf'; 'cr_04_10.bdf'; 'cr_01_40.bdf'; 'cr_02_40.bdf'; 'cr_03_40.bdf'; 'cr_04_40.bdf'; 'cr_01_0.bdf'; 'cr_02_0.bdf'; 'cr_03_0.bdf'; 'cr_04_0.bdf'; ...
-                    'hh_01_40.bdf'; 'hh_02_40.bdf'; 'hh_03_40.bdf'; 'hh_04_40.bdf'; 'hh_01_0.bdf'; 'hh_02_0.bdf'; 'hh_03_0.bdf'; 'hh_04_0.bdf'; 'hh_01_10.bdf'; 'hh_02_10.bdf'; 'hh_03_10.bdf'; 'hh_04_10.bdf'; ...
+                   'hh_01_40.bdf'; 'hh_02_40.bdf'; 'hh_03_40.bdf'; 'hh_04_40.bdf'; 'hh_01_0.bdf'; 'hh_02_0.bdf'; 'hh_03_0.bdf'; 'hh_04_0.bdf'; 'hh_01_10.bdf'; 'hh_02_10.bdf'; 'hh_03_10.bdf'; 'hh_04_10.bdf'; ...
                    'ha_01_10.bdf'; 'ha_02_10.bdf'; 'ha_03_10.bdf'; 'ha_04_10.bdf'; 'ha_01_40.bdf'; 'ha_02_40.bdf'; 'ha_03_40.bdf'; 'ha_04_40.bdf'; 'ha_01_0.bdf'; 'ha_02_0.bdf'; 'ha_03_0.bdf'; 'ha_04_0.bdf'};
         
         %{    
@@ -55,8 +54,12 @@ function MAIN_ANALYSIS()
                
        
 
-        filesIn = {'cr_01_10.bdf'};     
+        
         %}
+        %filesIn = {'ka_03_40.bdf'};     
+        
+        % Problematic input files: (one from each subject)
+        % filesIn = {'dk_01_0.bdf'; 'da_03_10.bdf'; 'cr_01_0.bdf'; 'ha_02_0.bdf'; 'hh_03_40.bdf'; 'ka_03_40.bdf'; 'je_04_40.bdf';  'sh_02_0.bdf'; 'jo_02_0.bdf'; 'ka_01_0.bdf'};
         fileNameIn = filesIn;
         
         handles.inputFile = fileNameIn;
@@ -86,6 +89,8 @@ function MAIN_ANALYSIS()
         scales = [handles.parameters.ep_den.scales_postStim];
                 
         numberOfCombinations = length(hiFreq) * length(loFreq) * length(scales)       
+        
+        % handles.parameters.computeWavelet = 0; % save some time by skipping
                 
         for i = 1 : length(filesIn)
             

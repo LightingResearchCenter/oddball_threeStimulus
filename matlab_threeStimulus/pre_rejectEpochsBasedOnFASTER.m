@@ -39,7 +39,6 @@ function epochsOut = pre_rejectEpochsBasedOnFASTER(epochsIn, artifactIndices, st
         
         epochsOut.ERP{ep}(:, artifactYes == 1) = NaN;        
         % subplot(2,1,2);plot(epochsOut.ERP{ep}(:,1:4));title(num2str(artifactYes)); pause(1.5)
-                
         
     end
     

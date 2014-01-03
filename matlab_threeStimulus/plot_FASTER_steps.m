@@ -56,7 +56,16 @@ function [sp_i, sp] = plot_FASTER_steps(fig, sp, sp_i, leg, rows, cols, zs_st2, 
             legend('boxoff')
             lab(2,1) = xlabel('ICA components');
             lab(2,2) = ylabel(['Z-score (thr = ', num2str(parameters.artifacts.FASTER_zThreshold_step3), ')']);
-            tit(2) = title('STEP 3: ICA');
+            
+            if parameters.artifacts.FASTER_skipICA == 0
+                titStr = 'Step 3: ICA';
+            elseif parameters.artifacts.FASTER_regressEOG_asStep3 == 1
+                titStr = 'Step 3: regressEOG';
+            else
+                titStr = 'Step 3: ICA and regressEOG skipped';
+            end
+                
+            tit(2) = title(titStr);
             grid off
             axis tight
             set(gca, 'XTick', x, 'XLim', [min(x)-0.5 max(x)+0.5])      

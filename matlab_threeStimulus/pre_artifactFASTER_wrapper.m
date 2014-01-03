@@ -578,6 +578,15 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
         
             
          %% RETURN
+         
+            % As a last check, we can roughly determine the quality of
+            % grand average based on the number of trials surviving the
+            % artifact removal algorithm            
+            numberOfNans = sum(artifactIndices);            
+            rejectionThresholdInEpochs = round(parameters.artifacts.FASTER_chRejectionRatio * noOfEpochs1);
+            belowThresholdPerChannel = numberOfNans < rejectionThresholdInEpochs;
+            EEG.data(belowThresholdPerChannel,:,:) = NaN;
+            
         
             % now the EEG.data is in the format of:
             % channels (without ECG) x samples per epoch x epoch, and we need to
@@ -585,7 +594,6 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
             % epochs total
             EEG_concat = reshape(EEG.data, size(EEG.data, 1), (size(EEG.data, 2) * size(EEG.data, 3)));
             epochsOut.ERP = EEG_concat';
-
             nrOfEpochsOut = size(EEG.data, 3);
             
             % For the continuous data, now the artifactIndices refer to the
@@ -595,6 +603,11 @@ function [epochsOut, artifactIndices] = pre_artifactFASTER_wrapper(epochsIn, fix
             if strcmp(erpType, 'continuous')
                 artifactIndices = pre_FASTER_convertEpochIndicesToContinuous(artifactIndices, epochLength, parameters, handles);
             end
+            
+            
+            
+            
+     
             
         
         %% PLOT "ARTIFACT-FREE" EPOCHS and the AVERAGE WAVEFORM

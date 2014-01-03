@@ -16,7 +16,7 @@ function [rejectedEpochs_target, rejectedEpochs_distr, rejectedEpochs_std, artif
             load('debugPath.mat')
             load(fullfile(path.debugMATs, debugMatFileName))
             close all
-            localCall = 1;
+            localCall = 0;
         else
             if handles.flags.saveDebugMATs == 1
                 path = handles.path;
@@ -75,7 +75,8 @@ function [rejectedEpochs_target, rejectedEpochs_distr, rejectedEpochs_std, artif
     [epochs_concan_FASTER_target, artifactIndices_FASTER_target] = pre_artifactFASTER_wrapper(epochs_concan_target, fixedIndices_target,...
         NaN_indices_EEG_target, NaN_indices_EOG_target, NaN_indices_moving_target, NaN_indices_movingEOG_target, NaN_indices_step_target, ...
         reference_target, vDiffOutMovWindow_target, vDiffOutMovWindowEOG_target, vDiffOutStep_target, ...
-        handles.parameters, 'target', rejectOn_target.samplesPerEpoch, handles);
+        handles.parameters, 'target', rejectOn_target.samplesPerEpoch, handles); 
+
     
     if debugOnlyTarget ~= 1 || localCall == 0
         [epochs_concan_FASTER_distr, artifactIndices_FASTER_distr] = pre_artifactFASTER_wrapper(epochs_concan_distr, fixedIndices_distr,...
@@ -83,6 +84,8 @@ function [rejectedEpochs_target, rejectedEpochs_distr, rejectedEpochs_std, artif
             reference_distr, vDiffOutMovWindow_distr, vDiffOutMovWindowEOG_distr, vDiffOutStep_distr, ...
             handles.parameters, 'distracter', rejectOn_distr.samplesPerEpoch, handles);            
 
+        
+        
         [epochs_concan_FASTER_std, artifactIndices_FASTER_std] = pre_artifactFASTER_wrapper(epochs_concan_std, fixedIndices_std,...
             NaN_indices_EEG_std, NaN_indices_EOG_std, NaN_indices_moving_std, NaN_indices_movingEOG_std, NaN_indices_step_std, ...
             reference_std, vDiffOutMovWindow_std, vDiffOutMovWindowEOG_std, vDiffOutStep_std, ...
