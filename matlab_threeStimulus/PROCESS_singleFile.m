@@ -22,8 +22,8 @@ function [epochs, analyzed, TF, dataMatrix_filtGeneral, alpha, powers, handles] 
     TF = [];
 
     %% PRE-PROCESS THE DATA            
-    [dataMatrix_filtGeneral, dataMatrix_filtGeneralRegress, firstBandpassFilteredMatrix, artifactNaN_indices, ...
-        dataMatrix_filtAlpha, dataMatrix_filt, dataMatrix_filt_CNV, dataMatrix_filtP300] = ...
+    [dataMatrix_filtGeneral, dataMatrix_filtGeneralContinuous, firstBandpassFilteredMatrix, artifactNaN_indices, ...
+        dataMatrix_filtAlpha, dataMatrix_filt, dataMatrix_filtSmooth1, dataMatrix_filtSmooth2, dataMatrix_filt_CNV, dataMatrix_filtP300] = ...
         process_preProcessFiltering(dataMatrixIn, handles);
     
             
@@ -44,10 +44,10 @@ function [epochs, analyzed, TF, dataMatrix_filtGeneral, alpha, powers, handles] 
         % PROCESS the "Time-Series EEG", i.e. al the channels without
         % ERP oddball epoching, artifacts removed and bandpass-filtered     
         handles.parameters.compute_MFDFA = 0;
-        [alpha, powers, amplitSpectrum, PSD, SEM, heart, fractalAnalysis] =  process_timeSeriesEEG(dataMatrix_filtGeneral(:,EEGind(1):EEGind(2)), ... % EEG
-                                                                            dataMatrix_filtGeneral(:,EOGind(1):EOGind(2)), ... % EOG 
+        [alpha, powers, amplitSpectrum, PSD, SEM, heart, fractalAnalysis] =  process_timeSeriesEEG(dataMatrix_filtGeneralContinuous(:,EEGind(1):EEGind(2)), ... % EEG
+                                                                            dataMatrix_filtGeneralContinuous(:,EOGind(1):EOGind(2)), ... % EOG 
                                                                             dataMatrixIn(:,EOGind_raw(1):EOGind_raw(2)), ... % EOG RAW
-                                                                            dataMatrix_filtGeneral(:,ECGind(1):ECGind(2)), ... % ECG
+                                                                            dataMatrix_filtGeneralContinuous(:,ECGind(1):ECGind(2)), ... % ECG
                                                                             dataMatrixIn(:,ECGind_raw(1):ECGind_raw(2)), ... % ECG RAW
                                                                             triggers, handles.style, handles.parameters, handles);                                                                           
         close all
@@ -58,12 +58,14 @@ function [epochs, analyzed, TF, dataMatrix_filtGeneral, alpha, powers, handles] 
         disp('    Split recording to ERP epochs')              
         
         filteringType = 'bandpass';        
-        
-            % If you start adding a lot more erpTypes, consider changing to
-            % something more automagical and structured instead of having
-            % individual manual calls
+
             ERP_baseline = handles.parameters.oddballTask.ERP_baseline;
             ERP_duration = handles.parameters.oddballTask.ERP_duration;
+            
+            % Now all the different possible filtering/data types are
+            % stored to fields of a structure, and you can rather freely
+            % add new types and then just use that added type easily from
+            % the BATCH portion of the code without rewriting any code
         
             erpType = 'ERP'; disp(['     ', erpType]) % use the regression corrected
             [epochs.(filteringType).(erpType).target, epochs.(filteringType).(erpType).distr, epochs.(filteringType).(erpType).std, epoch_indices] = ...
@@ -71,7 +73,15 @@ function [epochs, analyzed, TF, dataMatrix_filtGeneral, alpha, powers, handles] 
 
             erpType = 'RAW'; disp(['     ', erpType])
             [epochs.(filteringType).(erpType).target, epochs.(filteringType).(erpType).distr, epochs.(filteringType).(erpType).std, epoch_indices] = ...
-                pre_epochToERPs(dataMatrixIn(:,:), triggers, epoch_indices, ERP_baseline, ERP_duration, alpha, handles.parameters, erpType, handles);                              
+                pre_epochToERPs(dataMatrixIn(:,:), triggers, epoch_indices, ERP_baseline, ERP_duration, alpha, handles.parameters, erpType, handles); 
+            
+            erpType = 'ERPsmooth1'; disp(['     ', erpType])
+            [epochs.(filteringType).(erpType).target, epochs.(filteringType).(erpType).distr, epochs.(filteringType).(erpType).std, epoch_indices] = ...
+                pre_epochToERPs(dataMatrix_filtSmooth1(:,:), triggers, epoch_indices, ERP_baseline, ERP_duration, alpha, handles.parameters, erpType, handles);                              
+            
+            erpType = 'ERPsmooth2'; disp(['     ', erpType])
+            [epochs.(filteringType).(erpType).target, epochs.(filteringType).(erpType).distr, epochs.(filteringType).(erpType).std, epoch_indices] = ...
+                pre_epochToERPs(dataMatrix_filtSmooth2(:,:), triggers, epoch_indices, ERP_baseline, ERP_duration, alpha, handles.parameters, erpType, handles);                              
             
             erpType = 'GENERAL'; disp(['     ', erpType])
             [epochs.(filteringType).(erpType).target, epochs.(filteringType).(erpType).distr, epochs.(filteringType).(erpType).std, epoch_indices] = ...

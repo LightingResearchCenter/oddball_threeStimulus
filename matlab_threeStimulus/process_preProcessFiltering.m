@@ -1,4 +1,6 @@
-function [dataMatrix_filtGeneral, dataMatrix_filtGeneralRegress, onlyNotchBandpassFilteredMatrix, artifactNaN_indices, dataMatrix_filtAlpha, dataMatrix_filt, dataMatrix_filt_CNV, dataMatrix_filt_P300] = ...
+function [dataMatrix_filtGeneral, dataMatrix_filtGeneralContinuous, onlyNotchBandpassFilteredMatrix, artifactNaN_indices, ...
+    dataMatrix_filtAlpha, dataMatrix_filt, dataMatrix_filtSmooth1, dataMatrix_filtSmooth2, ...
+    dataMatrix_filt_CNV, dataMatrix_filt_P300] = ...
     process_preProcessFiltering(dataMatrixIn, handles)
 
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
@@ -79,7 +81,7 @@ function [dataMatrix_filtGeneral, dataMatrix_filtGeneralRegress, onlyNotchBandpa
 
         % use subfunction wrapper
         [dataMatrix_filt,~,~,~] = pre_componentArtifactFiltering(matrixIn, rawMax, rowsIn, colsIn, ... % EEG matrix parameters
-            handles.parameters.filter.bandPass_ERP_loFreq, handles.parameters.filter.bandPass_ERP_hiFreq, handles.parameters.filterOrder, handles.parameters.filterOrderSteep, ... % filter parameters
+            handles.parameters.filter.bandPass_ERP_loFreq, handles.parameters.filter.bandPass_ERP_hiFreq, handles.parameters.filterOrder_ERP, handles.parameters.filterOrderSteep, ... % filter parameters
             dataType, handles.parameters, handles); % general settings
         
             % remove artifacts, that were found with the general filtering,
@@ -87,7 +89,31 @@ function [dataMatrix_filtGeneral, dataMatrix_filtGeneralRegress, onlyNotchBandpa
             EEGtemp = dataMatrix_filt(:,1:handles.parameters.EEG.nrOfChannels);
             EEGtemp(artifactNaN_indices) = NaN;
             dataMatrix_filt(:,1:handles.parameters.EEG.nrOfChannels) = EEGtemp;
-
+            
+            
+            %% ERP SMOOTH 1
+            % use subfunction wrapper
+            [dataMatrix_filtSmooth1,~,~,~] = pre_componentArtifactFiltering(matrixIn, rawMax, rowsIn, colsIn, ... % EEG matrix parameters
+                handles.parameters.filter.bandPass_ERPsmooth1_loFreq, handles.parameters.filter.bandPass_ERPsmooth1_hiFreq, handles.parameters.filterOrder_ERPsmooth1, handles.parameters.filterOrderSteep, ... % filter parameters
+                dataType, handles.parameters, handles); % general settings
+        
+                % remove artifacts, that were found with the general filtering,
+                % cannot remove before bandpass filtering (NaN)
+                EEGtemp = dataMatrix_filtSmooth1(:,1:handles.parameters.EEG.nrOfChannels);
+                EEGtemp(artifactNaN_indices) = NaN;
+                dataMatrix_filtSmooth1(:,1:handles.parameters.EEG.nrOfChannels) = EEGtemp;
+                
+            %% ERP SMOOTH 2
+            % use subfunction wrapper
+            [dataMatrix_filtSmooth2,~,~,~] = pre_componentArtifactFiltering(matrixIn, rawMax, rowsIn, colsIn, ... % EEG matrix parameters
+                handles.parameters.filter.bandPass_ERPsmooth1_loFreq, handles.parameters.filter.bandPass_ERPsmooth2_hiFreq, handles.parameters.filterOrder_ERPsmooth2, handles.parameters.filterOrderSteep, ... % filter parameters
+                dataType, handles.parameters, handles); % general settings
+        
+                % remove artifacts, that were found with the general filtering,
+                % cannot remove before bandpass filtering (NaN)
+                EEGtemp = dataMatrix_filtSmooth2(:,1:handles.parameters.EEG.nrOfChannels);
+                EEGtemp(artifactNaN_indices) = NaN;
+                dataMatrix_filtSmooth2(:,1:handles.parameters.EEG.nrOfChannels) = EEGtemp;
 
     %% CNV
 

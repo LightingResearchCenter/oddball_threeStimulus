@@ -108,6 +108,16 @@ function parameters = init_DefaultParameters(handles)
         parameters.filter.bandPass_ERP_loFreq = 0.1;
         parameters.filter.bandPass_ERP_hiFreq = 20;
         parameters.filterOrder_ERP = parameters.filterOrder; % filter order   
+        
+            % ERP smooth1
+            parameters.filter.bandPass_ERPsmooth1_loFreq = 0.1;
+            parameters.filter.bandPass_ERPsmooth1_hiFreq = 14;
+            parameters.filterOrder_ERPsmooth1 = parameters.filterOrder; % filter order
+            
+            % ERP smooth2
+            parameters.filter.bandPass_ERPsmooth2_loFreq = 0.1;
+            parameters.filter.bandPass_ERPsmooth2_hiFreq = 10;
+            parameters.filterOrder_ERPsmooth2 = parameters.filterOrder; % filter order
     
         % parameters for re-bandbass filtering for extracting the CNV
         parameters.filter.bandPass_CNV_loFreq = 0.1;
