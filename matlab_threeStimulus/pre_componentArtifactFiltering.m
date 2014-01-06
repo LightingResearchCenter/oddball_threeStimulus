@@ -1,4 +1,4 @@
-function [matrixOut, matrixRegress, filtOnly, NaN_indices] = pre_componentArtifactFiltering(matrixIn, rawMax, rowsIn, colsIn, loFreq, hiFreq, filterOrder, filterOrderSteep, dataType, parameters, handles)   
+function [matrixOut, matrixContinuous, filtOnly, NaN_indices] = pre_componentArtifactFiltering(matrixIn, rawMax, rowsIn, colsIn, loFreq, hiFreq, filterOrder, filterOrderSteep, dataType, parameters, handles)   
 
     
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
@@ -62,11 +62,10 @@ function [matrixOut, matrixRegress, filtOnly, NaN_indices] = pre_componentArtifa
         
         parameters.artifacts.contFaster_regressEOGbeforeFaster = 1;
         
-        %% NOTE! the epoching trims a bit the data to integer number of epochLenghts
-        
-        % Rethink a bit the procedure, and make it a better for continous
-        % data after Christmas, does not leave that much for the
-        % epoch-by-epoch Faster to work with
+        %% NOTE! the epoching trims a bit the data to integer number of epochLenghts        
+            % Rethink a bit the procedure, and make it a better for continous
+            % data after Christmas, does not leave that much for the
+            % epoch-by-epoch Faster to work with
         
         
         % If you wanna do regress EOG before whole FASTER
@@ -83,9 +82,11 @@ function [matrixOut, matrixRegress, filtOnly, NaN_indices] = pre_componentArtifa
         % Now split the continuous data into chunks and evaluate each chunk
         % as an epoch, and determine whether this chunk is artifacted or
         % not
-        [matrixOut, ~, NaN_indices] = pre_FASTER_forContinuousData(EEG, EOG, ECG, parameters, handles);
-        matrixRegress = [EEG EOG ECG];
+        [matrixContinuous, ~, NaN_indices] = pre_FASTER_forContinuousData(EEG, EOG, ECG, parameters, handles);
+        matrixOut = [EEG EOG ECG];
         
+
+
         disp(['          ARTIFACT SUMMARY:'])
         for ch = 1: parameters.EEG.nrOfChannels
             
@@ -105,14 +106,14 @@ function [matrixOut, matrixRegress, filtOnly, NaN_indices] = pre_componentArtifa
         disp(['             ... EOG REGRESSION'])
         EEG = pre_artifactRegressionWrapper(EEG, EOG, parameters.EEG.nrOfChannels, parameters);
         
-        matrixRegress = [EEG EOG ECG];
-        matrixOut = matrixRegress;
+        matrixContinuous = [EEG EOG ECG];
+        matrixOut = matrixContinuous;
         NaN_indices = false(length(matrixOut), parameters.EEG.nrOfChannels);
        
     else
         
         matrixOut = matrixOut1;
-        matrixRegress = matrixOut;
+        matrixContinuous = matrixOut;
         NaN_indices = false(length(matrixOut), parameters.EEG.nrOfChannels);
         
     end

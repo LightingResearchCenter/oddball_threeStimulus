@@ -89,7 +89,7 @@ function [epochs, analyzed, TF, dataMatrix_filtGeneral, alpha, powers, handles] 
             
             erpType = 'GENERAL_regress'; disp(['     ', erpType])
             [epochs.(filteringType).(erpType).target, epochs.(filteringType).(erpType).distr, epochs.(filteringType).(erpType).std, epoch_indices] = ...
-                pre_epochToERPs(dataMatrix_filtGeneralRegress(:,:), triggers, epoch_indices, ERP_baseline, ERP_duration, alpha, handles.parameters, erpType, handles);
+                pre_epochToERPs(dataMatrix_filtGeneralContinuous(:,:), triggers, epoch_indices, ERP_baseline, ERP_duration, alpha, handles.parameters, erpType, handles);
                         
             erpType = 'CNV'; disp(['     ', erpType])
             [epochs.(filteringType).(erpType).target, epochs.(filteringType).(erpType).distr, epochs.(filteringType).(erpType).std, epoch_indices] = ...                

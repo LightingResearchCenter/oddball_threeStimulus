@@ -44,10 +44,16 @@ function [dataMatrix_filtGeneral, dataMatrix_filtGeneralContinuous, onlyNotchBan
         rawMax = max(max(abs(matrixIn(:,1:handles.parameters.EEG.nrOfChannels))));
 
         % use subfunction wrapper
-        [dataMatrix_filtGeneral, dataMatrix_filtGeneralRegress, onlyNotchBandpassFilteredMatrix, artifactNaN_indices] ...
+        [dataMatrix_filtGeneral, dataMatrix_filtGeneralContinuous, onlyNotchBandpassFilteredMatrix, artifactNaN_indices] ...
             = pre_componentArtifactFiltering(matrixIn, rawMax, rowsIn, colsIn, ... % EEG matrix parameters
             handles.parameters.filter.bandPass_loFreq, handles.parameters.filter.bandPass_hiFreq, handles.parameters.filterOrder, handles.parameters.filterOrderSteep, ... % filter parameters
             dataType, handles.parameters, handles); % general settings                 
+
+            % remove artifacts from the continuous recording:
+            % -
+            EEGtemp = dataMatrix_filtGeneralContinuous(:,1:handles.parameters.EEG.nrOfChannels);
+            EEGtemp(artifactNaN_indices) = NaN;
+            dataMatrix_filtGeneralContinuous(:,1:handles.parameters.EEG.nrOfChannels) = EEGtemp;
 
 
      %% ALPHA                   
@@ -55,7 +61,7 @@ function [dataMatrix_filtGeneral, dataMatrix_filtGeneralContinuous, onlyNotchBan
         % Alpha-filtered ERP, as done by Barry et al. (2000) for
         % example, http://dx.doi.org/10.1016/S0167-8760(00)00114-8                   
         dataType = 'Alpha';
-        matrixIn = dataMatrix_filtGeneralRegress;
+        matrixIn = dataMatrix_filtGeneral;
         [rowsIn, colsIn] = size(matrixIn);
         rawMax = max(max(abs(matrixIn(:,1:handles.parameters.EEG.nrOfChannels))));        
         
@@ -66,16 +72,18 @@ function [dataMatrix_filtGeneral, dataMatrix_filtGeneralContinuous, onlyNotchBan
         
             % remove artifacts, that were found with the general filtering,
             % cannot remove before bandpass filtering (NaN)
-            EEGtemp = dataMatrix_filtAlpha(:,1:handles.parameters.EEG.nrOfChannels);
-            EEGtemp(artifactNaN_indices) = NaN;
-            dataMatrix_filtAlpha(:,1:handles.parameters.EEG.nrOfChannels) = EEGtemp;
+            if handles.parameters.artifacts.rejectContinuousFromEpochs == 1
+                EEGtemp = dataMatrix_filtAlpha(:,1:handles.parameters.EEG.nrOfChannels);
+                EEGtemp(artifactNaN_indices) = NaN;
+                dataMatrix_filtAlpha(:,1:handles.parameters.EEG.nrOfChannels) = EEGtemp;
+            end
 
 
     %% ERP
 
         % For ERP (P3, N2, P3-N2)
         dataType = 'ERP';
-        matrixIn = dataMatrix_filtGeneralRegress;
+        matrixIn = dataMatrix_filtGeneral;
         [rowsIn, colsIn] = size(matrixIn);
         rawMax = max(max(abs(matrixIn(:,1:handles.parameters.EEG.nrOfChannels))));
 
@@ -86,12 +94,16 @@ function [dataMatrix_filtGeneral, dataMatrix_filtGeneralContinuous, onlyNotchBan
         
             % remove artifacts, that were found with the general filtering,
             % cannot remove before bandpass filtering (NaN)
-            EEGtemp = dataMatrix_filt(:,1:handles.parameters.EEG.nrOfChannels);
-            EEGtemp(artifactNaN_indices) = NaN;
-            dataMatrix_filt(:,1:handles.parameters.EEG.nrOfChannels) = EEGtemp;
+            if handles.parameters.artifacts.rejectContinuousFromEpochs == 1
+                EEGtemp = dataMatrix_filt(:,1:handles.parameters.EEG.nrOfChannels);
+                EEGtemp(artifactNaN_indices) = NaN;
+                dataMatrix_filt(:,1:handles.parameters.EEG.nrOfChannels) = EEGtemp;
+            end
             
             
             %% ERP SMOOTH 1
+            dataType = 'ERPsmooth1';
+
             % use subfunction wrapper
             [dataMatrix_filtSmooth1,~,~,~] = pre_componentArtifactFiltering(matrixIn, rawMax, rowsIn, colsIn, ... % EEG matrix parameters
                 handles.parameters.filter.bandPass_ERPsmooth1_loFreq, handles.parameters.filter.bandPass_ERPsmooth1_hiFreq, handles.parameters.filterOrder_ERPsmooth1, handles.parameters.filterOrderSteep, ... % filter parameters
@@ -99,11 +111,15 @@ function [dataMatrix_filtGeneral, dataMatrix_filtGeneralContinuous, onlyNotchBan
         
                 % remove artifacts, that were found with the general filtering,
                 % cannot remove before bandpass filtering (NaN)
-                EEGtemp = dataMatrix_filtSmooth1(:,1:handles.parameters.EEG.nrOfChannels);
-                EEGtemp(artifactNaN_indices) = NaN;
-                dataMatrix_filtSmooth1(:,1:handles.parameters.EEG.nrOfChannels) = EEGtemp;
+                if handles.parameters.artifacts.rejectContinuousFromEpochs == 1
+                    EEGtemp = dataMatrix_filtSmooth1(:,1:handles.parameters.EEG.nrOfChannels);
+                    EEGtemp(artifactNaN_indices) = NaN;
+                    dataMatrix_filtSmooth1(:,1:handles.parameters.EEG.nrOfChannels) = EEGtemp;
+                end
                 
             %% ERP SMOOTH 2
+            dataType = 'ERPsmooth2';
+
             % use subfunction wrapper
             [dataMatrix_filtSmooth2,~,~,~] = pre_componentArtifactFiltering(matrixIn, rawMax, rowsIn, colsIn, ... % EEG matrix parameters
                 handles.parameters.filter.bandPass_ERPsmooth1_loFreq, handles.parameters.filter.bandPass_ERPsmooth2_hiFreq, handles.parameters.filterOrder_ERPsmooth2, handles.parameters.filterOrderSteep, ... % filter parameters
@@ -111,15 +127,17 @@ function [dataMatrix_filtGeneral, dataMatrix_filtGeneralContinuous, onlyNotchBan
         
                 % remove artifacts, that were found with the general filtering,
                 % cannot remove before bandpass filtering (NaN)
-                EEGtemp = dataMatrix_filtSmooth2(:,1:handles.parameters.EEG.nrOfChannels);
-                EEGtemp(artifactNaN_indices) = NaN;
-                dataMatrix_filtSmooth2(:,1:handles.parameters.EEG.nrOfChannels) = EEGtemp;
+                if handles.parameters.artifacts.rejectContinuousFromEpochs == 1
+                    EEGtemp = dataMatrix_filtSmooth2(:,1:handles.parameters.EEG.nrOfChannels);
+                    EEGtemp(artifactNaN_indices) = NaN;
+                    dataMatrix_filtSmooth2(:,1:handles.parameters.EEG.nrOfChannels) = EEGtemp;
+                end
 
     %% CNV
 
         % For CNV
         dataType = 'CNV';
-        matrixIn = dataMatrix_filtGeneralRegress;
+        matrixIn = dataMatrix_filtGeneral;
         [rowsIn, colsIn] = size(matrixIn);
         rawMax = max(max(abs(matrixIn(:,1:handles.parameters.EEG.nrOfChannels))));
 
@@ -130,9 +148,11 @@ function [dataMatrix_filtGeneral, dataMatrix_filtGeneralContinuous, onlyNotchBan
         
             % remove artifacts, that were found with the general filtering,
             % cannot remove before bandpass filtering (NaN)
-            EEGtemp = dataMatrix_filt_CNV(:,1:handles.parameters.EEG.nrOfChannels);
-            EEGtemp(artifactNaN_indices) = NaN;
-            dataMatrix_filt_CNV(:,1:handles.parameters.EEG.nrOfChannels) = EEGtemp;
+            if handles.parameters.artifacts.rejectContinuousFromEpochs == 1
+                EEGtemp = dataMatrix_filt_CNV(:,1:handles.parameters.EEG.nrOfChannels);
+                EEGtemp(artifactNaN_indices) = NaN;
+                dataMatrix_filt_CNV(:,1:handles.parameters.EEG.nrOfChannels) = EEGtemp;
+            end
 
     %% P300
     
@@ -149,7 +169,7 @@ function [dataMatrix_filtGeneral, dataMatrix_filtGeneralContinuous, onlyNotchBan
 
         % For P300
         dataType = 'P300';
-        matrixIn = dataMatrix_filtGeneralRegress;
+        matrixIn = dataMatrix_filtGeneral;
         [rowsIn, colsIn] = size(matrixIn);
         rawMax = max(max(abs(matrixIn(:,1:handles.parameters.EEG.nrOfChannels))));
 
@@ -160,9 +180,11 @@ function [dataMatrix_filtGeneral, dataMatrix_filtGeneralContinuous, onlyNotchBan
         
             % remove artifacts, that were found with the general filtering,
             % cannot remove before bandpass filtering (NaN)
-            EEGtemp = dataMatrix_filt_P300(:,1:handles.parameters.EEG.nrOfChannels);
-            EEGtemp(artifactNaN_indices) = NaN;
-            dataMatrix_fil_P300(:,1:handles.parameters.EEG.nrOfChannels) = EEGtemp;
+            if handles.parameters.artifacts.rejectContinuousFromEpochs == 1
+                EEGtemp = dataMatrix_filt_P300(:,1:handles.parameters.EEG.nrOfChannels);
+                EEGtemp(artifactNaN_indices) = NaN;
+                dataMatrix_filt_P300(:,1:handles.parameters.EEG.nrOfChannels) = EEGtemp;
+            end
             
 
         % Debug plot for bandpass characteristics
