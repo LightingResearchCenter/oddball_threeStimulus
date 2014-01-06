@@ -182,7 +182,8 @@ function heart = analyze_ECGforHeartParameters(ECG, ECG_raw, handles)
     %% Calculate HRV (Kardia Toolbox)
         disp(['            .. Compute heart Rate Variability (HRV)'])
         [heart, hpFilt] = analyze_HRV_Wrapper(heart, hp, thp, hpOutlierRej, thpOutOutlierRej, rrTimes, rrPeakInterval, rrPeakAmplitude, heartrateSampleRate, parameters, handles);        
-        
+            
+            %{
             % save the heart RR interval data to disk
             disp(['                .. save debug MAT file to disk of both unfiltered and filtered RR timeseries'])
                 fileNameOut = sprintf('%s%s', 'RR_timeSeries_', strrep(handles.inputFile, '.bdf', ''), '.mat');
@@ -194,6 +195,7 @@ function heart = analyze_ECGforHeartParameters(ECG, ECG_raw, handles)
             disp(['                  .. save debug MAT file to disk of raw ECG'])
                 fileNameOut = sprintf('%s%s', 'ECG_', strrep(handles.inputFile, '.bdf', ''), '.mat');
                 save(fullfile(handles.path.debugHeartOut, fileNameOut), 't', 'ECG_raw', 'Fs', 'heartParam')
+            %}
 
     %% Calculate DFA (Kardia Toolbox)    
         disp(['            .. DFA for R-R timeseries'])
