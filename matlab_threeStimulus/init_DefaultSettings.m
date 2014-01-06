@@ -38,6 +38,16 @@ function [handles, flags] = init_DefaultSettings()
             
             % OUT
             handles.path.matFilesMain = '/home/petteri/EEG-threeStim/';
+            try
+                currDir = pwd;
+                cd(handles.path.matFilesMain)
+                cd(currDir)
+            catch err
+                err
+                error('OUTPUT Directory does not exist. Note that the output .MAT files are stored outside the Cloud/Github path!')
+                % in other words change the handles.path.matFilesMain to a
+                % folder that exists
+            end
             handles.path.matFilesOut = fullfile(handles.path.matFilesMain, 'matOut');
             handles.path.matFilesInput = fullfile(handles.path.matFilesMain, 'inputMat');
             handles.path.debugMATs = fullfile(handles.path.matFilesMain, 'debugMATs');
