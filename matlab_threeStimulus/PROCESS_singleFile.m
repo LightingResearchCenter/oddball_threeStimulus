@@ -296,8 +296,33 @@ function [epochs, analyzed, TF, dataMatrix_filtGeneral, alpha, powers, handles] 
         for filt = 1 : length(filterTypes)
             disp(['     . ', filterTypes{filt}])
             erpTypes = fieldnames(epochs.(filterTypes{filt}));
+
+            % erpTypes = 
+            % 
+            %     'ERP'
+            %     'RAW'
+            %     'ERPsmooth1'
+            %     'ERPsmooth2'
+            %     'GENERAL'
+            %     'GENERAL_regress'
+            %     'CNV'
+            %     'ALPHA'
+            %     'P300'
+            %     'ECG'
+            %     'EOG'
+            %     'EP_DEN'
             
-            for erp = 1 : length(erpTypes)
+            if strcmp(filterTypes{filt}, 'bandpass')
+                noOfERPs = length(erpTypes) - 3;
+                    % 3 refers to ECG and EOG, and EP_DEN,  Would be more elegant to
+                    % remove these fieldnames with strcmp() or something
+            else
+                noOfERPs = 1;
+            end
+
+
+            for erp = 1 : noOfERPs
+
                 disp(['      .. ', erpTypes{erp}])
                 
                 for stim = 1 : length(stimTypes)
@@ -306,8 +331,8 @@ function [epochs, analyzed, TF, dataMatrix_filtGeneral, alpha, powers, handles] 
                     fprintf([' / ', stimTypes{stim}])
                 
                     % Use subfunction
-                    ERP_components.(filterTypes{filt}).(erpTypes{erpType}).(stimTypes{stim}) = ...
-                        analyze_getERPcomponents(epochs.(filterTypes{filt}).(erpTypes{erpType}).(stimTypes{stim}), ...
+                    ERP_components.(filterTypes{filt}).(erpTypes{erp}).(stimTypes{stim}) = ...
+                        analyze_getERPcomponents(epochs.(filterTypes{filt}).(erpTypes{erp}).(stimTypes{stim}), ...
                             filterTypes{filt}, handles.parameters.oddballTask.timeWindows, handles.parameters, handles);
                    
                     if stim == length(stimTypes); fprintf(['\n']); end
@@ -315,6 +340,8 @@ function [epochs, analyzed, TF, dataMatrix_filtGeneral, alpha, powers, handles] 
                 end % end of stimulus types (target, distracter, standard)
                 
             end % end of ERP types (ERP, CNV, etc.)
+
+            % ERP_components.(filterTypes{filt})
             
         end % end of filtering types (Bandpass, EP, etc.)       
 

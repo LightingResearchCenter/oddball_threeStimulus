@@ -73,8 +73,10 @@ function process_assignOutputsFromPROCESS(epochs, ERP_components, alpha, powers,
             analyzed_aux.PSD.(fieldName) = powers{i}.PSD.powerData;
         end
 
+        ERP_components.bandpass
+
         fileMatAnalyzedOut = strrep(handles.inputFile, '.bdf', '_analyzed.mat');                        
-        disp(['       .. Auxiliary measures [', fullfile(handles.path.matFilesOut, fileMatOut), ']'])
+        disp(['       .. Analyzed & Auxiliary measures [', fullfile(handles.path.matFilesOut, fileMatOut), ']'])
         save(fullfile(handles.path.matFilesOut, fileMatAnalyzedOut), 'ERP_components', 'analyzed_aux', 'powers', 'alpha', 'parameters', 'handles') % need powers and alpha?
 
     %% Time-Frequency derived
