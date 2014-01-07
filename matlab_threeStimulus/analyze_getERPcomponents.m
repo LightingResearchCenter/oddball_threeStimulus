@@ -1,6 +1,6 @@
 function [ERP_components, timeVector] = analyze_getERPcomponents(epochsIn, filtType, timeWindows, parameters, handles)
   
-    
+    %{
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction        
     if handles.flags.saveDebugMATs == 1
         debugMatFileName = 'tempGetERPcomponents.mat';
@@ -16,7 +16,7 @@ function [ERP_components, timeVector] = analyze_getERPcomponents(epochsIn, filtT
             end
         end 
     end
-    
+    %}
     
     noOfEpochsIn = length(epochsIn.ERP);
     [noOfSamples, noOfChannels] = size(epochsIn.ERP{1});

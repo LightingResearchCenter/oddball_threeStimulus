@@ -320,7 +320,6 @@ function [epochs, analyzed, TF, dataMatrix_filtGeneral, alpha, powers, handles] 
                 noOfERPs = 1;
             end
 
-
             for erp = 1 : noOfERPs
 
                 disp(['      .. ', erpTypes{erp}])

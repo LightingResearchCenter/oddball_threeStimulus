@@ -202,8 +202,15 @@ function parameters = init_DefaultParameters(handles)
             parameters.artifacts.FASTER_chRejectionRatio = 0.15;
             
             % for continuous 
-            parameters.artifacts.continuousFASTER = 0;
+            parameters.artifacts.continuousFASTER = 1;
                 parameters.artifacts.continuousEpochLength = 0.05; % seconds
+                
+                % in the current version of the script, the continuous
+                % artifact rejection is only used for the timeSeries
+                % analysis of EEG (IAF and fractal EEG), and this rejection
+                % is not propagated to the epoch analysis, where the
+                % FASTER+CRAP+FIXED rejection is done again:
+                parameters.artifacts.rejectContinuousFromEpochs = 0;
             
         
         % CRAP of ERPLAB
