@@ -33,6 +33,7 @@ function sessionStat = batch_calculateStatsFromStats(matricesSessionAver, handle
 
                     % should be the size of 4 sessions x 2 subjects                    
                     dataMatrix(session, :) = matricesSessionAver.(ERPtypes{j}).(conditions{condition}).(channels{ch}){session}.mean;
+                    dataMatrixMedian(session, :) = matricesSessionAver.(ERPtypes{j}).(conditions{condition}).(channels{ch}){session}.median;
                     dataMatrix_SD(session, :) = matricesSessionAver.(ERPtypes{j}).(conditions{condition}).(channels{ch}){session}.SD;
 
                 end
@@ -42,9 +43,21 @@ function sessionStat = batch_calculateStatsFromStats(matricesSessionAver, handle
 
                 % Data in
                 % dataMatrix;
+                
+                % save the input data as well 
+                matricesStat.(ERPtypes{j}).(conditions{condition}).(handles.parameters.BioSemi.chName{ch+handles.parameters.BioSemi.chOffset}).meanIn = ...
+                    dataMatrix;
+                matricesStat.(ERPtypes{j}).(conditions{condition}).(handles.parameters.BioSemi.chName{ch+handles.parameters.BioSemi.chOffset}).medianIn = ...
+                    dataMatrixMedian;
+                matricesStat.(ERPtypes{j}).(conditions{condition}).(handles.parameters.BioSemi.chName{ch+handles.parameters.BioSemi.chOffset}).sdIn = ...
+                    dataMatrix_SD;
+
 
                 % Mean out
                 meanOut = matricesStat.(ERPtypes{j}).(conditions{condition}).(handles.parameters.BioSemi.chName{ch+handles.parameters.BioSemi.chOffset}).mean;
+
+                % Median out
+                medianOut = matricesStat.(ERPtypes{j}).(conditions{condition}).(handles.parameters.BioSemi.chName{ch+handles.parameters.BioSemi.chOffset}).median;
 
                 % n of non-NaN values
                 nOut = matricesStat.(ERPtypes{j}).(conditions{condition}).(handles.parameters.BioSemi.chName{ch+handles.parameters.BioSemi.chOffset}).n;

@@ -57,6 +57,7 @@ function [p, styleHandles, yLims] = ...
     p(2,:) = plot(x2, y2, '*');
     p(3,:) = plot(x3, y3, 'o');
     hold off
+    
 
     [noOfCond, noOfSubjects] = size(p);
     for c =  1 : noOfCond

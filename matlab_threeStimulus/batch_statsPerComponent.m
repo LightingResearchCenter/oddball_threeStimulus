@@ -59,7 +59,13 @@ function [statsOut, matricesSessionNorm, outlierOut] = ...
         disp('  .. . . . calculate stats of these')
         normFieldNames = fieldnames(matricesSessionNorm);
         for i = 1 : length(normFieldNames)
+
+            % simple stats like mean, SD, median
             statsOut.(normFieldNames{i}) = batch_calculateStatsFromStats(matricesSessionNorm.(normFieldNames{i}), handles);
+
+            % calculate significances between different conditions
+            % statsOut.(normFieldNames{i}) = batch_calculateStatSignificances(statsOut.(normFieldNames{i}), matricesSessionNorm.(normFieldNames{i}), handles);
+
         end
         
 

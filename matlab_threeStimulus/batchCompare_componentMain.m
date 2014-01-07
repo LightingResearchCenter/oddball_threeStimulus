@@ -56,6 +56,7 @@ function batchCompare_componentMain(fileNameFields, fileNames, outlierFilenameLi
         end
     end
     
+    %{
     
     %% AUX (EEG Continuous powers, and IAF)
     
@@ -64,4 +65,4 @@ function batchCompare_componentMain(fileNameFields, fileNames, outlierFilenameLi
         
         % Plot
         batch_plotAuxScalars(auxStat, auxStatPowers, subjects, handles)
-    
+  %}  
