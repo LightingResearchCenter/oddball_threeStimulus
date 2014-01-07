@@ -15,8 +15,10 @@ function plot_EXTRA_MAIN(heart_Out, fractalEEG_Out, eye_Out, handles)
     end
     
     
-    fieldsOfInterest = {'HR_Mean'; 'NHF'; 'avIBI'; 'RMSSD'; 'DFA_alphaScaling'; 'MFDFA_mean_h'};
-    batch_plotAuxSubLoop(heart_Out, 'scalar', fieldsOfInterest, 'Heart', handles) 
+    fieldsOfInterest = {'HR_Mean'; 'SDNN'; 'RMSSD'; 'VLF' 'NHF'; 'DFA_alphaScaling'};
+    batch_plotAuxSubLoop(heart_Out, 'scalar', fieldsOfInterest, 'Heart', handles)     
+        % to see all the field, see "analyze_ECGforHeartParameters.m" for
+        % example
     
     fieldsOfInterest = {'MFDFA_mean_h'; 'MFDFA_mean_Dh'; 'MFDFA_width_h';  'MFDFA_height_Dh'};
     %batch_plotAuxSubLoop(fractalEEG_Out, 'scalar', fieldsOfInterest, 'fractalEEG', handles) 
