@@ -1,5 +1,5 @@
 % ABSOLUTE NORMALIZED
-function plot_componentAbsoluteNormalizedFigure(fig, statsOut, normalizationTypes, erpComponent, erpFilterType, chsToPlot, erpTypes, fieldValue, subjects, handles)
+function plot_componentAbsoluteNormalizedFigure(fig, statsOut, normalizationTypes, erpBandType, erpComponent, erpFilterType, chsToPlot, erpTypes, fieldValue, subjects, handles)
 
     scrsz = get(0,'ScreenSize'); % get screen size for plotting
     % normalizationTypes = {'rawWithNoNormalization'}
@@ -20,7 +20,7 @@ function plot_componentAbsoluteNormalizedFigure(fig, statsOut, normalizationType
             stim = 1; % target
             sp(index) = subplot(rows,cols,index);
             [p(index,:), styleHandles(index,:), yLims(index,:)] = plot_sessionMeanSubplot(statsOut.(normalizationTypes{normType}), ...
-                        'Cz', normalizationTypes, erpTypes, rows, cols, normType, stim, [], index, fieldValue, erpComponent, erpFilterType, subjects, handles);
+                        'Cz', normalizationTypes, erpBandType, erpTypes, rows, cols, normType, stim, [], index, fieldValue, erpComponent, erpFilterType, subjects, handles);
             drawnow
         else
             for stim = 1 : length(erpTypes)   
@@ -29,7 +29,7 @@ function plot_componentAbsoluteNormalizedFigure(fig, statsOut, normalizationType
                     sp(index) = subplot(rows,cols,index);
                     % stimulusTypes{stim}
                     [p(index,:), styleHandles(index,:), yLims(index,:)] = plot_sessionMeanSubplot(statsOut.(normalizationTypes{normType}), ...
-                        chsToPlot{ch}, normalizationTypes, erpTypes, rows, cols, normType, stim, ch, index, fieldValue, erpComponent, erpFilterType, subjects, handles);
+                        chsToPlot{ch}, normalizationTypes, erpBandType, erpTypes, rows, cols, normType, stim, ch, index, fieldValue, erpComponent, erpFilterType, subjects, handles);
                     drawnow
                 end
             end
@@ -64,7 +64,7 @@ function plot_componentAbsoluteNormalizedFigure(fig, statsOut, normalizationType
             drawnow
             dateStr = plot_getDateString(); % get current date as string
             %cd(path.outputFigures)            
-            fileNameOut = ['plot_componentComparison_',  erpComponent, '_', erpFilterType, '_', fieldValue, '_', chsToPlot{1}, '-',  chsToPlot{2}, '_', dateStr];
+            fileNameOut = ['plot_componentComparison_',  erpComponent, '_', erpFilterType, '_', fieldValue, '_', chsToPlot{1}, '-',  chsToPlot{2}, '_', erpBandType, '_', dateStr];
             export_fig(fullfile(handles.path.figuresOut, fileNameOut), handles.figureOut.resolution, handles.figureOut.antialiasLevel, fig)
             %cd(path.code)
         end

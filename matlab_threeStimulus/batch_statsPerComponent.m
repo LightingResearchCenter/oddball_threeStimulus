@@ -1,5 +1,5 @@
 function [statsOut, matricesSessionNorm, outlierOut] = ...
-    batch_statsPerComponent(dataOut, statsPer, erpComponent, erpFilterType, fieldValue, fileNameFields, fileNames, stimulusType, subjects, outlierFilenameList, handles)
+    batch_statsPerComponent(dataOut, statsPer, erpBandType, erpComponent, erpFilterType, fieldValue, fileNameFields, fileNames, stimulusType, subjects, outlierFilenameList, handles)
 
     %% DEBUG
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
@@ -23,10 +23,10 @@ function [statsOut, matricesSessionNorm, outlierOut] = ...
     dataOut.bright
     dataOut.bright.session1
     dataOut.bright.session1.target
-    dataOut.bright.session1.target.component
-    dataOut.bright.session1.target.component.bl
-    dataOut.bright.session1.target.component.bl.(erpFilterType)
-    dataOut.bright.session1.target.component.bl.(erpFilterType).Cz
+    dataOut.bright.session1.target.(erpTypes{1})
+    dataOut.bright.session1.target.(erpTypes{1}).bl
+    dataOut.bright.session1.target.(erpTypes{1}).bl.(erpFilterType)
+    dataOut.bright.session1.target.(erpTypes{1}).bl.(erpFilterType).Cz
     %}
 
     dataOutField = fieldnames(dataOut);   
@@ -35,12 +35,13 @@ function [statsOut, matricesSessionNorm, outlierOut] = ...
     % dataNormField
     
     noOfSessions = length(fieldnames(dataOut.(dataOutField{1})));
-    subjectsIn = fieldnames(dataOut.(dataOutField{1}).session1.target.component);
+    erpTypes = fieldnames(dataOut.(dataOutField{1}).session1.target);
+    subjectsIn = fieldnames(dataOut.(dataOutField{1}).session1.target.(erpTypes{1}));
     noOfSubjects = length(subjectsIn);    
-    noOfTrials = length(dataOut.(dataOutField{1}).session1.target.component.(subjectsIn{1}).(erpFilterType).Cz);
+    noOfTrials = length(dataOut.(dataOutField{1}).session1.target.(erpTypes{1}).(subjectsIn{1}).(erpFilterType).Cz);
 
     disp('  .. . create intensity matrix (4D)')
-    matricesIntensity = batch_getPerSubjectMatrix_Intensity(dataOut, erpComponent, erpFilterType, fieldValue, noOfSubjects, noOfTrials, handles);   
+    matricesIntensity = batch_getPerSubjectMatrix_Intensity(dataOut, erpBandType, erpComponent, erpFilterType, fieldValue, noOfSubjects, noOfTrials, handles);   
 
     % Each session have only one value, i.e. the average of 40
     % trials 

@@ -1,4 +1,4 @@
-function [dataOut, auxOut, auxOutPowers, subjects] = batch_pullOut_ERP(fileNameFields, outlierFilenameList, erpComponent, erpFilterType, handles)
+function [dataOut, auxOut, auxOutPowers, subjects] = batch_pullOut_ERP(fileNameFields, outlierFilenameList, erpBandType, erpComponent, erpFilterType, handles)
 
     %% DEBUG
     debugMatFileName = 'tempPullOutERPs.mat';
@@ -121,50 +121,50 @@ function [dataOut, auxOut, auxOutPowers, subjects] = batch_pullOut_ERP(fileNameF
                 % while you might think that it is been corrected
                 outlierFilesFoundFromInput(outlierListTrue) = 1;
 
-            erpTypes = fieldnames(dataIn.ERP_components.(erpFilterType));
+            erpBandTypes = fieldnames(dataIn.ERP_components.(erpFilterType));            
 
-            for erpType = 1 : length(erpTypes) % ERP, CNV, ERPsmooth1, P300, etc
+            % use more intuitive variable names
+            if errorWithTheInput == 0 && thisFileMarkedAsOutlier == 0
+                target = dataIn.ERP_components.(erpFilterType).(erpBandType).target;
+                distracter = dataIn.ERP_components.(erpFilterType).(erpBandType).distr;
+                standard = dataIn.ERP_components.(erpFilterType).(erpBandType).std;                
 
-                % use more intuitive variable names
-                if errorWithTheInput == 0 && thisFileMarkedAsOutlier == 0
-                    target = dataIn.ERP_components.(erpFilterType).ERP.target;
-                    distracter = dataIn.ERP_components.(erpFilterType).ERP.distr;
-                    standard = dataIn.ERP_components.(erpFilterType).ERP.std;                
+                % Get structure of the input
+                chNames = fieldnames(target);                
+                componentNames = fieldnames(target.(chNames{1}){1});
+                componentStatFields = fieldnames(target.(chNames{1}){1}.(componentNames{1}));                                
 
-                    % Get structure of the input
-                    chNames = fieldnames(target);                
-                    componentNames = fieldnames(target.(chNames{1}){1});
-                    componentStatFields = fieldnames(target.(chNames{1}){1}.(componentNames{1}));                                
+                % get number of epochs
+                noOfEpochs.target = length(target.(chNames{1}));
+                noOfEpochs.distr = length(distracter.(chNames{1}));
+                noOfEpochs.std = length(standard.(chNames{1}));
 
-                    % get number of epochs
-                    noOfEpochs.target = length(target.(chNames{1}));
-                    noOfEpochs.distr = length(distracter.(chNames{1}));
-                    noOfEpochs.std = length(standard.(chNames{1}));
-
-                else
-                    try
-                        target = batch_fillComponentFieldWithNaNs(chNames, componentNames, componentStatFields, noOfEpochs.target);
-                        disp(['          - filling the target/distracter/standard ERPs with NaNs'])
-                    catch err
-                        err
-                        disp(['fileIndex = ', num2str(i)])
-                        disp('does not work actually if your first file is faulty, fix later')
-                    end
-                    distracter = batch_fillComponentFieldWithNaNs(chNames, componentNames, componentStatFields, noOfEpochs.distr);
-                    standard = batch_fillComponentFieldWithNaNs(chNames, componentNames, componentStatFields, noOfEpochs.std);
+            else
+                try
+                    target = batch_fillComponentFieldWithNaNs(chNames, componentNames, componentStatFields, noOfEpochs.target);
+                    disp(['          - filling the target/distracter/standard ERPs with NaNs'])
+                catch err
+                    err
+                    disp(['fileIndex = ', num2str(i)])
+                    disp('does not work actually if your first file is faulty, fix later')
                 end
-
+                distracter = batch_fillComponentFieldWithNaNs(chNames, componentNames, componentStatFields, noOfEpochs.distr);
+                standard = batch_fillComponentFieldWithNaNs(chNames, componentNames, componentStatFields, noOfEpochs.std);
             end
-               
+
             % subject
             subject = fileNameFields{i}.subject;
             subjects{i} = subject;
 
             % assign to output, the desired component
-            dataOut.(intensity).(session).target.component.(subject).(erpFilterType) = target;
-            dataOut.(intensity).(session).distracter.component.(subject).(erpFilterType) = distracter;
-            dataOut.(intensity).(session).standard.component.(subject).(erpFilterType) = standard;
-        
+            dataOut.(intensity).(session).target.(erpBandType).(subject).(erpFilterType) = target;
+            dataOut.(intensity).(session).distracter.(erpBandType).(subject).(erpFilterType) = distracter;
+            dataOut.(intensity).(session).standard.(erpBandType).(subject).(erpFilterType) = standard;      
+            
+            %whos('dataOut')
+            
+            
+            
         %% AUX variables
         analyzed_aux = dataIn.analyzed_aux;
         aux_fieldNames = fieldnames(analyzed_aux);
@@ -254,3 +254,6 @@ function [dataOut, auxOut, auxOutPowers, subjects] = batch_pullOut_ERP(fileNameF
         fprintf('\n')
 
 
+    
+    
+        

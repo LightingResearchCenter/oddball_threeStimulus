@@ -1,5 +1,5 @@
 function [p, styleHandles, yLims] = ...
-    plot_sessionMeanSubplot(statData, chToPlot, normalizationTypes, erpTypes, rows, cols, normType, stim, ch, index, fieldValue, erpComponent, erpDataType, subjects, handles)
+    plot_sessionMeanSubplot(statData, chToPlot, normalizationTypes, erpBandType, erpTypes, rows, cols, normType, stim, ch, index, fieldValue, erpComponent, erpDataType, subjects, handles)
 
     i = 1;
 
@@ -102,7 +102,7 @@ function [p, styleHandles, yLims] = ...
             yLabelString = ' ';
         elseif (index - (floor(index/cols)*cols)) == 4
             normString = fieldValue;                
-            yLabelString = ' ';
+            yLabelString = erpBandType;
         elseif (index - (floor(index/cols)*cols)) == 0
             normString = erpDataType;                
             yLabelString = ' ';                

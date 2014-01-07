@@ -1,5 +1,5 @@
 function [p, styleHandles, yLims] = ...
-    plot_sessionScatterSubplot(normData, chToPlot, normalizationTypes, erpTypes, rows, cols, normType, stim, ch, index, fieldValue, erpComponent, erpDataType, noOfSessions, subjects, handles)
+    plot_sessionScatterSubplot(normData, chToPlot, normalizationTypes, erpBandType, erpTypes, rows, cols, normType, stim, ch, index, fieldValue, erpComponent, erpDataType, noOfSessions, subjects, handles)
 
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
     if 1 == 1
@@ -120,7 +120,7 @@ function [p, styleHandles, yLims] = ...
             yLabelString = ' ';
         elseif (index - (floor(index/cols)*cols)) == 2
             normString = fieldValue;                
-            yLabelString = ' ';
+            yLabelString = erpBandType;
         elseif (index - (floor(index/cols)*cols)) == 0
             normString = erpDataType;                
             yLabelString = ' ';                

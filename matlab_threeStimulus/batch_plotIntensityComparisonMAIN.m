@@ -1,4 +1,4 @@
-function batch_plotIntensityComparisonMAIN(statsOut, matricesSessionNorm, statsPer, erpComponent, erpFilterType, fieldValue, fileNameFields, stimulusType, chsToPlot, subjects, outlierOut, handles)
+function batch_plotIntensityComparisonMAIN(statsOut, matricesSessionNorm, statsPer, erpBandType, erpComponent, erpFilterType, fieldValue, fileNameFields, stimulusType, chsToPlot, subjects, outlierOut, handles)
 
     %% DEBUG
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
@@ -40,17 +40,17 @@ function batch_plotIntensityComparisonMAIN(statsOut, matricesSessionNorm, statsP
         
         fig1 = figure('Color', 'w');
             set(fig1, 'Name', 'MEAN PLOT: Subjects averaged & Normalized')
-            plot_componentAbsoluteNormalizedFigure(fig1, statsOut, normalizationTypes, erpComponent, erpFilterType, chsToPlot, erpTypes, fieldValue, subjects, handles)
+            plot_componentAbsoluteNormalizedFigure(fig1, statsOut, normalizationTypes, erpBandType, erpComponent, erpFilterType, chsToPlot, erpTypes, fieldValue, subjects, handles)
             
     
     %% PLOT 2:        
 
         fig2 = figure('Color', 'w');
             chSelected = 1; % too clogged if you plot 2 channels to same figure
-            plot_componentScatterFigure(fig2, statsOut, matricesSessionNorm, noOfSessions, normalizationTypes, erpComponent, erpFilterType, chsToPlot, chSelected,  erpTypes, fieldValue, subjects, handles)
+            plot_componentScatterFigure(fig2, statsOut, matricesSessionNorm, noOfSessions, normalizationTypes, erpBandType, erpComponent, erpFilterType, chsToPlot, chSelected,  erpTypes, fieldValue, subjects, handles)
 
         fig3 = figure('Color', 'w');
             chSelected = 2; % too clogged if you plot 2 channels to same figure
-            plot_componentScatterFigure(fig3, statsOut, matricesSessionNorm, noOfSessions, normalizationTypes, erpComponent, erpFilterType, chsToPlot, chSelected, erpTypes, fieldValue, subjects, handles)
+            plot_componentScatterFigure(fig3, statsOut, matricesSessionNorm, noOfSessions, normalizationTypes, erpBandType, erpComponent, erpFilterType, chsToPlot, chSelected, erpTypes, fieldValue, subjects, handles)
 
   
