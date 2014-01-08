@@ -25,13 +25,14 @@ function MAIN_ANALYSIS()
     %% General Settings
     
         % i.e. like where the folders are, fonts to be used, colors, etc.
-        [handles, ~] = init_DefaultSettings(); % use a subfunction        
+        [handles, ~] = init_DefaultSettings(); % use a subfunction                       
 
     %% Parameters for ANALYSIS
     
         % i.e. like artifact rejection threolds, filter cutoffs,
         % numerical parameters for EEG analysis
         handles.parameters = init_DefaultParameters(handles); % use a subfunction        
+        handles.parameters.processOnlyTimeSeries = 1;
     
     %% Define input
     
@@ -52,11 +53,9 @@ function MAIN_ANALYSIS()
                    'ha_01_10.bdf'; 'ha_02_10.bdf'; 'ha_03_10.bdf'; 'ha_04_10.bdf'; 'ha_01_40.bdf'; 'ha_02_40.bdf'; 'ha_03_40.bdf'; 'ha_04_40.bdf'; 'ha_01_0.bdf'; 'ha_02_0.bdf'; 'ha_03_0.bdf'; 'ha_04_0.bdf'};
         
                
-       
-
         
         %}
-        %filesIn = {'ka_03_40.bdf'};     
+        %filesIn = {'hh_01_40.bdf'};     
         
         % Problematic input files: (one from each subject)
         % filesIn = {'dk_01_0.bdf'; 'da_03_10.bdf'; 'cr_01_0.bdf'; 'ha_02_0.bdf'; 'hh_03_40.bdf'; 'ka_03_40.bdf'; 'je_04_40.bdf';  'sh_02_0.bdf'; 'jo_02_0.bdf'; 'ka_01_0.bdf'};
@@ -137,7 +136,6 @@ function MAIN_ANALYSIS()
 
             tElapsed(i) = toc;
             disp(['TIME FOR COMPUTATION: ', num2str(tElapsed(i)), ' sec'])
-            whos
 
         end           
         

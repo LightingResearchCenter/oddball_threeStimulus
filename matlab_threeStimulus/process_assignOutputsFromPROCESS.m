@@ -32,68 +32,72 @@ function process_assignOutputsFromPROCESS(epochs, ERP_components, alpha, powers,
     parameters = handles.parameters;
     handles.parameters = [];
 
-    %% ERP Waveforms
-
-        fileMatOut = strrep(handles.inputFile, '.bdf', '_fullEpochs.mat');        
-        disp(['      .. All ERP Epochs [', fullfile(handles.path.matFilesOut, fileMatOut), ']'])
-        save(fullfile(handles.path.matFilesOut, fileMatOut), 'epochs', 'parameters', 'handles')        
-        
-    %% ERP Waveforms stat, instead of outputting all the epochs, calculate the mean/median/etc. here and save
+    if parameters.processOnlyTimeSeries ~= 1
     
-        %{
-        fileMatOut = strrep(handles.inputFile, '.bdf', '_statEpochs.mat');        
-        disp(['      .. Stats of ERP Epochs [', fullfile(handles.path.matFilesOut, fileMatOut), ']'])
-        
-        % quick'n'dirty fix
-        erpFilterType = {'bandpass'};
-        erpType = {'ERP'};
-        chsToPlot = {'Cz'; 'Pz'};
-        responseTypes = fieldnames(epochs.(erpFilterType).(erpType));
-        
-        for filt = 1 : length(erpFilterType)       
-            for erp = 1 : length(erpType)  
-                for resp = 1 : length(responseTypes)            
-                    % process using a subfunction
-                    [epochsStat, debug] = batch_timeDomEpochsAverage(epochs.(erpFilterType).(erpType).(responseTypes{resp}), thisFileMarkedAsOutlier, handles.parameters, handles);
+        %% ERP Waveforms
+
+            fileMatOut = strrep(handles.inputFile, '.bdf', '_fullEpochs.mat');        
+            disp(['      .. All ERP Epochs [', fullfile(handles.path.matFilesOut, fileMatOut), ']'])
+            save(fullfile(handles.path.matFilesOut, fileMatOut), 'epochs', 'parameters', 'handles')        
+
+        %% ERP Waveforms stat, instead of outputting all the epochs, calculate the mean/median/etc. here and save
+
+            %{
+            fileMatOut = strrep(handles.inputFile, '.bdf', '_statEpochs.mat');        
+            disp(['      .. Stats of ERP Epochs [', fullfile(handles.path.matFilesOut, fileMatOut), ']'])
+
+            % quick'n'dirty fix
+            erpFilterType = {'bandpass'};
+            erpType = {'ERP'};
+            chsToPlot = {'Cz'; 'Pz'};
+            responseTypes = fieldnames(epochs.(erpFilterType).(erpType));
+
+            for filt = 1 : length(erpFilterType)       
+                for erp = 1 : length(erpType)  
+                    for resp = 1 : length(responseTypes)            
+                        % process using a subfunction
+                        [epochsStat, debug] = batch_timeDomEpochsAverage(epochs.(erpFilterType).(erpType).(responseTypes{resp}), thisFileMarkedAsOutlier, handles.parameters, handles);
+                    end
                 end
             end
-        end
-        
-        % save
-        save(fullfile(handles.path.matFilesOut, fileMatOut), 'epochsStat', 'parameters', 'handles')        
-        %}
 
-    %% Derived ERP Measures such as amplitude latency etc.
+            % save
+            save(fullfile(handles.path.matFilesOut, fileMatOut), 'epochsStat', 'parameters', 'handles')        
+            %}
 
-        % "Auxiliary measures" (scalars)            
-        analyzed_aux.IAF_amplitGravity = alpha.amplit_gravity;
-        for i = 1 : length(parameters.powerAnalysis.eegBins.freqs)
-            fieldName = powers{i}.label;
-            analyzed_aux.Amplit.(fieldName) = powers{i}.ps.powerData;                
-            analyzed_aux.PSD.(fieldName) = powers{i}.PSD.powerData;
-        end
+        %% Derived ERP Measures such as amplitude latency etc.
 
-        ERP_components.bandpass
+            % "Auxiliary measures" (scalars)            
+            analyzed_aux.IAF_amplitGravity = alpha.amplit_gravity;
+            for i = 1 : length(parameters.powerAnalysis.eegBins.freqs)
+                fieldName = powers{i}.label;
+                analyzed_aux.Amplit.(fieldName) = powers{i}.ps.powerData;                
+                analyzed_aux.PSD.(fieldName) = powers{i}.PSD.powerData;
+            end
 
-        fileMatAnalyzedOut = strrep(handles.inputFile, '.bdf', '_analyzed.mat');                        
-        disp(['       .. Analyzed & Auxiliary measures [', fullfile(handles.path.matFilesOut, fileMatOut), ']'])
-        save(fullfile(handles.path.matFilesOut, fileMatAnalyzedOut), 'ERP_components', 'analyzed_aux', 'powers', 'alpha', 'parameters', 'handles') % need powers and alpha?
+            ERP_components.bandpass
 
-    %% Time-Frequency derived
-        fileMatOutWavelet = strrep(handles.inputFile, '.bdf', '_waveletDerived.mat');
-        disp(['        .. Derived Time-Frequency measures [', fullfile(handles.path.matFilesOut, fileMatOutWavelet), ']'])
-        if parameters.timeFreq.computeTF == 1
-            save(fullfile(handles.path.matFilesOut, fileMatOutWavelet), 'timeFreqEpochs', 'timeFreq', 'TF_derivedMeasures', 'parameters', 'handles')
-        end
+            fileMatAnalyzedOut = strrep(handles.inputFile, '.bdf', '_analyzed.mat');                        
+            disp(['       .. Analyzed & Auxiliary measures [', fullfile(handles.path.matFilesOut, fileMatOut), ']'])
+            save(fullfile(handles.path.matFilesOut, fileMatAnalyzedOut), 'ERP_components', 'analyzed_aux', 'powers', 'alpha', 'parameters', 'handles') % need powers and alpha?
+
+        %% Time-Frequency derived
+            fileMatOutWavelet = strrep(handles.inputFile, '.bdf', '_waveletDerived.mat');
+            disp(['        .. Derived Time-Frequency measures [', fullfile(handles.path.matFilesOut, fileMatOutWavelet), ']'])
+            if parameters.timeFreq.computeTF == 1
+                save(fullfile(handles.path.matFilesOut, fileMatOutWavelet), 'timeFreqEpochs', 'timeFreq', 'TF_derivedMeasures', 'parameters', 'handles')
+            end
 
 
-    %% Time-Frequency, all epochs 
-        % (REQUIRE A LOT OF DISK SPACE), around ~1 GB of session -> ~120 GB for 10 subjects
-        %{
-        fileMatOutWaveletEpochs = strrep(handles.inputFile, '.bdf', '_waveletEpochs.mat');
-        disp(['       .. All Wavelet (TF) Epochs) [', fullfile(handles.path.matFilesOut, fileMatOutWaveletEpochs), ']'])
-        save(fullfile(handles.path.matFilesOut, fileMatOutWaveletEpochs), 'TF_allEpochs', 'handles')
-        %}
+        %% Time-Frequency, all epochs 
+            % (REQUIRE A LOT OF DISK SPACE), around ~1 GB of session -> ~120 GB for 10 subjects
+            %{
+            fileMatOutWaveletEpochs = strrep(handles.inputFile, '.bdf', '_waveletEpochs.mat');
+            disp(['       .. All Wavelet (TF) Epochs) [', fullfile(handles.path.matFilesOut, fileMatOutWaveletEpochs), ']'])
+            save(fullfile(handles.path.matFilesOut, fileMatOutWaveletEpochs), 'TF_allEpochs', 'handles')
+            %}
+            
+    end
 
     %% EEG Fractal Analysis
         fileMatOutFractalEEG = strrep(handles.inputFile, '.bdf', '_fractalEEG.mat');

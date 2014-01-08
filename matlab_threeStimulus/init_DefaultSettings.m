@@ -27,6 +27,7 @@ function [handles, flags] = init_DefaultSettings()
             % derived pathnames
             % NO NEED to touch these unless you know what you are really doing
             handles.path.dataFolder = fullfile(handles.path.homeFolder, 'EEG-threeStimOddball');            
+                handles.path.dataKSS = fullfile(handles.path.dataFolder, 'KSS');
             
             handles.path.figuresOut = fullfile(handles.path.codeFolder, 'figuresOut');
             
