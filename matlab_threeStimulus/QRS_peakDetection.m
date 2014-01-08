@@ -340,7 +340,7 @@
         % amplitudes and we could check for deviating R peak amplitudes
         rPeakTimes = t(R_loc);  
         handles.parameters.heart.ectopicMedianParam = 12;
-        handles.parameters.heart.ectopicOutlierMethod = 'sd'; % 'percent', 'median', 'sd'    
+        handles.parameters.heart.ectopicOutlierMethod = 'median'; % 'percent', 'median', 'sd'    
         handles.parameters.heart.outlierReplaceMethod = 'remove'; % 'mean' / 'median' / 'cubic' / 'remove'
         
         disp(['           * Rejecting outliers from R peaks (only R, not Q or S)'])
