@@ -87,7 +87,17 @@ function batch_plotKSS(KSS, KSS_z, KSS_Norm, KSS_z_Norm, parameters, handles)
             condition = 'bright';
             [p, legStr] = batch_KSS_subplot(t, KSS_z_Norm.(condition), sp(ind), condition, ind, parameters, handles);
         
+        % Average of Absolute
+        ind = 10;
+        sp(ind) = subplot(rows,cols,ind);
         
+        % Average of Z-Score
+        ind = 11;
+        sp(ind) = subplot(rows,cols,ind);
+        
+        % Average of normalized Z-Scores
+        ind = 12;
+        sp(ind) = subplot(rows,cols,ind);
                 
         try
             if handles.figureOut.ON == 1    
