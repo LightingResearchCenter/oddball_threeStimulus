@@ -20,5 +20,12 @@ function batchCompare_KSS(handles)
     % IMPORT
     KSS = batch_importKSS(handles.path.dataKSS, handles);
     
+    % Normalize (z-score), within subjects
+    KSS_z = batch_zScoreTransformKSS(KSS, handles);
+    
+    % Normalize to the first session    
+    KSS_Norm = batch_KSS_normalize(KSS, handles);
+    KSS_z_Norm = batch_KSS_normalize(KSS_z, handles);    
+    
     % PLOT
-    batch_plotKSS(KSS, handles.parameters, handles)
+    batch_plotKSS(KSS, KSS_z, KSS_Norm, KSS_z_Norm, handles.parameters, handles)

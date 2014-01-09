@@ -1,4 +1,4 @@
-function batch_plotKSS(KSS, parameters, handles)
+function batch_plotKSS(KSS, KSS_z, KSS_Norm, KSS_z_Norm, parameters, handles)
 
     %% DEBUG
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
@@ -18,12 +18,13 @@ function batch_plotKSS(KSS, parameters, handles)
     end
 
     scrsz = get(0,'ScreenSize'); % get screen size for plotting
-    fig = figure('Color','w');
-        set(fig, 'Position', [0.05*scrsz(3) 0.625*scrsz(4) 0.92*scrsz(3) 0.3*scrsz(4)])  
+    fig = figure('Color','w','Name','KSS');
+        set(fig, 'Position', [0.05*scrsz(3) 0.0625*scrsz(4) 0.92*scrsz(3) 0.9*scrsz(4)])  
     
-        rows = 1;
+        rows = 4;
         cols = 3;
         
+        % sessions, after 2nd session, no KSS was asked
         t = [1 3 4];
         
         ind = 1;
@@ -45,9 +46,48 @@ function batch_plotKSS(KSS, parameters, handles)
             [p, legStr] = batch_KSS_subplot(t, KSS.(condition), sp(ind), condition, ind, parameters, handles);
                     
             leg = legend(legStr);
-                set(leg,'Position',[0.919 0.245 0.0443 0.669]);
-                legend('boxoff')
-                
+                set(leg,'Position',[0.918996054333765 0.714130434782609 0.0443078913324709 0.199869565217391]);
+                %legend('boxoff')
+          
+        ind = 4;
+        sp(ind) = subplot(rows,cols,ind);
+        
+            condition = 'dark';
+            [p, legStr] = batch_KSS_subplot(t, KSS_z.(condition), sp(ind), condition, ind, parameters, handles);
+        
+        ind = 5;
+        sp(ind) = subplot(rows,cols,ind);
+        
+            condition = 'dim';
+            [p, legStr] = batch_KSS_subplot(t, KSS_z.(condition), sp(ind), condition, ind, parameters, handles);
+        
+        ind = 6;
+        sp(ind) = subplot(rows,cols,ind);
+        
+            condition = 'bright';
+            [p, legStr] = batch_KSS_subplot(t, KSS_z.(condition), sp(ind), condition, ind, parameters, handles);
+            
+        ind = 7;
+        sp(ind) = subplot(rows,cols,ind);
+        
+            condition = 'dark';
+            [p, legStr] = batch_KSS_subplot(t, KSS_z_Norm.(condition), sp(ind), condition, ind, parameters, handles);
+        
+        
+        ind = 8;
+        sp(ind) = subplot(rows,cols,ind);
+        
+            condition = 'dim';
+            [p, legStr] = batch_KSS_subplot(t, KSS_z_Norm.(condition), sp(ind), condition, ind, parameters, handles);
+        
+        
+        ind = 9;
+        sp(ind) = subplot(rows,cols,ind);
+        
+            condition = 'bright';
+            [p, legStr] = batch_KSS_subplot(t, KSS_z_Norm.(condition), sp(ind), condition, ind, parameters, handles);
+        
+        
                 
         try
             if handles.figureOut.ON == 1    
@@ -82,6 +122,14 @@ function batch_plotKSS(KSS, parameters, handles)
         
         p = plot(t, y, '-o');
         
+        % style
+        
+            for sub = 1 : length(subjects)      
+               set(p(sub), 'MarkerEdgeColor', 'none', 'MarkerFaceColor', ColorSet(sub,:), 'Color', ColorSet(sub,:))
+            end
+        
+        
+                
         lab(1) = xlabel('Session');
         lab(2) = ylabel('KSS');
         
