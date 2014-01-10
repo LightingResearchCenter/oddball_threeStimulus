@@ -41,15 +41,15 @@ function batchCompare_componentMain(fileNameFields, fileNames, outlierFilenameLi
                 % statsPer = 'trials';
                 statsPer = 'session'; % average one session        
                 stimulusType = {'target'; 'distracter'; 'standard'};                
-                [statsOut, matricesSessionNorm, outlierOut] = batch_statsPerComponent(dataOut, statsPer, erpBandType, erpComponent{j}, erpFilterType{k}, fieldValue{i}, fileNameFields, fileNames, stimulusType, subjects, outlierFilenameList, handles);        
+                [statsOut, statsTests, matricesSessionNorm, outlierOut] = batch_statsPerComponent(dataOut, statsPer, erpBandType, erpComponent{j}, erpFilterType{k}, fieldValue{i}, fileNameFields, fileNames, stimulusType, subjects, outlierFilenameList, handles);        
 
                 % PLOT
                 chsToPlot = {'Cz'; 'Pz'};
-                batch_plotIntensityComparisonMAIN(statsOut, matricesSessionNorm, statsPer, erpBandType, erpComponent{j}, erpFilterType{k}, fieldValue{i}, fileNameFields, stimulusType, chsToPlot, subjects, outlierOut, handles)
+                batch_plotIntensityComparisonMAIN(statsOut, statsTests, matricesSessionNorm, statsPer, erpBandType, erpComponent{j}, erpFilterType{k}, fieldValue{i}, fileNameFields, stimulusType, chsToPlot, subjects, outlierOut, handles)
                 
                 %{
                 chsToPlot = {'Fz'; 'Oz'};
-                batch_plotIntensityComparisonMAIN(statsOut, matricesSessionNorm, statsPer, erpComponent{j}, erpFilterType{k}, fieldValue{i}, fileNameFields, stimulusType, chsToPlot, subjects, handles)
+                batch_plotIntensityComparisonMAIN(statsOut, statsTests, matricesSessionNorm, statsPer, erpComponent{j}, erpFilterType{k}, fieldValue{i}, fileNameFields, stimulusType, chsToPlot, subjects, handles)
                 %}
 
             end

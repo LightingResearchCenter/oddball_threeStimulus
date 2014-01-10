@@ -1,5 +1,5 @@
 % ABSOLUTE NORMALIZED
-function plot_componentAbsoluteNormalizedFigure(fig, statsOut, normalizationTypes, erpBandType, erpComponent, erpFilterType, chsToPlot, erpTypes, fieldValue, subjects, handles)
+function plot_componentAbsoluteNormalizedFigure(fig, statsOut, statsTests, normalizationTypes, erpBandType, erpComponent, erpFilterType, chsToPlot, erpTypes, fieldValue, subjects, handles)
 
     scrsz = get(0,'ScreenSize'); % get screen size for plotting
     % normalizationTypes = {'rawWithNoNormalization'}

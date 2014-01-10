@@ -1,4 +1,4 @@
-function [statsOut, matricesSessionNorm, outlierOut] = ...
+function [statsOut, statsTests, matricesSessionNorm, outlierOut] = ...
     batch_statsPerComponent(dataOut, statsPer, erpBandType, erpComponent, erpFilterType, fieldValue, fileNameFields, fileNames, stimulusType, subjects, outlierFilenameList, handles)
 
     %% DEBUG
@@ -65,7 +65,7 @@ function [statsOut, matricesSessionNorm, outlierOut] = ...
             statsOut.(normFieldNames{i}) = batch_calculateStatsFromStats(matricesSessionNorm.(normFieldNames{i}), handles);
 
             % calculate significances between different conditions
-            % statsOut.(normFieldNames{i}) = batch_calculateStatSignificances(statsOut.(normFieldNames{i}), matricesSessionNorm.(normFieldNames{i}), handles);
+            statsTests.(normFieldNames{i}) = batch_calculateStatSignificances(statsOut.(normFieldNames{i}), matricesSessionNorm.(normFieldNames{i}), subjects, handles);
 
         end
         

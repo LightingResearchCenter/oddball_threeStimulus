@@ -1,5 +1,5 @@
-% SCATTER
-function plot_componentScatterFigure(fig, statsOut, matricesSessionNorm, noOfSessions, normalizationTypes, erpBandType, erpComponent, erpFilterType, chsToPlot, chSelected, erpTypes, fieldValue, subjects, handles)
+% STAT PLOT
+function plot_componentStatFigure(fig, statsOut, statsTests, matricesSessionNorm, noOfSessions, normalizationTypes, erpBandType, erpComponent, erpFilterType, chsToPlot, chSelected, erpTypes, fieldValue, subjects, handles)
 
     scrsz = get(0,'ScreenSize'); % get screen size for plotting
     if chSelected == 1

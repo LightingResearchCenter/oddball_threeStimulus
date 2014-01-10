@@ -1,4 +1,4 @@
-function statsOut = batch_calculateStatSignificances(statsOut, matricesSessionNorm, handles)
+function statsTests = batch_calculateStatSignificances(statsOut, matricesSessionNorm, subjects, handles)
 
     %% DEBUG
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
@@ -31,22 +31,15 @@ function statsOut = batch_calculateStatSignificances(statsOut, matricesSessionNo
     statField = 'meanIn';
 
     for stim = 1 : length(stimTypes)
-
+        
         for ch = 1 : length(chNames)
-
             for cond = 1 : length(conditions)
-
                 comparisonMatrix(cond,:,:) = statsOut.(stimTypes{stim}).(conditions{cond}).(chNames{ch}).(statField)                
-
             end
-
-            statsOut.comparison = stat_signifTestWrapper(comparisonMatrix, handles.parameters, handles)
-
+            [statsTests.assumptions.(stimTypes{stim}).(chNames{ch}), statsTests.testResults.(stimTypes{stim}).(chNames{ch})] = ...
+                stat_signifTestWrapper(comparisonMatrix, subjects, stimTypes{stim}, chNames{ch}, handles.parameters, handles)
         end
-
     end
 
-    whos
-
-
-    ads
+      
+    
