@@ -1,4 +1,4 @@
-function stat_results = batch_statAfterAssumptions(inputMatrix, stat_assumptions, conditions, sessions, subjects, parameters, handles)
+function stat_results = batch_statTestResults(inputMatrix, stat_assumptions, normFieldName, stimType, chName, conditions, sessions, subjects, parameters, handles)
 
     %% DEBUG
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
@@ -23,9 +23,49 @@ function stat_results = batch_statAfterAssumptions(inputMatrix, stat_assumptions
     
     [noOfConditions, noOfSessions, noOfSubjects] = size(inputMatrix);
     
-    condVect = conditions;
+    condVect = conditions
     sesVect = sessions;
-    subVect = unique(subjects);        
+    subVect = unique(subjects);            
+    
+    %{
+    normFieldName
+    if strcmp(normFieldName, 'firstSession')
+        goesHere = 1
+        chName
+        if strcmp(chName, 'Pz')
+            goesHere = 2
+            stimType
+            if strcmp(stimType, 'target')
+                fasa
+            end
+        end
+    end
+    %}
+    
+    
+    %% Debug plot the input
+    
+        if localCall == 1
+            scrsz = get(0,'ScreenSize'); % get screen size for plotting
+            fig = figure('Color','w','Name', 'inputMatrix Scatter');
+                set(fig, 'Position', [0.01*scrsz(3) 0.64*scrsz(4) 0.3*scrsz(3) 0.3*scrsz(4)])  
+                rows = 3; cols = 1;
+                xOffs = 0.15;
+                x1 = (1:4) - xOffs;
+
+            hold on
+            for cond = 1 : noOfConditions           
+
+                x = x1 + ((cond - 1) * xOffs);
+                p(cond,:) = plot(x, squeeze(inputMatrix(cond,:,:)), 'o');
+                titStr = sprintf('%s\n%s\n%s', normFieldName, [stimType, ', ', chName], '1st column of session = dark, then dim, and then bright');
+                title(titStr)
+                xlabel('Colors correspond to different subjects')
+
+            end
+            hold off
+            figure
+        end
     
     %% Vectorize the input 3D matrix
         
@@ -73,6 +113,7 @@ function stat_results = batch_statAfterAssumptions(inputMatrix, stat_assumptions
         % Combine the groups
 
             group = {condVect sesVect};
+            %group = {condVect sesVect subVect};
     
 
     %% If Data are normal (Gaussian) and deviations are homogeneous then you can do an ANOVA 

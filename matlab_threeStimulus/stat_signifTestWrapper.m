@@ -1,4 +1,4 @@
-function [stat_assumptions, stat_results] = stat_signifTestWrapper(inputMatrix, subjects, stimType, chName, parameters, handles)
+function [stat_assumptions, stat_results] = stat_signifTestWrapper(inputMatrix, subjects, normFieldName, stimType, chName, parameters, handles)
 
     %% DEBUG
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
@@ -43,6 +43,6 @@ function [stat_assumptions, stat_results] = stat_signifTestWrapper(inputMatrix, 
     
 
     %% Actual TESTS   
-    stat_results = batch_statTestResults(inputMatrix, stat_assumptions, conditions, sessions, subjects, parameters, handles);
+    stat_results = batch_statTestResults(inputMatrix, stat_assumptions, normFieldName, stimType, chName, conditions, sessions, subjects, parameters, handles);
 
     

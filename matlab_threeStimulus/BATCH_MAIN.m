@@ -10,13 +10,17 @@ function BATCH_MAIN()
     %% General Settings
     
         % i.e. like where the folders are, fonts to be used, colors, etc.
-        [handles, handles.flags] = init_DefaultSettings(); % use a subfunction        
+        [handles, handles.flags] = init_DefaultSettings(); % use a subfunction          
+        
+        
 
     %% Parameters for ANALYSIS
     
         % i.e. like artifact rejection thresholds, filter cutoffs,
         % numerical parameters for EEG analysis
         handles.parameters = init_DefaultParameters(handles); % use a subfunction        
+        
+        batchCompare_KSS(handles)
     
     %% Get directory listing of the processed files
     
@@ -72,8 +76,13 @@ function BATCH_MAIN()
     %% Compare conditions (session, intensity, subject) for 1D signals 
             
         % i.e. 1D signals such as the ERP components, Reaction time,
-        % Band powers and IAF        
-        batchCompare_componentMain(handles.batch.fileNameFields_analyzed, fileNames, outlierFilenameList, handles)
+        % Band powers and IAF      
+        erpBandTypeCell = {'ERP'}; % {'CNV'; 'ERP'; 'ERPsmooth1'; 'ERPsmooth2'; 'P300'; 'ALPHA'; 'GENERAL'};
+        for bandType = 1 : length(erpBandTypeCell)
+            erpBandType = erpBandTypeCell{bandType};
+            disp(['#', num2str(bandType), ' of ', num2str(length(erpBandTypeCell)), ' different bandTypes you wanted to batch analyze (', erpBandType, ')'])
+            batchCompare_componentMain(handles.batch.fileNameFields_analyzed, fileNames, outlierFilenameList, erpBandType, handles)
+        end
         
     %% Compare extra sensors
     

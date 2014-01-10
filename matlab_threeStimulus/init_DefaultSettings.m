@@ -20,6 +20,8 @@ function [handles, flags] = init_DefaultSettings()
     
         % get your computer name
         [ret, compName] = system('hostname'); 
+            %compName = lower(compName);
+            compName = strtrim(compName); % remove whitespace
             % can be used to define custom paths for each user developing/using this
             % code simultaneously
 
@@ -27,7 +29,7 @@ function [handles, flags] = init_DefaultSettings()
             % 'homeFolder', and then the output folder matFilesMain
             
         % main paths 
-        % change these only if you move the data somewhere else        
+        % change these only if you move the data somewhere else                
         if strcmp(compName, 'Ubuntu64')
             handles.path.homeFolder = '/home/petteri/CopyShare/'; % Unix home folder, for EEG Data            
         elseif strcmp(compName, 'someoneElse')
@@ -59,7 +61,7 @@ function [handles, flags] = init_DefaultSettings()
             elseif strcmp(compName, 'someoneElse')
                 handles.path.matFilesMain = '????????????????';
             else
-                
+                error('Unknown computer name, define your paths!')
             end
             
             % check that the folder actually exists
