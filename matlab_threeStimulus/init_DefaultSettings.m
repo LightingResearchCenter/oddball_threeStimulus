@@ -17,15 +17,31 @@ function [handles, flags] = init_DefaultSettings()
     flags = handles.flags;
 
     %% PATHS
+    
+        % get your computer name
+        [ret, compName] = system('hostname'); 
+            % can be used to define custom paths for each user developing/using this
+            % code simultaneously
 
+            % you need to define the home folder for the INPUT DATA,
+            % 'homeFolder', and then the output folder matFilesMain
+            
         % main paths 
-        % change these only if you move the data somewhere else
-        handles.path.homeFolder = '/home/petteri/CopyShare/'; % Unix home folder, for EEG Data
+        % change these only if you move the data somewhere else        
+        if strcmp(compName, 'Ubuntu64')
+            handles.path.homeFolder = '/home/petteri/CopyShare/'; % Unix home folder, for EEG Data            
+        elseif strcmp(compName, 'someoneElse')
+            
+        elseif strcmp(compName, 'someoneElse2')
+            
+        else
+            error('Unknown computer name, define your paths!')
+        end
+        
+        
         handles.path.codeFolder = mfilename('fullpath'); % Setting the path for the code
         handles.path.codeFolder = strrep(handles.path.codeFolder, 'init_DefaultSettings',''); % Removing the filename from the path
 
-            % derived pathnames
-            % NO NEED to touch these unless you know what you are really doing
             handles.path.dataFolder = fullfile(handles.path.homeFolder, 'EEG-threeStimOddball');            
                 handles.path.dataKSS = fullfile(handles.path.dataFolder, 'KSS');
             
@@ -38,7 +54,15 @@ function [handles, flags] = init_DefaultSettings()
             handles.path.debugFASTER = fullfile(handles.path.debugOut, 'FASTER');
             
             % OUT
-            handles.path.matFilesMain = '/home/petteri/EEG-threeStim/';
+            if strcmp(compName, 'Ubuntu64')
+                handles.path.matFilesMain = '/home/petteri/EEG-threeStim/';
+            elseif strcmp(compName, 'someoneElse')
+                handles.path.matFilesMain = '????????????????';
+            else
+                
+            end
+            
+            % check that the folder actually exists
             try
                 currDir = pwd;
                 cd(handles.path.matFilesMain)
