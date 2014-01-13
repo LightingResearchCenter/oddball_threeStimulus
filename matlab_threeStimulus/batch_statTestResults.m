@@ -142,8 +142,16 @@ function stat_results = batch_statTestResults(inputMatrix, stat_assumptions, nor
             % For an introduction to n-Anova see e.g.
             % http://www.mathworks.com/help/stats/anova.html#bqttd20-1
             
-            [p,table,stats,terms] = anovan(inputVector, group, 'model','interaction', ...
-                                    'varnames',{'Condition';'Session'}, 'display', displayMode);
+            try
+                [p,table,stats,terms] = anovan(inputVector, group, 'model','interaction', ...
+                                        'varnames',{'Condition';'Session'}, 'display', displayMode);
+            catch err
+                stat_results.anovan.p = NaN;
+                stat_results.anovan.table = NaN;
+                stat_results.anovan.stats = NaN;
+                stat_results.anovan.terms = NaN;
+                return
+            end
 
                 [c,m,h,nms] = multcompare(stats,'display', displayMode);
                 [nms num2cell(m)]

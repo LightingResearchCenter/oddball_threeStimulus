@@ -20,15 +20,18 @@ function statsTests = batch_calculateStatSignificances(statsOut, normFieldName, 
     % example input data
     if strcmp(dataType, 'component')
         noOfSessions = size(statsOut.target.dark.Fz.mean);    
-        [noOfSessions, noOfSubjects] = size(statsOut.target.dark.Fz.meanIn)
+        [noOfSessions, noOfSubjects] = size(statsOut.target.dark.Fz.meanIn);
         statFields = fieldnames(statsOut.target.dark.Fz)
     elseif strcmp(dataType, 'AUX')
         noOfSessions = length(statsOut.dark.PSD.alpha.mean);
         [noOfSessions, noOfSubjects] = size(matrixIn.dark.PSD.alpha);
         %.PSD.alpha.mean
-        
+    elseif strcmp(dataType, 'extraHeart')
+        matrixIn = squeeze(matrixIn); % why is there the extra singleton dimension actually?
+        [noOfSessions, noOfSubjects] = size(matrixIn.dark.scalar.HR_Mean);
     else
         error(['Your datatype is: ', dataType, '. There is nothing coded for this dataType, or is this a typo?'])
+        
         
     end
 
@@ -79,6 +82,27 @@ function statsTests = batch_calculateStatSignificances(statsOut, normFieldName, 
             end
             
         end
+        
+    elseif strcmp(dataType, 'extraHeart')
+        
+        conditions = fieldnames(statsOut);
+        statField = 'mean';
+        
+        dimType = 'scalar'
+        measureFields = fieldnames(matrixIn.(conditions{1}).(dimType))
+        
+        for meas = 1 : length(measureFields)
+            
+            for cond = 1 : length(conditions)            
+                matrixInputPerCond = matrixIn.(conditions{1}).(dimType).(measureFields{meas})
+                comparisonMatrix(cond,:,:) = matrixInputPerCond;
+            end            
+            
+        end
+        
+        [statsTests.assumptions.(measureFields{meas}), statsTests.testResults.(measureFields{meas})] = ...
+                    stat_signifTestWrapper(comparisonMatrix, statsOut, subjects, normFieldName, [], [], [], statField, measureFields{meas}, [], dataType, handles.parameters, handles);
+        
         
     else
         

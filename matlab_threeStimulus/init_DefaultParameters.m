@@ -291,6 +291,7 @@ function parameters = init_DefaultParameters(handles)
 
     %% EEG FRACTAL ANALYSIS
     
+        parameters.eegFractal.compute_MFDFA = 0;
     
     %% ECG ANALYSIS       
     

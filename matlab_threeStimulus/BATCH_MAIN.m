@@ -81,7 +81,7 @@ function BATCH_MAIN()
         for bandType = 1 : length(erpBandTypeCell)
             erpBandType = erpBandTypeCell{bandType};
             disp(['#', num2str(bandType), ' of ', num2str(length(erpBandTypeCell)), ' different bandTypes you wanted to batch analyze (', erpBandType, ')'])
-            batchCompare_componentMain(handles.batch.fileNameFields_analyzed, fileNames, outlierFilenameList, erpBandType, handles)
+            % batchCompare_componentMain(handles.batch.fileNameFields_analyzed, fileNames, outlierFilenameList, erpBandType, handles)
         end
         
     %% Compare extra sensors

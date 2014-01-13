@@ -37,7 +37,14 @@ function stat_assumptions = batch_statTestAssumptions(inputVector, inputMatrix, 
 
         % call the subfunction
         if n >= 3
-            [sw.H, sw.pValue, sw.W] = swtest(X, alpha, tail);
+            try
+                [sw.H, sw.pValue, sw.W] = swtest(X, alpha, tail);
+            catch err
+                % err
+                sw.H = NaN;
+                sw.pValue = NaN;
+                sw.W = NaN;                
+            end
         else
             sw.H = NaN;
             sw.pValue = NaN;

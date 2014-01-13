@@ -26,8 +26,10 @@ function batch_writeDataToDiskForStats(inputMatrix, statsOut, stat_results, stat
     if strcmp(dataType, 'component')
         fileNameOut = [dataType, '_', erpFilterType, '_', erpComponent, '_', 'bandpassFilter-', erpBandType, '_', stimType, '_', normFieldName, '_', chName, '_', statField, '_', dateStr, '.txt'];
     elseif strcmp(dataType, 'AUX')
-        fileNameOut = [dataType, '_', erpFilterType, '_', erpComponent, '_', 'bandpassFilter-', erpBandType, '_', stimType, '_', normFieldName, '_', chName, '_', statField, '_', dateStr, '.txt'];
-    else
+        fileNameOut = [dataType, '_', erpFilterType, '_', erpComponent, '_', 'bandpassFilter-', erpBandType, '_', stimType, '_', normFieldName, '_', chName, '_', statField, '_', dateStr, '.txt'];    
+    elseif strcmp(dataType, 'extraHeart')
+        fileNameOut = [dataType, '_', stimType, '_', normFieldName, '_', statField, '_', dateStr, '.txt']
+    else        
         error(['Your datatype is: ', dataType, '. There is nothing coded for this dataType, or is this a typo?'])
     end
     fileOutWithPath = fullfile(handles.path.textOut, fileNameOut);
@@ -65,6 +67,18 @@ function batch_writeDataToDiskForStats(inputMatrix, statsOut, stat_results, stat
             headerRow{i} = ['===================================================']; i = i + 1;
             headerRow{i} = ['Power computation type is "', stimType, '"']; i = i + 1;            
             headerRow{i} = ['Power band is = "', chName, '"']; i = i + 1;
+            headerRow{i} = ['-------']; i = i + 1;
+            headerRow{i} = ['Subjects done (correspond to the rows below in the matrix)']; i = i + 1;
+            headerRow{i} = ['-------']; i = i + 1;
+            headerRow{i} = ['This data is written disk: ', dateStr, ' (year-month-day)']; i = i + 1;
+            headerRow{i} = ['===================================================']; i = i + 1;
+            
+        elseif strcmp(dataType, 'extraHeart')
+            % stimType, chName
+            i = 1;
+            headerRow{i} = ['Numerical data of the "', dataType, '"']; i = i + 1;
+            headerRow{i} = ['===================================================']; i = i + 1;
+            headerRow{i} = ['The data field is "', stimType, '"']; i = i + 1;            
             headerRow{i} = ['-------']; i = i + 1;
             headerRow{i} = ['Subjects done (correspond to the rows below in the matrix)']; i = i + 1;
             headerRow{i} = ['-------']; i = i + 1;

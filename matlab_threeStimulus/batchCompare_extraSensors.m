@@ -16,7 +16,7 @@ function batchCompare_extraSensors(fileNameFields, handles)
         
 
     % Pull out the data   
-    [heart, eye] = batch_pullOut_extraSensors(fileNameFields, handles);
+    [heart, eye, subjects] = batch_pullOut_extraSensors(fileNameFields, handles);
     fractalEEG = [];
     % fractalEEG = .. use another subfunction as saved to other .mat files    
     
@@ -24,7 +24,7 @@ function batchCompare_extraSensors(fileNameFields, handles)
     % statsPer = 'trials';
     statsPer = 'session'; % average one session        
     stimulusType = {'target'; 'distracter'; 'standard'};                
-    [heart_Out, fractalEEG_Out, eye_Out] = batch_extraSensorStats(heart, fractalEEG, eye, statsPer, stimulusType, handles);
+    [heart_Out, fractalEEG_Out, eye_Out] = batch_extraSensorStats(heart, fractalEEG, eye, statsPer, subjects, stimulusType, handles);
     
     % Plot the results
     plot_EXTRA_MAIN(heart_Out, fractalEEG_Out, eye_Out, handles)

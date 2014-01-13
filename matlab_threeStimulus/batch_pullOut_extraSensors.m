@@ -1,4 +1,4 @@
-function [heart, eye] = batch_pullOut_extraSensors(fileNameFields, handles)
+function [heart, eye, subjects] = batch_pullOut_extraSensors(fileNameFields, handles)
 
     %% DEBUG
     debugMatFileName = 'tempDataOutExtra.mat';
@@ -28,6 +28,7 @@ function [heart, eye] = batch_pullOut_extraSensors(fileNameFields, handles)
     for i = 1 : numberOfFilesFound                       
         
         subject = fileNameFields{i}.subject;
+        subjects{i} = subject;
         
         % check intensity
         if fileNameFields{i}.intensity == 0

@@ -1,4 +1,4 @@
-function [heart_Out, fractalEEG_Out, eye_Out] = batch_extraSensorStats(heart, fractalEEG, eye, statsPer, stimulusType, handles)
+function [heart_Out, fractalEEG_Out, eye_Out] = batch_extraSensorStats(heart, fractalEEG, eye, statsPer, subjects, stimulusType, handles)
 
     %% DEBUG
     debugMatFileName = 'tempStatsOutExtra.mat';
@@ -21,7 +21,7 @@ function [heart_Out, fractalEEG_Out, eye_Out] = batch_extraSensorStats(heart, fr
     %}
     
     % heart
-    heart_Out = batch_extraProcessEachSensor(heart, 'heart', handles);
+    heart_Out = batch_extraProcessEachSensor(heart, 'heart', subjects, handles);
     
     % fractal EEG
     % fractalEEG_Out = batch_extraProcessEachSensor(fractalEEG, 'fractalEEG', handles)
@@ -32,7 +32,7 @@ function [heart_Out, fractalEEG_Out, eye_Out] = batch_extraSensorStats(heart, fr
     eye_Out = [];
     
     
-    function statOut = batch_extraProcessEachSensor(dataIn, sensorType, handles)
+    function statOut = batch_extraProcessEachSensor(dataIn, sensorType, subjects, handles)
         
         conditionFields = fieldnames(dataIn);
         sessionFields = fieldnames(dataIn.(conditionFields{1}));
@@ -60,4 +60,12 @@ function [heart_Out, fractalEEG_Out, eye_Out] = batch_extraSensorStats(heart, fr
             disp('     ... compute the stats')
             statOut = batch_extraComputeStats(dataOut, 'scalar', sensorType, handles);
             
-        end
+            % calculate significances between different conditions
+            normFieldNames = fieldnames(dataOut);
+            for i = 1 : length(normFieldNames)
+                dataType = 'extraHeart';
+                statsTests.(normFieldNames{i}) = batch_calculateStatSignificances(statOut.(normFieldNames{i}), (normFieldNames{i}), ...
+                    [], [], [], dataOut.(normFieldNames{i}), subjects, dataType, handles);
+            end
+
+            end
