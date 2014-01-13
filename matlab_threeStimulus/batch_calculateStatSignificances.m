@@ -91,18 +91,22 @@ function statsTests = batch_calculateStatSignificances(statsOut, normFieldName, 
         dimType = 'scalar'
         measureFields = fieldnames(matrixIn.(conditions{1}).(dimType))
         
+        pause
+        
         for meas = 1 : length(measureFields)
             
             for cond = 1 : length(conditions)            
-                matrixInputPerCond = matrixIn.(conditions{1}).(dimType).(measureFields{meas})
+                matrixInputPerCond = matrixIn.(conditions{1}).(dimType).(measureFields{meas});
                 comparisonMatrix(cond,:,:) = matrixInputPerCond;
             end            
             
-        end
-        
-        [statsTests.assumptions.(measureFields{meas}), statsTests.testResults.(measureFields{meas})] = ...
+             [statsTests.assumptions.(measureFields{meas}), statsTests.testResults.(measureFields{meas})] = ...
                     stat_signifTestWrapper(comparisonMatrix, statsOut, subjects, normFieldName, [], [], [], statField, measureFields{meas}, [], dataType, handles.parameters, handles);
         
+            
+        end
+        
+       
         
     else
         
