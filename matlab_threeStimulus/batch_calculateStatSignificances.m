@@ -88,10 +88,8 @@ function statsTests = batch_calculateStatSignificances(statsOut, normFieldName, 
         conditions = fieldnames(statsOut);
         statField = 'mean';
         
-        dimType = 'scalar'
-        measureFields = fieldnames(matrixIn.(conditions{1}).(dimType))
-        
-        pause
+        dimType = 'scalar';
+        measureFields = fieldnames(matrixIn.(conditions{1}).(dimType));
         
         for meas = 1 : length(measureFields)
             

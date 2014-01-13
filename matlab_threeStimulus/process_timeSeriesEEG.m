@@ -105,8 +105,8 @@ function [alpha, powers, amplit, PSD, SEM, heart, fractalAnalysis] = process_tim
             % Analyze POWER SPECTRUM with subfunction
             [f, amplit, PSD, amplit_matrix, PSD_matrix] = analyze_powerSpectrum(EEGchannel, Fs, windowType, r, segmentLength, nfft, freqRange, nOverlap, 'eegTimeSeries');                               
             
-            % MULTIFRACTAL ANALYSIS
-            if 1234 == 123412
+            % MULTIFRACTAL ANALYSIS            
+            if parameters.eegFractal.compute_MFDFA == 1
                 disp(['           .. (MF)DFA for EEG channels'])
                 fractalAnalysis = analyze_fractalAnalysisPerChannel(EEGchannel, ch, Fs, parameters, handles);
             else

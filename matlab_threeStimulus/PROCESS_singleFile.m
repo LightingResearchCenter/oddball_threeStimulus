@@ -42,8 +42,7 @@ function [epochs, analyzed, TF, dataMatrix_filtGeneral, alpha, powers, handles] 
         ECGind_raw = [handles.parameters.EEG.nrOfChannels+2+handles.parameters.BioSemi.chOffset handles.parameters.EEG.nrOfChannels+2+handles.parameters.BioSemi.chOffset];
 
         % PROCESS the "Time-Series EEG", i.e. al the channels without
-        % ERP oddball epoching, artifacts removed and bandpass-filtered     
-        handles.parameters.compute_MFDFA = 0;
+        % ERP oddball epoching, artifacts removed and bandpass-filtered             
         [alpha, powers, amplitSpectrum, PSD, SEM, heart, fractalAnalysis] =  process_timeSeriesEEG(dataMatrix_filtGeneralContinuous(:,EEGind(1):EEGind(2)), ... % EEG
                                                                             dataMatrix_filtGeneralContinuous(:,EOGind(1):EOGind(2)), ... % EOG 
                                                                             dataMatrixIn(:,EOGind_raw(1):EOGind_raw(2)), ... % EOG RAW
