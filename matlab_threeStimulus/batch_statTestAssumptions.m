@@ -136,7 +136,11 @@ function stat_assumptions = batch_statTestAssumptions(inputVector, inputMatrix, 
         % NOTE! That some users on comments had noted with discrepancies
         % with the results obtained with this and the one from SPSS
         % http://www.mathworks.com/matlabcentral/fileexchange/3694-sphertest
-        stat_assumptions.mauchly.isTenable = Mauspher(inputVector,alpha) 
+        try
+            stat_assumptions.mauchly.isTenable = Mauspher(inputVector,alpha) 
+        catch
+            stat_assumptions.mauchly.isTenable = NaN;
+        end
 
          %{
          if parameters.stats.displayMidResults == 1

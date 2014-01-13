@@ -65,7 +65,8 @@ function [statsOut, statsTests, matricesSessionNorm, outlierOut] = ...
             statsOut.(normFieldNames{i}) = batch_calculateStatsFromStats(matricesSessionNorm.(normFieldNames{i}), handles);
 
             % calculate significances between different conditions
-            statsTests.(normFieldNames{i}) = batch_calculateStatSignificances(statsOut.(normFieldNames{i}), (normFieldNames{i}), erpBandType, erpComponent, erpFilterType, matricesSessionNorm.(normFieldNames{i}), subjects, handles);
+            dataType = 'component';
+            statsTests.(normFieldNames{i}) = batch_calculateStatSignificances(statsOut.(normFieldNames{i}), (normFieldNames{i}), erpBandType, erpComponent, erpFilterType, matricesSessionNorm.(normFieldNames{i}), subjects, dataType, handles);
 
         end
         

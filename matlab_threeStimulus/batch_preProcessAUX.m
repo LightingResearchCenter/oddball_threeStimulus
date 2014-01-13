@@ -38,6 +38,14 @@ function [auxStat, auxStatPowers] = batch_preProcessAUX(auxOut, auxOutPowers, su
         
         % calculate the stats subjects
         auxStatPowers = batch_auxStatCalculation(auxMatPowers, handles);
+        
+        % calculate significances between different conditions
+        normFieldNames = fieldnames(auxMatPowers);
+        for i = 1 : length(normFieldNames)
+            dataType = 'AUX';
+            statsTests.(normFieldNames{i}) = batch_calculateStatSignificances(auxStatPowers.(normFieldNames{i}), (normFieldNames{i}), ...
+                [], [], [], auxMatPowers.(normFieldNames{i}), subjects, dataType, handles);
+        end
     
     
     function matOut_aux = batch_auxCellToMatrix(auxOut, handles)

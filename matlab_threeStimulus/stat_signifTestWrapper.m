@@ -1,4 +1,4 @@
-function [stat_assumptions, stat_results] = stat_signifTestWrapper(inputMatrix, statsOut, subjects, normFieldName, erpBandType, erpComponent, erpFilterType, statField, stimType, chName, parameters, handles)
+function [stat_assumptions, stat_results] = stat_signifTestWrapper(inputMatrix, statsOut, subjects, normFieldName, erpBandType, erpComponent, erpFilterType, statField, stimType, chName, dataType, parameters, handles)
 
     %% DEBUG
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
@@ -47,5 +47,6 @@ function [stat_assumptions, stat_results] = stat_signifTestWrapper(inputMatrix, 
 
     
     %% write data to disk
-    batch_writeDataToDiskForStats(inputMatrix, statsOut, stat_results, stat_assumptions, normFieldName, erpBandType, erpComponent, erpFilterType, statField, stimType, chName, sessions, conditions, subjects, 'component', parameters, handles)
+    batch_writeDataToDiskForStats(inputMatrix, statsOut, stat_results, stat_assumptions, normFieldName, ...
+        erpBandType, erpComponent, erpFilterType, statField, stimType, chName, sessions, conditions, subjects, dataType, parameters, handles)
     
