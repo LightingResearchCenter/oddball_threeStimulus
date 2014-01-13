@@ -48,6 +48,7 @@ function [handles, flags] = init_DefaultSettings()
                 handles.path.dataKSS = fullfile(handles.path.dataFolder, 'KSS');
             
             handles.path.figuresOut = fullfile(handles.path.codeFolder, 'figuresOut');
+            handles.path.textOut = fullfile(handles.path.codeFolder, 'textFilesOut');
             
             handles.path.debugOut = fullfile(handles.path.figuresOut, 'debug');
             handles.path.debugHeartOut = fullfile(handles.path.debugOut, 'heart');

@@ -1,4 +1,4 @@
-function statsTests = batch_calculateStatSignificances(statsOut, normFieldName, matricesSessionNorm, subjects, handles)
+function statsTests = batch_calculateStatSignificances(statsOut, normFieldName, erpBandType, erpComponent, erpFilterType, matricesSessionNorm, subjects, handles)
 
     %% DEBUG
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
@@ -33,11 +33,14 @@ function statsTests = batch_calculateStatSignificances(statsOut, normFieldName, 
     for stim = 1 : length(stimTypes)
         
         for ch = 1 : length(chNames)
+            
             for cond = 1 : length(conditions)
                 comparisonMatrix(cond,:,:) = statsOut.(stimTypes{stim}).(conditions{cond}).(chNames{ch}).(statField)                
             end
+            
             [statsTests.assumptions.(stimTypes{stim}).(chNames{ch}), statsTests.testResults.(stimTypes{stim}).(chNames{ch})] = ...
-                stat_signifTestWrapper(comparisonMatrix, subjects, normFieldName, stimTypes{stim}, chNames{ch}, handles.parameters, handles)
+                stat_signifTestWrapper(comparisonMatrix, statsOut.(stimTypes{stim}), subjects, normFieldName, erpBandType, erpComponent, erpFilterType, statField, stimTypes{stim}, chNames{ch}, handles.parameters, handles)
+            
         end
     end
 

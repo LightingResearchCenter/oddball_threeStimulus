@@ -1,4 +1,4 @@
-function [stat_assumptions, stat_results] = stat_signifTestWrapper(inputMatrix, subjects, normFieldName, stimType, chName, parameters, handles)
+function [stat_assumptions, stat_results] = stat_signifTestWrapper(inputMatrix, statsOut, subjects, normFieldName, erpBandType, erpComponent, erpFilterType, statField, stimType, chName, parameters, handles)
 
     %% DEBUG
     [~, handles.flags] = init_DefaultSettings(); % use a subfunction    
@@ -28,9 +28,9 @@ function [stat_assumptions, stat_results] = stat_signifTestWrapper(inputMatrix, 
     parameters.stats.bartlett_pThreshold = 0.05;
     
     conditions = {'dark'; 'dim'; 'bright'};
-    sessions = {'session1'; 'session2'; 'session3'; 'session4'};
-        
+    sessions = {'session1'; 'session2'; 'session3'; 'session4'};       
    
+    
     %% TEST ASSUMPTIONS
     % 1) Normal distribution
     % 2) Homogeneity of variances
@@ -45,4 +45,7 @@ function [stat_assumptions, stat_results] = stat_signifTestWrapper(inputMatrix, 
     %% Actual TESTS   
     stat_results = batch_statTestResults(inputMatrix, stat_assumptions, normFieldName, stimType, chName, conditions, sessions, subjects, parameters, handles);
 
+    
+    %% write data to disk
+    batch_writeDataToDiskForStats(inputMatrix, statsOut, stat_results, stat_assumptions, normFieldName, erpBandType, erpComponent, erpFilterType, statField, stimType, chName, sessions, conditions, subjects, 'component', parameters, handles)
     
